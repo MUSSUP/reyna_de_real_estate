@@ -1,0 +1,130 @@
+---
+/**
+ * Buscador de propiedades.
+ *
+ * Es un formulario de verdad, con método GET: **sin JavaScript también
+ * funciona** — envía a `/propiedades` con los filtros en la dirección y la
+ * página los aplica. Con JavaScript, el filtrado es instantáneo y no recarga.
+ *
+ * Los cuatro campos son los que pidió la clienta. Se mantiene "tipo de
+ * propiedad" con **terreno** entre las opciones: en el rubro un terreno es un
+ * inmueble sin construir, no otra operación.
+ */
+interface Props {
+  zonas: { slug: string; city: string; zone: string | null }[];
+  tipologias: { slug: string; nameEs: string }[];
+  compacto?: boolean;
+}
+
+const { zonas, tipologias, compacto = false } = Astro.props;
+
+/** Tramos de precio en dólares. `hasta` en nulo significa "sin techo". */
+export const TRAMOS_PRECIO = [
+  { valor: '0-200000', etiqueta: 'Hasta USD 200.000' },
+  { valor: '200000-500000', etiqueta: 'USD 200.000 a 500.000' },
+  { valor: '500000-1000000', etiqueta: 'USD 500.000 a 1.000.000' },
+  { valor: '1000000-', etiqueta: 'Más de USD 1.000.000' },
+];
+
+const dormitorios = [
+  { valor: '1', etiqueta: '1 o más' },
+  { valor: '2', etiqueta: '2 o más' },
+  { valor: '3', etiqueta: '3 o más' },
+  { valor: '4', etiqueta: '4 o más' },
+];
+
+const claseCampo =
+  'w-full appearance-none rounded-[var(--radius-campo)] border border-crema bg-white px-4 py-3 pr-9 font-cuerpo text-base text-texto transition-colors hover:border-dorado focus:border-dorado';
+const claseEtiqueta =
+  'block text-[11px] font-semibold uppercase tracking-[0.12em] text-texto-suave';
+---
+
+<form
+  action="/propiedades"
+  method="get"
+  class:list={[
+    'buscador rounded-[var(--radius-card)] bg-white',
+    compacto
+      ? 'p-4 shadow-[0_2px_14px_rgba(15,30,29,0.08)]'
+      : 'p-5 shadow-[0_6px_28px_rgba(15,30,29,0.12)] sm:p-6',
+  ]}
+  role="search"
+  aria-label="Buscar propiedades"
+>
+  <div class="grid gap-4 lg:grid-cols-[repeat(4,1fr)_auto] lg:items-end">
+    <div>
+      <label class={claseEtiqueta} for="f-zona">Ubicación</label>
+      <div class="relative mt-1.5">
+        <select id="f-zona" name="zona" class={claseCampo}>
+          <option value="">Todas</option>
+          {
+            zonas.map((z) => (
+              <option value={z.slug}>{z.zone ? `${z.city} · ${z.zone}` : z.city}</option>
+            ))
+          }
+        </select>
+        <span
+          class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dorado"
+          aria-hidden="true">▾</span
+        >
+      </div>
+    </div>
+
+    <div>
+      <label class={claseEtiqueta} for="f-tipo">Tipo de propiedad</label>
+      <div class="relative mt-1.5">
+        <select id="f-tipo" name="tipo" class={claseCampo}>
+          <option value="">Todos</option>
+          {tipologias.map((t) => <option value={t.slug}>{t.nameEs}</option>)}
+        </select>
+        <span
+          class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dorado"
+          aria-hidden="true">▾</span
+        >
+      </div>
+    </div>
+
+    <div>
+      <label class={claseEtiqueta} for="f-dormitorios">Habitaciones</label>
+      <div class="relative mt-1.5">
+        <select id="f-dormitorios" name="dormitorios" class={claseCampo}>
+          <option value="">Cualquiera</option>
+          {dormitorios.map((d) => <option value={d.valor}>{d.etiqueta}</option>)}
+        </select>
+        <span
+          class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dorado"
+          aria-hidden="true">▾</span
+        >
+      </div>
+    </div>
+
+    <div>
+      <label class={claseEtiqueta} for="f-precio">Presupuesto</label>
+      <div class="relative mt-1.5">
+        <select id="f-precio" name="precio" class={claseCampo}>
+          <option value="">Sin límite</option>
+          {TRAMOS_PRECIO.map((p) => <option value={p.valor}>{p.etiqueta}</option>)}
+        </select>
+        <span
+          class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dorado"
+          aria-hidden="true">▾</span
+        >
+      </div>
+    </div>
+
+    <button
+      type="submit"
+      class="mt-1.5 inline-flex min-h-[50px] items-center justify-center gap-2 rounded-full bg-rosa px-7 py-3 font-cuerpo text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-rosa-hover lg:mt-0"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+        <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        ></path>
+      </svg>
+      Buscar
+    </button>
+  </div>
+
+  {/* La operación llega desde los botones del hero y viaja con la búsqueda */}
+  <input type="hidden" name="operacion" id="f-operacion" value="" />
+</form>

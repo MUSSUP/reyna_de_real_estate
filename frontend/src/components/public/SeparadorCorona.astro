@@ -1,0 +1,16 @@
+---
+import Corona from './Corona.astro';
+
+/** Separador entre secciones: filete dorado, corona rosa, filete dorado. */
+interface Props {
+  clase?: string | undefined;
+}
+
+const { clase = '' } = Astro.props;
+---
+
+<div class={`flex items-center justify-center gap-4 ${clase}`} role="presentation">
+  <span class="h-px w-16 bg-gradient-to-r from-transparent to-dorado sm:w-24"></span>
+  <Corona tamano={26} clase="text-rosa shrink-0" />
+  <span class="h-px w-16 bg-gradient-to-l from-transparent to-dorado sm:w-24"></span>
+</div>

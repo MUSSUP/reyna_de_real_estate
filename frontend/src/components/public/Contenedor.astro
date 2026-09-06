@@ -1,0 +1,21 @@
+---
+/** Ancho máximo de contenido: 1200px, con aire lateral que crece con la pantalla. */
+interface Props {
+  ancho?: 'normal' | 'lectura' | 'completo';
+  clase?: string | undefined;
+  etiqueta?: 'div' | 'section' | 'article' | 'header' | 'footer' | 'main';
+}
+
+const { ancho = 'normal', clase = '', etiqueta: Etiqueta = 'div' } = Astro.props;
+
+const anchos = {
+  normal: 'max-w-[1200px]',
+  // 65 caracteres: el largo de línea que se lee cómodo.
+  lectura: 'max-w-[65ch]',
+  completo: 'max-w-none',
+};
+---
+
+<Etiqueta class={`mx-auto w-full px-5 sm:px-8 lg:px-12 ${anchos[ancho]} ${clase}`}>
+  <slot />
+</Etiqueta>

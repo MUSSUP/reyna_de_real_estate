@@ -1,0 +1,162 @@
+---
+import Base from '../../layouts/Base.astro';
+import BarraSuperior from '../../components/public/BarraSuperior.astro';
+import PieDePagina from '../../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../../components/public/BotonWhatsApp.astro';
+import Contenedor from '../../components/public/Contenedor.astro';
+import SeparadorCorona from '../../components/public/SeparadorCorona.astro';
+import CardNoticia from '../../components/public/CardNoticia.astro';
+import Boton from '../../components/public/Boton.astro';
+import CuerpoArticulo from '../../components/public/CuerpoArticulo.astro';
+import { obtenerConfiguracion, obtenerNoticias, prepararImagen } from '../../lib/datos';
+import { bloquesDeTexto, fechaISO, fechaLegible, minutosDeLectura } from '../../lib/articulos';
+
+/**
+ * Una noticia.
+ *
+ * El cuerpo lo escribe la clienta desde el panel y **nunca se inserta como
+ * HTML**: se parte en bloques y cada uno se renderiza con el texto
+ * interpolado, que Astro escapa solo. Ver `lib/articulos.ts`.
+ */
+export async function getStaticPaths() {
+  const noticias = await obtenerNoticias();
+  return noticias.map((n) => ({
+    params: { slug: n.slug },
+    props: { noticia: n, todas: noticias },
+  }));
+}
+
+const { noticia, todas } = Astro.props;
+const config = await obtenerConfiguracion();
+
+const portada = prepararImagen(
+  noticia.coverPath,
+  noticia.coverWidth,
+  noticia.coverHeight,
+  noticia.coverAltEs ?? noticia.titleEs,
+);
+
+const bloques = bloquesDeTexto(noticia.bodyEs);
+const minutos = minutosDeLectura(noticia.bodyEs);
+const otras = todas.filter((n) => n.slug !== noticia.slug).slice(0, 3);
+
+const descripcion = noticia.excerptEs ?? `${noticia.titleEs} — Reyna de Real Estate, Riviera Maya.`;
+
+const datosEstructurados = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline: noticia.titleEs,
+  description: descripcion,
+  datePublished: noticia.publishedAt?.toISOString(),
+  author: { '@type': 'Person', name: 'Laura Cabral' },
+  ...(portada ? { image: portada.src } : {}),
+};
+---
+
+<Base
+  titulo={`${noticia.titleEs} — Reyna de Real Estate`}
+  descripcion={descripcion}
+  imagenSocial={portada?.src}
+>
+  <BarraSuperior />
+
+  <main id="contenido" class="pt-24">
+    <Contenedor>
+      <nav aria-label="Migas de pan" class="py-6 text-sm text-texto-suave">
+        <a href="/noticias" class="hover:text-verde">Noticias</a>
+        <span aria-hidden="true"> / </span>
+        <span class="text-texto">{noticia.titleEs}</span>
+      </nav>
+
+      <article class="mx-auto max-w-[70ch] pb-8">
+        <header>
+          <h1 class="font-titulo text-3xl leading-tight text-verde sm:text-4xl">
+            {noticia.titleEs}
+          </h1>
+          <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-texto-suave">
+            {
+              noticia.publishedAt && (
+                <time datetime={fechaISO(noticia.publishedAt)}>
+                  {fechaLegible(noticia.publishedAt)}
+                </time>
+              )
+            }
+            <span aria-hidden="true">·</span>
+            <span>{minutos} min de lectura</span>
+          </p>
+          {noticia.excerptEs && <p class="mt-6 text-lg text-texto">{noticia.excerptEs}</p>}
+        </header>
+
+        {
+          portada && (
+            <img
+              src={portada.src}
+              srcset={portada.srcset}
+              sizes="(min-width: 768px) 70ch, 100vw"
+              alt={portada.alt}
+              width={portada.width}
+              height={portada.height}
+              loading="eager"
+              decoding="async"
+              class="mt-8 w-full rounded-[var(--radius-card)] object-cover"
+            />
+          )
+        }
+
+        <div class="mt-8">
+          <CuerpoArticulo bloques={bloques} />
+        </div>
+
+        <div class="mt-12 rounded-[var(--radius-card)] bg-crema p-6 text-center sm:p-8">
+          <p class="font-titulo text-xl text-verde">¿Querés que lo veamos juntos?</p>
+          <p class="mx-auto mt-2 max-w-[46ch] text-texto-suave">
+            Si algo de esto te sirve para decidir, escribinos y lo analizamos con tu caso.
+          </p>
+          <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Boton variante="primario" href="/#contacto">Escribinos</Boton>
+            <Boton variante="terciario" href="/propiedades">Ver propiedades</Boton>
+          </div>
+        </div>
+      </article>
+
+      {
+        otras.length > 0 && (
+          <section class="pb-20 pt-6">
+            <h2 class="text-center font-titulo text-2xl uppercase tracking-[0.08em] text-verde">
+              Otras noticias
+            </h2>
+            <SeparadorCorona clase="mt-4" />
+            <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {otras.map((n) => {
+                const img = prepararImagen(
+                  n.coverPath,
+                  n.coverWidth,
+                  n.coverHeight,
+                  n.coverAltEs ?? n.titleEs,
+                );
+                return (
+                  <CardNoticia
+                    slug={n.slug}
+                    titulo={n.titleEs}
+                    bajada={n.excerptEs}
+                    fecha={n.publishedAt}
+                    imagenSrc={img?.src}
+                    imagenSrcset={img?.srcset}
+                    imagenAlt={img?.alt}
+                    imagenAncho={img?.width}
+                    imagenAlto={img?.height}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )
+      }
+    </Contenedor>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(datosEstructurados)} />
+</Base>

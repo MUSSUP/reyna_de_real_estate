@@ -1,0 +1,151 @@
+---
+import Campo from './Campo.astro';
+import Corona from './Corona.astro';
+import { t } from '../../i18n';
+import { INTERESES } from '../../../../backend/lib/validation';
+
+/**
+ * El formulario de consulta. Es la conversión del sitio.
+ *
+ * **Es un formulario de verdad**, con `action` y `method`: sin JavaScript se
+ * envía igual y el servidor responde con una redirección a `/gracias`. El
+ * script solo mejora la experiencia — envía sin recargar y muestra los errores
+ * al lado de cada campo. Si no carga, no se pierde ninguna consulta.
+ *
+ * En la ficha de una propiedad recibe `propiedadSlug` y el interés ya elegido,
+ * para que quien llega desde ahí escriba lo menos posible.
+ *
+ * **No lleva `novalidate`**, a propósito: sin JavaScript la validación del
+ * navegador es la única que avisa antes de enviar. El script se lo pone al
+ * cargar, y recién ahí toma el control para mostrar los errores al lado de
+ * cada campo. Ponerlo en el HTML dejaba a quien no tiene script mandando
+ * datos malos al servidor para no recibir ninguna explicación.
+ */
+interface Props {
+  /** Slug de la propiedad desde la que se consulta, si aplica. */
+  propiedadSlug?: string | undefined;
+  /** Título de la propiedad, para nombrarla en el mensaje inicial. */
+  propiedadTitulo?: string | undefined;
+  interesInicial?: (typeof INTERESES)[number];
+  /** Camino desde el que se consulta. Queda guardado con el lead. */
+  origen: string;
+  clase?: string | undefined;
+}
+
+const {
+  propiedadSlug,
+  propiedadTitulo,
+  interesInicial = 'consulta',
+  origen,
+  clase = '',
+} = Astro.props;
+
+const opcionesInteres = [
+  { valor: 'invertir', etiqueta: 'Invertir' },
+  { valor: 'rentar', etiqueta: 'Rentar' },
+  { valor: 'consulta', etiqueta: 'Consulta general' },
+];
+
+const mensajeInicial = propiedadTitulo ? `Me interesa ${propiedadTitulo}.` : undefined;
+---
+
+<form
+  id="formulario-consulta"
+  action="/api/leads"
+  method="POST"
+  class:list={['flex flex-col gap-5', clase]}
+  data-formulario-consulta
+>
+  <input type="hidden" name="sourcePath" value={origen} />
+  {propiedadSlug && <input type="hidden" name="propertySlug" value={propiedadSlug} />}
+
+  {
+    /* La trampa. Oculta para las personas, visible para los programas que
+      completan todo lo que encuentran. `tabindex` y `aria-hidden` la sacan
+      también del camino del teclado y de los lectores de pantalla. */
+  }
+  <div class="hidden" aria-hidden="true">
+    <label for="website">No completar este campo</label>
+    <input id="website" type="text" name="website" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <Campo
+      id="consulta-nombre"
+      nombre="name"
+      etiqueta={t('formulario.nombre')}
+      obligatorio
+      maximo={100}
+      placeholder="Tu nombre"
+    />
+    <Campo
+      id="consulta-email"
+      nombre="email"
+      tipo="email"
+      etiqueta={t('formulario.email')}
+      obligatorio
+      maximo={200}
+      placeholder="tu@email.com"
+    />
+    <Campo
+      id="consulta-telefono"
+      nombre="phone"
+      tipo="tel"
+      etiqueta={t('formulario.telefono')}
+      maximo={25}
+      placeholder="+52 984 000 0000"
+      ayuda="Opcional"
+    />
+    <Campo
+      id="consulta-interes"
+      nombre="interest"
+      etiqueta={t('formulario.interes')}
+      opciones={opcionesInteres}
+      valor={interesInicial}
+    />
+  </div>
+
+  <Campo
+    id="consulta-mensaje"
+    nombre="message"
+    etiqueta={t('formulario.mensaje')}
+    multilinea
+    maximo={2000}
+    valor={mensajeInicial}
+    filas={4}
+    placeholder="Contanos qué estás buscando"
+  />
+
+  {
+    /* Aviso general del envío: errores del servidor o falta de conexión.
+      `role="alert"` hace que el lector de pantalla lo anuncie al aparecer. */
+  }
+  <p
+    data-aviso-consulta
+    role="alert"
+    class="hidden items-start gap-2 rounded-[var(--radius-campo)] bg-red-50 px-4 py-3 text-sm text-red-800"
+  >
+  </p>
+
+  <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+    <button
+      type="submit"
+      data-enviar-consulta
+      class="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-rosa px-9 py-3 font-cuerpo text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      {t('formulario.enviar')}
+    </button>
+    <p class="text-sm text-texto-suave">Te respondemos a la brevedad.</p>
+  </div>
+</form>
+
+{
+  /* El agradecimiento vive en la página desde el principio y arranca oculto.
+    Así el script solo intercambia dos bloques que ya existen, en vez de
+    fabricar HTML con datos que vienen de afuera. */
+}
+<div data-gracias-consulta hidden class="py-6 text-center">
+  <Corona tamano={44} clase="mx-auto text-rosa" />
+  <p class="mt-5 font-titulo text-2xl text-verde">{t('formulario.gracias')}</p>
+  <p class="mt-2 text-texto-suave">Revisá tu correo: te vamos a escribir desde ahí.</p>
+</div>

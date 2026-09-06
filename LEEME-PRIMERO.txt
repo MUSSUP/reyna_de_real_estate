@@ -1,0 +1,83 @@
+╔════════════════════════════════════════════════════════╗
+║   LA MAQUINARIA · AI First — AI Biz School (Yami Gala)   ║
+╚════════════════════════════════════════════════════════╝
+
+Bienvenido/a. Acá la regla es simple:
+la IA no es tu herramienta, es tu empleada.
+Vos dirigís. Ella planifica, construye y verifica como un
+ingeniero senior. No escribe una línea de código hasta que
+vos apruebes el plan.
+
+
+────────────────────────────────────────────────────────
+ARRANCÁ EN 4 PASOS
+────────────────────────────────────────────────────────
+
+1) RENOMBRÁ esta carpeta con el nombre de tu proyecto.
+   Ej: "turnos-peluqueria"
+
+2) ABRILA en Claude Code.
+
+3) CONTALE tu proyecto en el chat y pedile que llene el brief.
+   Copiá y pegá esto (cambiá lo que está entre corchetes):
+
+   ----------------------------------------------------------
+   Quiero arrancar un proyecto nuevo con esta plantilla.
+
+   Mi proyecto es:
+   - Qué hago: [qué vendés y a quién, en una línea]
+   - Qué quiero construir: [describilo como si se lo
+     explicaras a un empleado nuevo]
+   - Cosas que ya uso: [WhatsApp, Mercado Pago, Instagram...
+     si no sabés, poné "no estoy seguro"]
+
+   Tu tarea:
+   1. Llename el archivo START_PROJECT_PROMPT.md con esto.
+   2. Cuando esté listo, avisame. NO escribas código todavía.
+   ----------------------------------------------------------
+
+4) PONÉ EN MARCHA con el comando:
+
+      /init-project          → si construís una APP
+                               (web, dashboard, tienda...)
+
+      /init-agent-system     → si construís un EQUIPO DE
+                               AGENTES (empleados IA que
+                               trabajan solos)
+
+   Regla de bolsillo:
+   ¿Pantalla para una persona? -> /init-project
+   ¿Empleado que trabaja solo? -> /init-agent-system
+
+   Claude te va a hacer preguntas y armar un PLAN.
+   Cuando te guste, escribí:  /start-execution
+   Recién ahí construye.
+
+
+────────────────────────────────────────────────────────
+LOS 5 COMANDOS
+────────────────────────────────────────────────────────
+  /init-project        Arrancar una app (una vez)
+  /init-agent-system   Arrancar un equipo de agentes (una vez)
+  /start-execution     Construir, después de aprobar el plan
+  /session-start       Retomar al empezar cada sesión
+  /review              Auditar después de cada milestone
+  /iterate             Pedir cambios, después de entregar
+
+  OJO: es /init-project, NO /init a secas.
+
+
+────────────────────────────────────────────────────────
+LAS REGLAS DE ORO (no las rompas)
+────────────────────────────────────────────────────────
+  1. No hay código antes del plan aprobado. Ni una línea.
+  2. Una cosa a la vez. Nunca dos en paralelo.
+  3. Una feature está hecha cuando la podés usar de punta
+     a punta en el navegador. Si no, no está hecha.
+  4. Seguridad después de cada tarea. Sin excepción.
+
+
+────────────────────────────────────────────────────────
+"Publicar > perfeccionar. Dale, vamos. Empezá."
+            — Yami Gala, AI Biz School
+────────────────────────────────────────────────────────

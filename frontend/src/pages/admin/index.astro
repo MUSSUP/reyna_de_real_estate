@@ -1,0 +1,129 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import { obtenerResumen, obtenerUltimasConsultas } from '../../lib/panel';
+import { fechaLegible } from '../../lib/articulos';
+
+/**
+ * Tablero. Lo primero que ve la clienta al entrar.
+ *
+ * Responde una sola pregunta: **¿hay algo que atender?** Por eso las consultas
+ * nuevas van primero y las que no se avisaron por mail salen marcadas: son
+ * las que se pueden perder sin que nadie se entere.
+ */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const resumen = await obtenerResumen();
+const consultas = await obtenerUltimasConsultas(5);
+
+const ETIQUETA_INTERES = {
+  invertir: 'Invertir',
+  rentar: 'Rentar',
+  consulta: 'Consulta general',
+} as const;
+
+const contadores = [
+  { n: resumen.consultasNuevas, texto: 'consultas nuevas', href: '/admin/leads', destacar: true },
+  { n: resumen.propiedadesPublicadas, texto: 'propiedades publicadas', href: '/admin/propiedades' },
+  {
+    n: resumen.propiedadesBorrador,
+    texto: 'en borrador',
+    href: '/admin/propiedades?estado=borrador',
+  },
+  { n: resumen.articulosPublicados, texto: 'artículos publicados', href: '/admin/articulos' },
+];
+
+const primerNombre = sesion?.name?.split(' ')[0] ?? '';
+---
+
+<Panel titulo="Tablero" usuario={sesion?.name}>
+  <p class="text-texto-suave">
+    {primerNombre ? `Hola, ${primerNombre}.` : 'Hola.'} Esto es lo que hay hoy.
+  </p>
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {
+      contadores.map((c) => (
+        <a
+          href={c.href}
+          class:list={[
+            'rounded-[var(--radius-card)] border bg-white p-5 transition-colors',
+            c.destacar && c.n > 0
+              ? 'border-rosa/40 hover:border-rosa'
+              : 'border-black/5 hover:border-verde/30',
+          ]}
+        >
+          <p
+            class:list={[
+              'font-titulo text-4xl leading-none',
+              c.destacar && c.n > 0 ? 'text-rosa' : 'text-verde',
+            ]}
+          >
+            {c.n}
+          </p>
+          <p class="mt-2 text-sm text-texto-suave">{c.texto}</p>
+        </a>
+      ))
+    }
+  </div>
+
+  <section class="mt-10">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+      <h2 class="font-titulo text-xl text-verde">Últimas consultas</h2>
+      <a href="/admin/leads" class="text-sm text-verde underline-offset-4 hover:underline">
+        Ver todas
+      </a>
+    </div>
+
+    {
+      consultas.length === 0 ? (
+        <div class="mt-4 rounded-[var(--radius-card)] border border-dashed border-black/10 bg-white p-8 text-center">
+          <p class="text-texto-suave">Todavía no llegó ninguna consulta.</p>
+          <p class="mt-1 text-sm text-texto-suave">
+            Cuando alguien escriba desde el sitio, va a aparecer acá.
+          </p>
+        </div>
+      ) : (
+        <div class="mt-4 overflow-x-auto rounded-[var(--radius-card)] border border-black/5 bg-white">
+          <table class="w-full min-w-[640px] text-left text-sm">
+            <thead class="border-b border-black/5 text-xs uppercase tracking-[0.06em] text-texto-suave">
+              <tr>
+                <th class="px-4 py-3 font-semibold">Fecha</th>
+                <th class="px-4 py-3 font-semibold">Nombre</th>
+                <th class="px-4 py-3 font-semibold">Interés</th>
+                <th class="px-4 py-3 font-semibold">Propiedad</th>
+                <th class="px-4 py-3 font-semibold">Aviso</th>
+              </tr>
+            </thead>
+            <tbody>
+              {consultas.map((c) => (
+                <tr class="border-b border-black/5 last:border-0">
+                  <td class="whitespace-nowrap px-4 py-3 text-texto-suave">
+                    {fechaLegible(c.creado)}
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="font-semibold text-verde">{c.nombre}</span>
+                    <span class="block text-xs text-texto-suave">{c.email}</span>
+                  </td>
+                  <td class="px-4 py-3 text-texto-suave">{ETIQUETA_INTERES[c.interes]}</td>
+                  <td class="px-4 py-3 text-texto-suave">{c.propiedad ?? '—'}</td>
+                  <td class="px-4 py-3">
+                    {c.avisado ? (
+                      <span class="text-xs text-texto-suave">Enviado</span>
+                    ) : (
+                      /* El mail no salió. La consulta está igual, pero conviene
+                         que se vea: es lo que se puede perder sin enterarse. */
+                      <span class="rounded-full bg-[#f7eeda] px-2.5 py-1 text-xs font-semibold text-[#8a6a28]">
+                        Sin aviso
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+</Panel>

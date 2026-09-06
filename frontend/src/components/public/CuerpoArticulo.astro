@@ -1,0 +1,47 @@
+---
+import type { Bloque } from '../../lib/articulos';
+
+/**
+ * Pinta el cuerpo de una noticia o de un informe.
+ *
+ * Vive en un solo lugar a propósito: antes cada página decidía por su cuenta
+ * cómo se ve un título o un párrafo, y con dos páginas eso ya empieza a
+ * divergir. Acá se decide una vez.
+ *
+ * **El texto nunca se inserta como HTML.** Lo escribe la clienta desde el
+ * panel; cada bloque se renderiza como un elemento con el texto interpolado,
+ * que Astro escapa solo. Meter contenido editable con `set:html` es la forma
+ * más común de abrir un XSS, y acá no hace ninguna falta.
+ */
+interface Props {
+  bloques: Bloque[];
+  /** Los pilares del informe se ven como tarjetas; en una noticia, no. */
+  pilaresComoTarjetas?: boolean;
+}
+const { bloques, pilaresComoTarjetas = false } = Astro.props;
+---
+
+<div class="flex flex-col gap-5">
+  {
+    bloques.map((b) =>
+      b.tipo === 'titulo' ? (
+        <h2 class="mt-4 font-titulo text-2xl text-verde sm:text-[26px]">{b.texto}</h2>
+      ) : b.tipo === 'pilar' ? (
+        <h3
+          class:list={[
+            'font-titulo text-verde',
+            pilaresComoTarjetas ? 'text-xl' : 'mt-2 text-xl sm:text-[22px]',
+          ]}
+        >
+          {b.texto}
+        </h3>
+      ) : b.tipo === 'cita' ? (
+        <blockquote class="my-2 border-l-2 border-dorado py-1 pl-5 sm:pl-6">
+          <p class="font-titulo text-lg italic leading-snug text-verde sm:text-xl">{b.texto}</p>
+        </blockquote>
+      ) : (
+        <p class="text-[17px] leading-relaxed text-texto">{b.texto}</p>
+      ),
+    )
+  }
+</div>

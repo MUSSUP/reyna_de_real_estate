@@ -1,0 +1,109 @@
+---
+import Corona from './Corona.astro';
+
+/**
+ * Portada. Video de fondo con imagen de respaldo.
+ *
+ * El video es opcional a propósito: la clienta todavía no lo entregó (D-10).
+ * Si `videoUrl` viene vacío se muestra solo la imagen, y la sección se ve
+ * terminada igual — no como algo a lo que le falta una pieza.
+ *
+ * El video nunca bloquea la carga: la imagen se pinta primero y el video se
+ * superpone cuando puede. Va siempre en silencio.
+ */
+interface Props {
+  titulo: string;
+  pregunta: string;
+  textoInvertir: string;
+  textoRentar: string;
+  videoUrl?: string | undefined;
+  imagenRespaldo?: string;
+}
+
+const {
+  titulo,
+  pregunta,
+  textoInvertir,
+  textoRentar,
+  videoUrl,
+  imagenRespaldo = '/video/hero-respaldo.jpg',
+} = Astro.props;
+---
+
+<section class="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
+  <!-- La imagen se pinta primero: el hero nunca aparece vacío -->
+  <img
+    src={imagenRespaldo}
+    alt=""
+    aria-hidden="true"
+    class="absolute inset-0 h-full w-full object-cover"
+    fetchpriority="high"
+  />
+
+  {
+    videoUrl && (
+      <video
+        class="hero-video absolute inset-0 h-full w-full object-cover"
+        src={videoUrl}
+        poster={imagenRespaldo}
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-hidden="true"
+        tabindex="-1"
+      />
+    )
+  }
+
+  <!-- Velo: asegura contraste del texto sobre cualquier imagen -->
+  <div
+    class="absolute inset-0 bg-gradient-to-b from-verde-oscuro/70 via-verde-oscuro/55 to-verde-oscuro/80"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="relative mx-auto max-w-[900px] px-6 py-24 text-center">
+    <Corona tamano={44} clase="mx-auto text-rosa" />
+
+    {
+      /* La pregunta manda: es lo que la clienta quiere que se lea primero.
+        El claim de marca queda debajo, más chico y en rosa. Los nombres de
+        las props siguen describiendo el contenido, no el lugar donde cae. */
+    }
+    <h1
+      class="mt-6 font-titulo text-[27px] uppercase leading-[1.12] tracking-[0.01em] text-white sm:text-[38px] lg:text-[46px]"
+    >
+      {pregunta}
+    </h1>
+
+    <p class="mx-auto mt-5 max-w-[26ch] font-titulo text-lg text-rosa sm:text-xl lg:text-2xl">
+      {titulo}
+    </p>
+
+    <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+      <a
+        href="/propiedades?operacion=venta"
+        class="inline-flex min-h-[52px] w-full max-w-xs items-center justify-center rounded-full bg-rosa px-9 py-3 font-cuerpo text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-rosa-hover sm:w-auto"
+      >
+        {textoInvertir}
+      </a>
+      <a
+        href="/propiedades?operacion=renta"
+        class="inline-flex min-h-[52px] w-full max-w-xs items-center justify-center rounded-full border border-white/70 bg-white/10 px-9 py-3 font-cuerpo text-sm font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-white hover:text-verde sm:w-auto"
+      >
+        {textoRentar}
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Quien pidió menos movimiento ve solo la imagen: el video se oculta. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-video {
+      display: none;
+    }
+  }
+</style>

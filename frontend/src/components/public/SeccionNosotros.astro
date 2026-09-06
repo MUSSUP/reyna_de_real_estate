@@ -1,0 +1,105 @@
+---
+import Contenedor from './Contenedor.astro';
+import Corona from './Corona.astro';
+import { valor, type Configuracion } from '../../lib/datos';
+
+/**
+ * "Conóceme": quién es Laura.
+ *
+ * **Tiene que verse terminada sin retrato** (D-10). La clienta todavía no
+ * mandó su foto, y poner una genérica sería peor que no poner ninguna: en una
+ * marca personal, la cara que se ve se lee como la suya. Un paisaje de stock
+ * en la portada es ambiente; una persona que no es ella es otra cosa.
+ *
+ * Así que hay dos composiciones reales, no una con un hueco:
+ *
+ * - **Sin foto** — el texto se centra a un ancho de lectura cómodo, con la
+ *   corona arriba. Se lee como una carta, que es lo que el texto es.
+ * - **Con foto** — dos columnas, texto a la izquierda y retrato a la derecha.
+ *   En móvil el retrato va arriba. El hueco tiene proporción de retrato (4:5)
+ *   y recorta: así cualquier foto que mande la clienta entra bien, venga
+ *   apaisada o vertical, y el espacio queda reservado desde el principio para
+ *   que la página no salte al cargar.
+ *
+ * Cuando llegue la foto, se carga desde el panel en `nosotros.photo` y la
+ * sección cambia sola. Nadie toca código.
+ */
+interface Props {
+  config: Configuracion;
+}
+const { config } = Astro.props;
+
+const titulo = valor(config, 'nosotros.title', 'Conóceme');
+const cuerpo = valor(config, 'nosotros.body');
+const claim = valor(config, 'nosotros.claim', 'Your dream is reality');
+const foto = valor(config, 'nosotros.photo');
+
+// El texto se guarda con líneas en blanco entre párrafos.
+const parrafos = cuerpo
+  .split(/\n\s*\n/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+
+// La primera frase presenta a Laura; se destaca para que la sección tenga
+// una entrada y no arranque como un bloque parejo de texto.
+const [entrada, ...resto] = parrafos;
+---
+
+{
+  parrafos.length > 0 && (
+    <section id="nosotros" class="aparece scroll-mt-24 bg-verde py-16 sm:py-24">
+      <Contenedor>
+        <div class="mx-auto max-w-[1000px] rounded-[var(--radius-card)] bg-crema p-7 sm:p-12 lg:p-14">
+          {foto ? (
+            <div class="grid gap-10 lg:grid-cols-[1fr_320px] lg:items-start lg:gap-14">
+              {/* En móvil el retrato va arriba: el orden lo fija la grilla. */}
+              <img
+                src={foto}
+                alt={`Retrato de ${titulo === 'Conóceme' ? 'Laura Cabral' : titulo}`}
+                loading="lazy"
+                decoding="async"
+                width="640"
+                height="800"
+                class="order-1 mx-auto aspect-[4/5] w-full max-w-[320px] rounded-[var(--radius-card)] object-cover lg:order-2"
+              />
+
+              <div class="order-2 lg:order-1">
+                <h2 class="font-titulo text-3xl text-verde sm:text-4xl">{titulo}</h2>
+                <div class="mt-6 flex flex-col gap-4 text-texto-suave">
+                  <p class="font-titulo text-xl leading-snug text-verde sm:text-2xl">{entrada}</p>
+                  {resto.map((p) => (
+                    <p>{p}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Sin retrato: una sola columna centrada, a ancho de lectura.
+               No hay recuadro vacío ni marcador de posición — la ausencia no
+               se disimula, se compone alrededor. */
+            <div class="text-center">
+              <Corona tamano={44} clase="mx-auto text-rosa" />
+              <h2 class="mt-5 font-titulo text-3xl text-verde sm:text-4xl">{titulo}</h2>
+
+              <div class="mx-auto mt-7 flex max-w-[62ch] flex-col gap-4 text-left text-texto-suave">
+                <p class="text-center font-titulo text-xl leading-snug text-verde sm:text-2xl">
+                  {entrada}
+                </p>
+                {resto.map((p) => (
+                  <p>{p}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {claim && (
+            <div class="mt-10 flex flex-col items-center gap-3 border-t border-dorado/30 pt-8">
+              <Corona tamano={30} clase="text-rosa" />
+              <p class="texto-claim text-center text-xs text-verde sm:text-sm">{claim}</p>
+            </div>
+          )}
+        </div>
+      </Contenedor>
+    </section>
+  )
+}

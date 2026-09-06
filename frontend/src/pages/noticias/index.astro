@@ -1,0 +1,93 @@
+---
+import Base from '../../layouts/Base.astro';
+import BarraSuperior from '../../components/public/BarraSuperior.astro';
+import PieDePagina from '../../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../../components/public/BotonWhatsApp.astro';
+import Contenedor from '../../components/public/Contenedor.astro';
+import SeparadorCorona from '../../components/public/SeparadorCorona.astro';
+import CardNoticia from '../../components/public/CardNoticia.astro';
+import Corona from '../../components/public/Corona.astro';
+import Boton from '../../components/public/Boton.astro';
+import { obtenerConfiguracion, obtenerNoticias, prepararImagen } from '../../lib/datos';
+import { t } from '../../i18n';
+
+/**
+ * Listado de noticias.
+ *
+ * Existía en el menú desde UJ-01 y la página no estaba: el enlace llevaba a un
+ * 404 desde las trece páginas del sitio. Lo encontró la revisión del Hito 1 y
+ * por eso este journey se adelantó del Hito 3.
+ *
+ * Se genera al construir, como el resto del sitio público (D-04).
+ */
+const config = await obtenerConfiguracion();
+const noticias = await obtenerNoticias();
+---
+
+<Base
+  titulo="Noticias del mercado inmobiliario — Reyna de Real Estate"
+  descripcion="Novedades y análisis del mercado de Riviera Maya: desarrollos, tendencias y qué mirar antes de invertir."
+>
+  <BarraSuperior />
+
+  <main id="contenido" class="pt-24">
+    <Contenedor>
+      <header class="py-10 text-center sm:py-14">
+        <p class="texto-claim text-xs text-texto-suave">Reyna de Real Estate</p>
+        <h1 class="mt-3 font-titulo text-3xl text-verde sm:text-4xl">{t('noticias.titulo')}</h1>
+        <SeparadorCorona clase="mt-4" />
+        <p class="mx-auto mt-5 max-w-[56ch] text-texto-suave">{t('noticias.bajada')}</p>
+      </header>
+
+      {
+        noticias.length > 0 ? (
+          <div class="grid gap-6 pb-20 sm:grid-cols-2 lg:grid-cols-3">
+            {noticias.map((n, i) => {
+              const portada = prepararImagen(
+                n.coverPath,
+                n.coverWidth,
+                n.coverHeight,
+                n.coverAltEs ?? n.titleEs,
+              );
+              return (
+                <CardNoticia
+                  slug={n.slug}
+                  titulo={n.titleEs}
+                  bajada={n.excerptEs}
+                  fecha={n.publishedAt}
+                  imagenSrc={portada?.src}
+                  imagenSrcset={portada?.srcset}
+                  imagenAlt={portada?.alt}
+                  imagenAncho={portada?.width}
+                  imagenAlto={portada?.height}
+                  prioridad={i < 3}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          // Sin noticias la página no queda en blanco: explica qué va a haber
+          // acá y ofrece dos salidas.
+          <div class="mx-auto max-w-[46ch] pb-24 text-center">
+            <Corona tamano={44} clase="mx-auto text-rosa" />
+            <p class="mt-6 font-titulo text-xl text-verde">{t('estados.sinNoticias')}</p>
+            <p class="mt-3 text-texto-suave">
+              Estamos preparando las primeras notas. Mientras tanto, mirá lo que hay disponible.
+            </p>
+            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Boton variante="primario" href="/propiedades">
+                Ver propiedades
+              </Boton>
+              <Boton variante="terciario" href="/#contacto">
+                Escribinos
+              </Boton>
+            </div>
+          </div>
+        )
+      }
+    </Contenedor>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+</Base>

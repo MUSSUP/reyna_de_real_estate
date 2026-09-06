@@ -1,0 +1,436 @@
+---
+import CampoPanel from './CampoPanel.astro';
+import Galeria from './Galeria.astro';
+import type { Catalogos } from '../../lib/panel';
+import type { properties, propertyImages } from '../../../../backend/db/schema';
+
+/**
+ * El formulario de una propiedad, en pestañas.
+ *
+ * Las pestañas **no** son páginas distintas: todos los campos existen siempre
+ * en el HTML y solo se muestran u ocultan. Así, al guardar se manda todo junto
+ * y —lo que importa— un error en la pestaña "Datos" se puede señalar aunque la
+ * clienta esté parada en "Textos": el campo existe y se le puede dar foco.
+ *
+ * Sin JavaScript se ven **todas las pestañas una debajo de la otra**, que es
+ * un formulario largo pero completo. No es el camino previsto, pero no deja a
+ * nadie frente a una pantalla con campos inaccesibles.
+ */
+interface Props {
+  catalogos: Catalogos;
+  /** Si viene, es edición; si no, alta. */
+  propiedad?: Partial<typeof properties.$inferSelect> | undefined;
+  amenidadesElegidas?: number[];
+  imagenes?: (typeof propertyImages.$inferSelect)[];
+}
+
+const { catalogos, propiedad, amenidadesElegidas = [], imagenes = [] } = Astro.props;
+const p: Partial<typeof properties.$inferSelect> = propiedad ?? {};
+const esEdicion = Boolean(propiedad);
+
+const vacio = { valor: '', etiqueta: '— Sin elegir —' };
+
+const opcZonas = [
+  vacio,
+  ...catalogos.zonas.map((z) => ({
+    valor: String(z.id),
+    etiqueta: z.zona ? `${z.ciudad} · ${z.zona}` : z.ciudad,
+  })),
+];
+const opcTipos = [
+  vacio,
+  ...catalogos.tipologias.map((t) => ({ valor: String(t.id), etiqueta: t.nombre })),
+];
+const opcDesarrollistas = [
+  vacio,
+  ...catalogos.desarrollistas.map((d) => ({ valor: String(d.id), etiqueta: d.nombre })),
+];
+const opcPropietarios = [
+  vacio,
+  ...catalogos.propietarios.map((o) => ({ valor: String(o.id), etiqueta: o.nombre })),
+];
+
+const PESTANAS = [
+  { id: 'datos', texto: 'Datos' },
+  { id: 'amenidades', texto: 'Amenidades' },
+  { id: 'textos', texto: 'Textos' },
+  { id: 'material', texto: 'Material' },
+  { id: 'publicacion', texto: 'Publicación' },
+];
+---
+
+<form data-formulario-propiedad data-id={esEdicion ? String(p.id) : ''} class="mt-6">
+  {/* La lista de pestañas la muestra el script; sin él no sirve de nada. */}
+  <div
+    data-pestanas
+    role="tablist"
+    aria-label="Secciones de la propiedad"
+    class="hidden flex-wrap gap-1 border-b border-black/10"
+  >
+    {
+      PESTANAS.map((t, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`pestana-${t.id}`}
+          aria-controls={`panel-${t.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          data-pestana={t.id}
+          class="-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors aria-selected:border-rosa aria-selected:text-verde border-transparent text-texto-suave hover:text-verde"
+        >
+          {t.texto}
+        </button>
+      ))
+    }
+  </div>
+
+  <!-- Datos -->
+  <section
+    id="panel-datos"
+    role="tabpanel"
+    aria-labelledby="pestana-datos"
+    data-panel="datos"
+    class="pt-6"
+  >
+    <h2 data-titulo-seccion class="mb-4 font-titulo text-lg text-verde">Datos</h2>
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <CampoPanel
+        id="p-tipo"
+        nombre="propertyTypeId"
+        etiqueta="Tipología"
+        opciones={opcTipos}
+        valor={p.propertyTypeId}
+        obligatorio
+      />
+      <CampoPanel
+        id="p-zona"
+        nombre="zoneId"
+        etiqueta="Zona"
+        opciones={opcZonas}
+        valor={p.zoneId}
+        obligatorio
+      />
+      <CampoPanel
+        id="p-desarrollista"
+        nombre="developerId"
+        etiqueta="Desarrollista"
+        opciones={opcDesarrollistas}
+        valor={p.developerId}
+      />
+
+      <CampoPanel
+        id="p-operacion"
+        nombre="operation"
+        etiqueta="Operación"
+        opciones={[
+          { valor: 'venta', etiqueta: 'En venta' },
+          { valor: 'renta', etiqueta: 'En renta' },
+        ]}
+        valor={p.operation ?? 'venta'}
+        obligatorio
+      />
+      <CampoPanel
+        id="p-obra"
+        nombre="constructionStatus"
+        etiqueta="Estado de obra"
+        opciones={[
+          { valor: 'pozo', etiqueta: 'En pozo' },
+          { valor: 'construccion', etiqueta: 'En construcción' },
+          { valor: 'terminado', etiqueta: 'Terminado' },
+        ]}
+        valor={p.constructionStatus ?? 'terminado'}
+        obligatorio
+      />
+      <CampoPanel
+        id="p-anio"
+        nombre="yearBuilt"
+        etiqueta="Antigüedad (año)"
+        tipo="number"
+        min={1800}
+        max={2200}
+        valor={p.yearBuilt}
+        ayuda="Vacío en pozo y en terrenos"
+      />
+
+      <CampoPanel
+        id="p-precio"
+        nombre="priceUsd"
+        etiqueta="Precio (USD)"
+        tipo="number"
+        min={0}
+        paso="0.01"
+        valor={p.priceUsd}
+      />
+
+      <div class="flex flex-col gap-1.5">
+        <span class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+          >Precio</span
+        >
+        <label
+          class="flex items-center gap-2.5 rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2.5 text-sm"
+        >
+          <input
+            type="checkbox"
+            name="priceOnRequest"
+            data-campo="priceOnRequest"
+            checked={Boolean(p.priceOnRequest)}
+            class="h-4 w-4 accent-[#fb5696]"
+          />
+          A consultar
+        </label>
+        <p class="text-xs text-texto-suave">Si lo marcás, el sitio no muestra la cifra.</p>
+      </div>
+
+      <CampoPanel
+        id="p-cubiertos"
+        nombre="areaCoveredM2"
+        etiqueta="m² cubiertos"
+        tipo="number"
+        min={0}
+        valor={p.areaCoveredM2}
+      />
+      <CampoPanel
+        id="p-totales"
+        nombre="areaTotalM2"
+        etiqueta="m² totales"
+        tipo="number"
+        min={0}
+        valor={p.areaTotalM2}
+      />
+      <CampoPanel
+        id="p-dormitorios"
+        nombre="bedrooms"
+        etiqueta="Dormitorios"
+        tipo="number"
+        min={0}
+        max={50}
+        valor={p.bedrooms ?? 0}
+        ayuda="0 en terrenos"
+      />
+      <CampoPanel
+        id="p-banos"
+        nombre="bathrooms"
+        etiqueta="Baños"
+        tipo="number"
+        min={0}
+        max={50}
+        valor={p.bathrooms ?? 0}
+      />
+
+      <CampoPanel
+        id="p-cartera"
+        nombre="ownership"
+        etiqueta="Cartera"
+        opciones={[
+          { valor: 'propia', etiqueta: 'Propia' },
+          { valor: 'compartida', etiqueta: 'Compartida' },
+        ]}
+        valor={p.ownership ?? 'propia'}
+      />
+
+      <div class="xl:col-span-2">
+        <CampoPanel
+          id="p-propietario"
+          nombre="ownerId"
+          etiqueta="Propietario"
+          opciones={opcPropietarios}
+          valor={p.ownerId}
+        />
+        <p
+          class="mt-1.5 rounded-[var(--radius-campo)] bg-[#f7eeda] px-3 py-2 text-xs font-semibold text-[#8a6a28]"
+        >
+          Dato interno. No se muestra en el sitio.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Amenidades -->
+  <section
+    id="panel-amenidades"
+    role="tabpanel"
+    aria-labelledby="pestana-amenidades"
+    data-panel="amenidades"
+    class="pt-6"
+  >
+    <h2 data-titulo-seccion class="mb-4 font-titulo text-lg text-verde">Amenidades</h2>
+    {
+      catalogos.amenidades.length === 0 ? (
+        <p class="text-sm text-texto-suave">
+          Todavía no hay amenidades cargadas. Se administran en Catálogos.
+        </p>
+      ) : (
+        <fieldset>
+          <legend class="sr-only">Amenidades de la propiedad</legend>
+          <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {catalogos.amenidades.map((a) => (
+              <label class="flex items-center gap-2.5 rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2.5 text-sm hover:border-dorado">
+                <input
+                  type="checkbox"
+                  name="amenityIds"
+                  value={a.id}
+                  checked={amenidadesElegidas.includes(a.id)}
+                  class="h-4 w-4 accent-[#fb5696]"
+                />
+                {a.nombre}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )
+    }
+  </section>
+
+  <!-- Textos -->
+  <section
+    id="panel-textos"
+    role="tabpanel"
+    aria-labelledby="pestana-textos"
+    data-panel="textos"
+    class="pt-6"
+  >
+    <h2 data-titulo-seccion class="mb-4 font-titulo text-lg text-verde">Textos</h2>
+    <div class="flex max-w-[760px] flex-col gap-5">
+      <CampoPanel
+        id="p-titulo"
+        nombre="titleEs"
+        etiqueta="Título"
+        valor={p.titleEs}
+        obligatorio
+        marcador="Casa Abatón"
+        ayuda={esEdicion
+          ? 'Cambiar el título no cambia la dirección de la propiedad en el sitio.'
+          : 'De acá sale la dirección de la propiedad en el sitio.'}
+      />
+      <CampoPanel
+        id="p-descripcion"
+        nombre="descriptionEs"
+        etiqueta="Descripción"
+        multilinea
+        filas={8}
+        valor={p.descriptionEs}
+        ayuda="Una línea en blanco separa párrafos."
+      />
+    </div>
+  </section>
+
+  <!-- Material -->
+  <section
+    id="panel-material"
+    role="tabpanel"
+    aria-labelledby="pestana-material"
+    data-panel="material"
+    class="pt-6"
+  >
+    <h2 data-titulo-seccion class="mb-4 font-titulo text-lg text-verde">Material</h2>
+    <div class="flex max-w-[900px] flex-col gap-8">
+      {
+        esEdicion ? (
+          <Galeria
+            propiedadId={String(p.id)}
+            coverPath={p.coverPath}
+            coverWidth={p.coverWidth}
+            coverHeight={p.coverHeight}
+            coverAlt={p.coverAltEs}
+            imagenes={imagenes}
+          />
+        ) : (
+          /* Hasta que la propiedad no existe no hay dónde colgar las fotos.
+             Decirlo es mejor que mostrar un cargador que fallaría. */
+          <p class="rounded-[var(--radius-campo)] bg-[#f7eeda] px-4 py-3 text-sm text-[#8a6a28]">
+            Guardá la propiedad como borrador y vas a poder cargar la imagen principal y la galería
+            desde esta misma pestaña.
+          </p>
+        )
+      }
+
+      <div class="max-w-[760px]">
+        <CampoPanel
+          id="p-drive"
+          nombre="driveUrl"
+          etiqueta="Carpeta de Drive"
+          tipo="url"
+          valor={p.driveUrl}
+          marcador="https://drive.google.com/drive/folders/…"
+          ayuda="Para el video y el material pesado. Tiene que ser un enlace de Google Drive."
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Publicación -->
+  <section
+    id="panel-publicacion"
+    role="tabpanel"
+    aria-labelledby="pestana-publicacion"
+    data-panel="publicacion"
+    class="pt-6"
+  >
+    <h2 data-titulo-seccion class="mb-4 font-titulo text-lg text-verde">Publicación</h2>
+    <div class="flex max-w-[560px] flex-col gap-5">
+      <label
+        class="flex items-center gap-2.5 rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2.5 text-sm"
+      >
+        <input
+          type="checkbox"
+          name="isFeatured"
+          data-campo="isFeatured"
+          checked={Boolean(p.isFeatured)}
+          class="h-4 w-4 accent-[#fb5696]"
+        />
+        Mostrar entre las destacadas de la portada
+      </label>
+
+      {
+        esEdicion && (
+          <p class="text-sm text-texto-suave">
+            Estado actual:{' '}
+            <strong class="text-verde">
+              {p.status === 'publicado'
+                ? 'Publicada'
+                : p.status === 'archivado'
+                  ? 'Archivada'
+                  : 'Borrador'}
+            </strong>
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  {/* Aviso general del guardado. `role="alert"` lo hace anunciar al aparecer. */}
+  <p
+    data-aviso-propiedad
+    role="alert"
+    class="mt-6 hidden rounded-[var(--radius-campo)] px-4 py-3 text-sm"
+  >
+  </p>
+
+  <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-black/10 pt-5">
+    <button
+      type="button"
+      data-guardar="borrador"
+      class="min-h-[44px] rounded-full border border-verde px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white disabled:opacity-60"
+    >
+      Guardar borrador
+    </button>
+
+    <button
+      type="button"
+      data-guardar="publicado"
+      class="min-h-[44px] rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover disabled:opacity-60"
+    >
+      {esEdicion && p.status === 'publicado' ? 'Guardar y republicar' : 'Publicar'}
+    </button>
+
+    <a href="/admin/propiedades" class="ml-auto text-sm text-texto-suave hover:text-verde">
+      Volver al listado
+    </a>
+  </div>
+
+  <noscript>
+    <p class="mt-4 rounded-[var(--radius-campo)] bg-[#f7eeda] px-4 py-3 text-sm text-[#8a6a28]">
+      El panel necesita JavaScript activado para guardar.
+    </p>
+  </noscript>
+</form>

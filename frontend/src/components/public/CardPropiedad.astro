@@ -1,0 +1,163 @@
+---
+import Badge from './Badge.astro';
+
+/**
+ * Card de propiedad — se replica de `design/referencias/sec2-card-corregida.png`.
+ *
+ * Dos correcciones que pidió la clienta y están aplicadas acá:
+ *  1. El primer badge muestra el PAÍS, no los dormitorios (que ya aparecen
+ *     repetidos abajo, en la fila de atributos).
+ *  2. En terrenos no se muestran dormitorios ni baños: un lote sin construir
+ *     no los tiene, y poner "0 dor." se lee como un error.
+ */
+interface Props {
+  slug: string;
+  titulo: string;
+  pais: string;
+  ubicacion: string;
+  precioUsd?: number | null | undefined;
+  precioAConsultar?: boolean;
+  metros?: number | null | undefined;
+  dormitorios?: number | null | undefined;
+  banos?: number | null | undefined;
+  esTerreno?: boolean;
+  imagenSrc?: string | undefined;
+  imagenSrcset?: string | undefined;
+  imagenAlt?: string | undefined;
+  imagenAncho?: number | undefined;
+  imagenAlto?: number | undefined;
+  /** La primera card visible carga su imagen de inmediato; el resto, al acercarse. */
+  prioridad?: boolean;
+}
+
+const {
+  slug,
+  titulo,
+  pais,
+  ubicacion,
+  precioUsd,
+  precioAConsultar = false,
+  metros,
+  dormitorios,
+  banos,
+  esTerreno = false,
+  imagenSrc,
+  imagenSrcset,
+  imagenAlt,
+  imagenAncho,
+  imagenAlto,
+  prioridad = false,
+} = Astro.props;
+
+const formatoPrecio = new Intl.NumberFormat('es-MX', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
+const precio =
+  precioAConsultar || precioUsd == null
+    ? 'Precio a consultar'
+    : `USD ${formatoPrecio.format(precioUsd).replace(/^\D+/, '')}`;
+
+// En terrenos se omiten dormitorios y baños.
+const atributos = [
+  metros != null ? { icono: 'metros', texto: `${metros} m²` } : null,
+  !esTerreno && dormitorios != null ? { icono: 'cama', texto: `${dormitorios} dor.` } : null,
+  !esTerreno && banos != null ? { icono: 'bano', texto: `${banos} baños` } : null,
+].filter((a): a is { icono: string; texto: string } => a !== null);
+---
+
+<article
+  class="group flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] bg-white shadow-[0_2px_16px_rgba(15,30,29,0.08)] transition-shadow duration-[400ms] ease-[var(--ease-marca)] hover:shadow-[0_8px_28px_rgba(15,30,29,0.14)]"
+>
+  <div class="relative aspect-[4/3] overflow-hidden bg-crema">
+    {
+      imagenSrc ? (
+        <img
+          src={imagenSrc}
+          srcset={imagenSrcset}
+          sizes="(min-width: 1024px) 380px, (min-width: 768px) 45vw, 90vw"
+          alt={imagenAlt ?? ''}
+          width={imagenAncho}
+          height={imagenAlto}
+          loading={prioridad ? 'eager' : 'lazy'}
+          fetchpriority={prioridad ? 'high' : 'auto'}
+          decoding="async"
+          class="h-full w-full object-cover transition-transform duration-[600ms] ease-[var(--ease-marca)] group-hover:scale-[1.03]"
+        />
+      ) : (
+        // Sin foto la card no se rompe: queda un bloque crema con la marca.
+        <div class="flex h-full w-full items-center justify-center text-verde/20">
+          <span class="font-sub text-xs uppercase tracking-[0.2em]">Reyna de Real Estate</span>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="flex flex-1 flex-col gap-3 p-5">
+    <div class="flex flex-wrap gap-2">
+      <Badge variante="pais">{pais}</Badge>
+      <Badge variante="ubicacion">{ubicacion}</Badge>
+    </div>
+
+    <h3 class="font-titulo text-xl leading-tight text-verde">{titulo}</h3>
+
+    <p class="font-cuerpo text-lg font-medium text-verde-claro">{precio}</p>
+
+    {
+      atributos.length > 0 && (
+        <ul class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-texto-suave">
+          {atributos.map((a) => (
+            <li class="flex items-center gap-1.5">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+                class="shrink-0 text-dorado"
+              >
+                {a.icono === 'metros' && (
+                  <path
+                    d="M2 14 14 2M2 14h4M2 14v-4"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                  />
+                )}
+                {a.icono === 'cama' && (
+                  <path
+                    d="M2 12V6h9a3 3 0 0 1 3 3v3M2 9h12M2 12v1M14 12v1"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                )}
+                {a.icono === 'bano' && (
+                  <path
+                    d="M2 9h12v1a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V9ZM4 9V4a1.5 1.5 0 0 1 3 0"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                )}
+              </svg>
+              {a.texto}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <a
+      href={`/propiedades/${slug}`}
+      class="mt-auto inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-verde px-6 py-3 font-cuerpo text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-verde-claro"
+    >
+      Ver detalle
+      <span class="sr-only">de {titulo}</span>
+    </a>
+  </div>
+</article>

@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import BarraSuperior from '../components/public/BarraSuperior.astro';
+import PieDePagina from '../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../components/public/BotonWhatsApp.astro';
+import Corona from '../components/public/Corona.astro';
+import Boton from '../components/public/Boton.astro';
+import { obtenerConfiguracion } from '../lib/datos';
+import { enlaceWhatsApp } from '../lib/whatsapp';
+
+/**
+ * Adónde llega quien intentó consultar **sin JavaScript** y algo falló.
+ *
+ * Antes el servidor redirigía a `/#contacto?envio=error`. Eso no funcionaba de
+ * dos maneras a la vez: el `?envio=error` quedaba dentro del fragmento —así
+ * que no era una query string— y aunque lo hubiera sido, nadie la leía. El
+ * visitante volvía al tope de la home sin ningún mensaje, convencido de que
+ * había enviado la consulta. La revisión del Hito 1 lo encontró.
+ *
+ * Se genera en el servidor porque el mensaje depende del motivo, y el motivo
+ * llega en la dirección.
+ */
+export const prerender = false;
+
+const config = await obtenerConfiguracion();
+const whatsapp = enlaceWhatsApp(config);
+
+type Motivo = 'datos' | 'limite' | 'error';
+
+const MENSAJES: Record<Motivo, { titulo: string; explicacion: string; queHacer: string }> = {
+  datos: {
+    titulo: 'Faltó revisar algún dato',
+    explicacion:
+      'Alguno de los campos no quedó completo o tiene algo raro. Suele ser el email, o el nombre demasiado corto.',
+    queHacer: 'Volvé al formulario y revisalo: no perdiste nada más que un minuto.',
+  },
+  limite: {
+    titulo: 'Ya recibimos varias consultas tuyas',
+    explicacion:
+      'Llegaron varias seguidas desde tu conexión en los últimos minutos. Es una medida para frenar envíos automáticos, no algo que hayas hecho mal.',
+    queHacer:
+      'Probá de nuevo en unos minutos, o escribinos por WhatsApp y te respondemos enseguida.',
+  },
+  error: {
+    titulo: 'No pudimos recibir tu consulta',
+    explicacion: 'Fue un problema nuestro, no tuyo. La consulta no llegó.',
+    queHacer: 'Escribinos por WhatsApp y te respondemos enseguida — es el camino más rápido.',
+  },
+};
+
+const crudo = Astro.url.searchParams.get('motivo');
+const motivo: Motivo = crudo === 'datos' || crudo === 'limite' ? crudo : 'error';
+const { titulo, explicacion, queHacer } = MENSAJES[motivo];
+---
+
+<Base
+  titulo={`${titulo} — Reyna de Real Estate`}
+  descripcion="No pudimos recibir tu consulta. Escribinos por WhatsApp y te respondemos enseguida."
+  noIndexar={true}
+>
+  <BarraSuperior />
+
+  <main class="flex min-h-[70vh] items-center justify-center px-6 pt-24">
+    <div class="text-center">
+      <Corona tamano={48} clase="mx-auto text-rosa" />
+      <h1 class="mt-6 font-titulo text-3xl text-verde sm:text-4xl">{titulo}</h1>
+      <p class="mx-auto mt-4 max-w-[48ch] text-texto-suave">{explicacion}</p>
+      <p class="mx-auto mt-2 max-w-[48ch] text-texto-suave">{queHacer}</p>
+
+      <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        {
+          whatsapp && (
+            <Boton variante="primario" href={whatsapp} nuevaPestana>
+              Escribir por WhatsApp
+            </Boton>
+          )
+        }
+        <Boton variante="terciario" href="/#contacto">Volver al formulario</Boton>
+      </div>
+    </div>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+</Base>

@@ -1,0 +1,50 @@
+{
+  "nav": { "contacto": "Contacto", "propiedades": "Propiedades", "noticias": "Noticias" },
+  "hero": { "pregunta": "¿Qué estás buscando hoy?", "invertir": "Invertir", "rentar": "Rentar" },
+  "buscador": {
+    "ubicacion": "Ubicación",
+    "tipo": "Tipo de propiedad",
+    "habitaciones": "Habitaciones",
+    "presupuesto": "Presupuesto",
+    "buscar": "Buscar propiedades",
+    "cualquiera": "Cualquiera",
+    "todos": "Todos",
+    "sinLimite": "Sin límite"
+  },
+  "propiedad": {
+    "destacadas": "Destacadas",
+    "verTodas": "Ver todas las propiedades",
+    "verDetalle": "Ver detalle",
+    "precioConsultar": "Precio a consultar",
+    "dormitorios": "dor.",
+    "banos": "baños",
+    "verMaterial": "Ver el video y más material",
+    "similares": "Propiedades similares",
+    "sinResultados": "No encontramos propiedades con esos criterios"
+  },
+  "formulario": {
+    "nombre": "Nombre",
+    "email": "Email",
+    "telefono": "Teléfono",
+    "interes": "¿Qué estás buscando?",
+    "mensaje": "Mensaje",
+    "enviar": "Comencemos",
+    "enviando": "Enviando…",
+    "gracias": "¡Gracias! Te vamos a contactar a la brevedad.",
+    "error": "No pudimos enviar tu consulta. Escribinos por WhatsApp y te respondemos enseguida."
+  },
+  "whatsapp": {
+    "general": "Hola Laura, vi tu web y me gustaría recibir más información",
+    "propiedad": "Hola Laura, me interesa {propiedad}. ¿Podemos hablar?",
+    "flotante": "Escribir por WhatsApp (se abre en una pestaña nueva)"
+  },
+  "footer": { "derechos": "Todos los derechos reservados" },
+  "noticias": {
+    "titulo": "Noticias",
+    "bajada": "Lo que pasa en el mercado inmobiliario, contado sin vueltas."
+  },
+  "estados": {
+    "sinNoticias": "Pronto vas a encontrar acá las novedades del mercado",
+    "error404": "No encontramos esta página"
+  }
+}

@@ -1,0 +1,229 @@
+---
+import Panel from '../../../layouts/Panel.astro';
+import { getDb } from '../../../../../backend/db/client';
+import { listarPropiedades } from '../../../../../backend/lib/propiedades';
+import { prepararImagen } from '../../../lib/datos';
+
+/**
+ * El catálogo visto desde adentro.
+ *
+ * Los filtros viajan en la dirección, igual que en el buscador público: una
+ * búsqueda se puede compartir, guardar y volver con el botón atrás.
+ */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const params = Astro.url.searchParams;
+const estado = params.get('estado') ?? '';
+const texto = params.get('q') ?? '';
+
+const listado = await listarPropiedades(getDb(), {
+  estado: estado || undefined,
+  texto: texto || undefined,
+  porPagina: 100,
+});
+
+const ETIQUETA_ESTADO = {
+  borrador: { texto: 'Borrador', clase: 'bg-[#f2ece9] text-[#837873]' },
+  publicado: { texto: 'Publicada', clase: 'bg-[#e4ede9] text-[#1e4f4c]' },
+  archivado: { texto: 'Archivada', clase: 'bg-[#f7eeda] text-[#8a6a28]' },
+} as const;
+
+const precio = (usd: string | null, aConsultar: boolean) =>
+  aConsultar || !usd ? 'A consultar' : `USD ${Number(usd).toLocaleString('es-AR')}`;
+
+const FILTROS = [
+  { valor: '', texto: 'Todas' },
+  { valor: 'publicado', texto: 'Publicadas' },
+  { valor: 'borrador', texto: 'Borradores' },
+  { valor: 'archivado', texto: 'Archivadas' },
+];
+---
+
+<Panel titulo="Propiedades" usuario={sesion?.name}>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <p class="text-texto-suave">
+      {
+        `${listado.total} ${listado.total === 1 ? 'propiedad' : 'propiedades'}${
+          estado || texto ? ' con estos criterios' : ' en total'
+        }`
+      }
+    </p>
+
+    <a
+      href="/admin/propiedades/nueva"
+      class="rounded-full bg-rosa px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover"
+    >
+      Nueva propiedad
+    </a>
+  </div>
+
+  {/* Un formulario de verdad: sin JavaScript filtra igual. */}
+  <form method="GET" class="mt-5 flex flex-wrap items-end gap-3">
+    <div class="flex flex-col gap-1.5">
+      <label
+        for="f-estado"
+        class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+      >
+        Estado
+      </label>
+      <select
+        id="f-estado"
+        name="estado"
+        class="min-w-[150px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+      >
+        {
+          FILTROS.map((f) => (
+            <option value={f.valor} selected={estado === f.valor}>
+              {f.texto}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="f-q" class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave">
+        Buscar
+      </label>
+      <input
+        id="f-q"
+        name="q"
+        type="search"
+        value={texto}
+        placeholder="Título o dirección"
+        class="min-w-[220px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+      />
+    </div>
+
+    <button
+      type="submit"
+      class="rounded-full bg-verde px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-verde-claro"
+    >
+      Filtrar
+    </button>
+
+    {
+      (estado || texto) && (
+        <a href="/admin/propiedades" class="py-2.5 text-sm text-texto-suave hover:text-verde">
+          Limpiar
+        </a>
+      )
+    }
+  </form>
+
+  {
+    listado.items.length === 0 ? (
+      <div class="mt-6 rounded-[var(--radius-card)] border border-dashed border-black/10 bg-white p-10 text-center">
+        <p class="font-titulo text-lg text-verde">
+          {estado || texto
+            ? 'No hay propiedades con esos criterios'
+            : 'Todavía no cargaste ninguna propiedad'}
+        </p>
+        <p class="mx-auto mt-2 max-w-[46ch] text-sm text-texto-suave">
+          {estado || texto
+            ? 'Probá con otro estado o limpiá la búsqueda.'
+            : 'Cargá la primera y va a aparecer acá. Podés guardarla como borrador y publicarla cuando esté lista.'}
+        </p>
+        <a
+          href={estado || texto ? '/admin/propiedades' : '/admin/propiedades/nueva'}
+          class="mt-6 inline-block rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:bg-rosa-hover"
+        >
+          {estado || texto ? 'Ver todas' : 'Cargar la primera'}
+        </a>
+      </div>
+    ) : (
+      <div class="mt-6 overflow-x-auto rounded-[var(--radius-card)] border border-black/5 bg-white">
+        <table class="w-full min-w-[860px] text-left text-sm">
+          <thead class="border-b border-black/5 text-xs uppercase tracking-[0.06em] text-texto-suave">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Propiedad</th>
+              <th class="px-4 py-3 font-semibold">Zona</th>
+              <th class="px-4 py-3 font-semibold">Tipo</th>
+              <th class="px-4 py-3 font-semibold">Operación</th>
+              <th class="px-4 py-3 font-semibold">Precio</th>
+              <th class="px-4 py-3 font-semibold">Estado</th>
+              <th class="px-4 py-3 font-semibold">
+                <span class="sr-only">Acciones</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {listado.items.map((p) => {
+              const portada = prepararImagen(p.coverPath, p.coverWidth, p.coverHeight, '');
+              return (
+                <tr class="border-b border-black/5 last:border-0">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      {portada ? (
+                        <img
+                          src={portada.src}
+                          alt=""
+                          width="56"
+                          height="42"
+                          loading="lazy"
+                          class="h-10 w-14 shrink-0 rounded object-cover"
+                        />
+                      ) : (
+                        /* Sin portada no se puede publicar: conviene que se
+                           vea en el listado y no recién al intentar. */
+                        <span
+                          class="flex h-10 w-14 shrink-0 items-center justify-center rounded border border-dashed border-[#ddc79a] bg-[#f7eeda] text-[10px] font-semibold text-[#8a6a28]"
+                          title="Sin imagen principal"
+                        >
+                          sin foto
+                        </span>
+                      )}
+                      <div class="min-w-0">
+                        <span class="block font-semibold text-verde">{p.titulo}</span>
+                        {p.destacada && <span class="text-xs text-rosa">Destacada</span>}
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-texto-suave">
+                    {p.zona ? `${p.ciudad} · ${p.zona}` : (p.ciudad ?? '—')}
+                  </td>
+                  <td class="px-4 py-3 text-texto-suave">{p.tipo ?? '—'}</td>
+                  <td class="px-4 py-3 text-texto-suave">
+                    {p.operacion === 'venta' ? 'En venta' : 'En renta'}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-texto-suave">
+                    {precio(p.precioUsd, p.precioAConsultar)}
+                  </td>
+                  <td class="px-4 py-3">
+                    <span
+                      class:list={[
+                        'rounded-full px-2.5 py-1 text-xs font-semibold',
+                        ETIQUETA_ESTADO[p.estado].clase,
+                      ]}
+                    >
+                      {ETIQUETA_ESTADO[p.estado].texto}
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-right">
+                    <a
+                      href={`/admin/propiedades/${p.id}`}
+                      class="text-sm font-semibold text-verde underline-offset-4 hover:underline"
+                    >
+                      Editar
+                    </a>
+                    {p.estado === 'publicado' && (
+                      <a
+                        href={`/propiedades/${p.slug}`}
+                        target="_blank"
+                        rel="noopener"
+                        class="ml-3 text-sm text-texto-suave underline-offset-4 hover:underline"
+                      >
+                        Ver ↗
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</Panel>

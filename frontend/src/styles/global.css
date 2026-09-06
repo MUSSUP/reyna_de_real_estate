@@ -1,0 +1,198 @@
+@import 'tailwindcss';
+
+/* Tipografías autoalojadas — no se carga nada de Google Fonts en tiempo de
+   ejecución (RNF-01). Solo el subset latino: el sitio es en español, y traer
+   cirílico, griego o vietnamita infla el CSS sin que nadie los use.
+   Solo los pesos que la marca realmente usa, ni uno más. */
+@import '@fontsource/playfair-display/latin-400.css';
+@import '@fontsource/playfair-display/latin-600.css';
+@import '@fontsource/playfair-display/latin-700.css';
+@import '@fontsource/playfair-display/latin-400-italic.css';
+@import '@fontsource/cinzel/latin-400.css';
+@import '@fontsource/cinzel/latin-600.css';
+@import '@fontsource/cinzel/latin-700.css';
+@import '@fontsource/montserrat/latin-300.css';
+@import '@fontsource/montserrat/latin-400.css';
+@import '@fontsource/montserrat/latin-500.css';
+@import '@fontsource/montserrat/latin-600.css';
+@import '@fontsource/montserrat/latin-700.css';
+
+/* ============================================================
+   TOKENS DE MARCA — design/style_guide.md
+   La identidad ya estaba definida: estos valores salieron de la
+   versión aprobada por la clienta. No se inventan colores nuevos.
+   Sin modo oscuro: el registro es lujo editorial, un solo tema.
+   ============================================================ */
+@theme {
+  --color-rosa: #fb5696;
+  --color-rosa-hover: #e03d7e;
+  --color-verde: #1e4f4c;
+  --color-verde-claro: #255f5b;
+  --color-verde-oscuro: #0f1e1d;
+  --color-dorado: #c9a96e;
+  --color-dorado-claro: #dfc089;
+  --color-crema: #f2e9e4;
+  --color-texto: #3a3a3a;
+  --color-texto-suave: #6b6b6b;
+
+  --font-titulo: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sub: 'Cinzel', Georgia, serif;
+  --font-cuerpo: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius-campo: 8px;
+  --radius-card: 12px;
+
+  --ease-marca: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-cuerpo);
+    color: var(--color-texto);
+    background-color: white;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-titulo);
+    line-height: 1.2;
+    color: var(--color-verde);
+  }
+
+  /* El foco visible es requisito de accesibilidad (RNF-04). No se quita. */
+  :focus-visible {
+    outline: 3px solid var(--color-rosa);
+    outline-offset: 2px;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+@layer utilities {
+  /* Claims y kickers en Cinzel: siempre mayúsculas con espaciado amplio */
+  .texto-claim {
+    font-family: var(--font-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+}
+
+/* Aparición al hacer scroll — CSS puro, sin JavaScript.
+   
+   El contenido está SIEMPRE visible por defecto. La animación se aplica solo
+   donde el navegador la soporta de forma nativa, y es una mejora opcional:
+   ningún fallo puede dejar una sección oculta.
+   
+   La primera versión de esto usaba JavaScript con IntersectionObserver, y al
+   verificarla apareció el problema: en una pestaña en segundo plano el
+   navegador congela el observador, y el contenido quedaba invisible. Una
+   animación decorativa nunca debe poder esconder contenido. */
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .aparece {
+      animation: aparecer linear both;
+      animation-timeline: view();
+      /* Se completa cuando el elemento entró un 40% en pantalla. */
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+/* Quien pidió menos movimiento no ve animaciones (RNF-04).
+   Incluye el video del hero, que se reemplaza por su imagen de respaldo. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Vista ampliada de la galería
+   Los estilos viven acá y no en el script: así el diálogo se ve
+   bien apenas aparece, sin un parpadeo sin estilo.
+   ============================================================ */
+.galeria-dialogo {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  border: none;
+  background: rgb(15 30 29 / 0.94);
+  color: white;
+}
+
+.galeria-dialogo::backdrop {
+  background: rgb(15 30 29 / 0.8);
+}
+
+.galeria-dialogo-img {
+  max-width: 92vw;
+  max-height: 82vh;
+  margin: auto;
+  object-fit: contain;
+}
+
+.galeria-dialogo-contador {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  color: rgb(255 255 255 / 0.75);
+}
+
+.galeria-dialogo-cerrar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.galeria-dialogo-cerrar:hover {
+  background: var(--color-rosa);
+}

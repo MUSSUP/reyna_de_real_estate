@@ -1,0 +1,83 @@
+---
+/**
+ * Barra fija. Empieza transparente sobre el hero y se vuelve verde al bajar.
+ *
+ * El cambio se hace con animación ligada al scroll, en CSS. Donde el navegador
+ * no la soporta queda **verde sólido desde el principio** — se ve algo distinto
+ * al diseño pero siempre legible. El fallback nunca puede ser "transparente",
+ * porque sobre contenido claro el logo blanco desaparecería.
+ */
+interface Props {
+  sobreHero?: boolean;
+}
+const { sobreHero = false } = Astro.props;
+
+const enlaces = [
+  { href: '/propiedades', texto: 'Propiedades' },
+  { href: '/noticias', texto: 'Noticias' },
+];
+---
+
+<header
+  class:list={[
+    'fixed inset-x-0 top-0 z-50 transition-colors duration-[400ms] ease-[var(--ease-marca)]',
+    sobreHero ? 'barra-sobre-hero bg-verde' : 'bg-verde',
+  ]}
+>
+  <nav
+    class="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-12"
+  >
+    <a href="/" class="shrink-0" aria-label="Reyna de Real Estate — ir al inicio">
+      <img
+        src="/logos/logo-claro.webp"
+        alt="Reyna de Real Estate"
+        width="499"
+        height="160"
+        class="h-11 w-auto"
+      />
+    </a>
+
+    <div class="flex items-center gap-1 sm:gap-4">
+      {
+        enlaces.map((e) => (
+          <a
+            href={e.href}
+            class="hidden rounded-full px-3 py-2 font-cuerpo text-xs font-medium uppercase tracking-[0.12em] text-white/85 transition-colors hover:text-white sm:inline-block"
+          >
+            {e.texto}
+          </a>
+        ))
+      }
+      <a
+        href="/#contacto"
+        class="inline-flex min-h-[44px] items-center rounded-full bg-rosa px-5 py-2 font-cuerpo text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-rosa-hover"
+      >
+        Contacto
+      </a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  /* Sobre el hero arranca transparente y se vuelve verde al bajar 120px.
+     Solo donde el navegador soporta animaciones ligadas al scroll. */
+  @supports (animation-timeline: scroll()) {
+    .barra-sobre-hero {
+      background-color: transparent;
+      animation: pintar-barra linear both;
+      animation-timeline: scroll();
+      animation-range: 0 120px;
+    }
+  }
+
+  @keyframes pintar-barra {
+    from {
+      background-color: transparent;
+      box-shadow: none;
+    }
+    to {
+      background-color: var(--color-verde);
+      box-shadow: 0 4px 30px rgb(15 30 29 / 0.25);
+    }
+  }
+</style>

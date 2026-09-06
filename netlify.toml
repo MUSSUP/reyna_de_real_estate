@@ -1,0 +1,87 @@
+# Configuración de despliegue — Reyna de Real Estate
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Netlify no usa la versión de Node del equipo de desarrollo.
+  NODE_VERSION = "22"
+
+# ---------------------------------------------------------------------------
+# Cabeceras de seguridad
+#
+# Se aplican a todo el sitio. Cada una cierra una puerta concreta.
+# ---------------------------------------------------------------------------
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # ENSAYO — QUITAR ANTES DE LA ENTREGA (acción A-11).
+    # El sitio muestra datos de demostración: no debe aparecer en buscadores
+    # hasta tener contenido real. Va junto con `frontend/public/robots.txt`,
+    # que también hay que borrar. Esta cabecera es la que de verdad frena a
+    # Google; el robots.txt solo pide que no entre.
+    X-Robots-Tag = "noindex, nofollow"
+
+    # El navegador solo carga recursos de donde decimos. Si alguien lograra
+    # inyectar un script apuntando a otro servidor, no se ejecutaría.
+    #   'unsafe-inline' en estilos es necesario: Astro incrusta CSS crítico.
+    #   Los scripts NO lo llevan — ahí está el riesgo real.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.supabase.co; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+
+    # Nadie puede meter el sitio dentro de un marco en otra página para
+    # engañar a un visitante haciéndole apretar algo que no ve.
+    X-Frame-Options = "DENY"
+
+    # El navegador respeta el tipo de archivo que declaramos y no intenta
+    # adivinarlo — evita que un archivo subido se ejecute como otra cosa.
+    X-Content-Type-Options = "nosniff"
+
+    # Al salir del sitio no se filtra la dirección exacta que estaba viendo.
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # El sitio no necesita cámara, micrófono ni ubicación: se apagan.
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+
+    # Un año de HTTPS obligatorio. Ni siquiera el primer pedido viaja en claro.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+# Las respuestas del panel y del formulario nunca se cachean: llevan datos
+# de sesión y de consultas.
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+    X-Robots-Tag = "noindex, nofollow"
+
+# El panel no se indexa.
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store, max-age=0"
+
+# Las rutas con identificador único en el nombre no cambian de contenido:
+# se cachean para siempre.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# ---------------------------------------------------------------------------
+# Redirecciones
+# ---------------------------------------------------------------------------
+
+# Una sola dirección canónica: sin www. Evita contenido duplicado para
+# los buscadores.
+[[redirects]]
+  from = "https://www.reynaderealestate.com/*"
+  to = "https://reynaderealestate.com/:splat"
+  status = 301
+  force = true

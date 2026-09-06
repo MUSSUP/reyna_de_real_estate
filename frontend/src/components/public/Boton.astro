@@ -1,0 +1,67 @@
+---
+/**
+ * Botón en tres variantes.
+ *
+ * El rosa se reserva para la conversión: un solo CTA rosa por pantalla visible.
+ * Dentro de las cards se usa el verde.
+ *
+ * Se renderiza como <a> si recibe `href`, y como <button> si no. Un enlace que
+ * parece botón sigue siendo un enlace: se abre en pestaña nueva, se copia la
+ * dirección, y el teclado lo trata como corresponde.
+ */
+interface Props {
+  variante?: 'primario' | 'secundario' | 'terciario';
+  href?: string | undefined;
+  tipo?: 'button' | 'submit';
+  anchoCompleto?: boolean;
+  nuevaPestana?: boolean;
+  deshabilitado?: boolean;
+  clase?: string | undefined;
+}
+
+const {
+  variante = 'primario',
+  href,
+  tipo = 'button',
+  anchoCompleto = false,
+  nuevaPestana = false,
+  deshabilitado = false,
+  clase = '',
+} = Astro.props;
+
+const variantes = {
+  primario: 'bg-rosa text-white hover:bg-rosa-hover rounded-full',
+  secundario: 'bg-verde text-white hover:bg-verde-claro rounded-full',
+  terciario:
+    'border border-rosa text-rosa hover:bg-rosa hover:text-white rounded-full bg-transparent',
+};
+
+const base = [
+  'inline-flex items-center justify-center gap-2',
+  // 44px de alto mínimo: el área táctil cómoda en un teléfono.
+  'min-h-[44px] px-7 py-3',
+  'font-cuerpo text-sm font-semibold uppercase tracking-[0.12em]',
+  'transition-colors duration-[400ms] ease-[var(--ease-marca)]',
+  'disabled:opacity-50 disabled:pointer-events-none',
+  anchoCompleto ? 'w-full' : '',
+  variantes[variante],
+  clase,
+].join(' ');
+
+// noopener y noreferrer: sin esto, la página abierta puede manipular a la que
+// la abrió.
+const atributosExternos = nuevaPestana ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+{
+  href ? (
+    <a href={href} class={base} {...atributosExternos}>
+      <slot />
+      {nuevaPestana && <span class="sr-only">(se abre en una pestaña nueva)</span>}
+    </a>
+  ) : (
+    <button type={tipo} class={base} disabled={deshabilitado}>
+      <slot />
+    </button>
+  )
+}

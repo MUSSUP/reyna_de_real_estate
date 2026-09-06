@@ -1,0 +1,101 @@
+---
+/**
+ * Campo del panel: etiqueta, control, ayuda y error.
+ *
+ * El error se pinta **con texto**, nunca solo con un borde rojo: quien no
+ * distingue colores necesita leer qué pasó. Lo escribe el script al recibir
+ * la respuesta del servidor, en el hueco que este componente deja preparado.
+ */
+interface Props {
+  id: string;
+  nombre: string;
+  etiqueta: string;
+  tipo?: 'text' | 'number' | 'url' | 'email' | 'tel';
+  valor?: string | number | null | undefined;
+  opciones?: { valor: string; etiqueta: string }[] | undefined;
+  multilinea?: boolean;
+  filas?: number;
+  ayuda?: string | undefined;
+  obligatorio?: boolean;
+  min?: number | undefined;
+  max?: number | undefined;
+  paso?: string | undefined;
+  marcador?: string | undefined;
+  clase?: string | undefined;
+}
+
+const {
+  id,
+  nombre,
+  etiqueta,
+  tipo = 'text',
+  valor,
+  opciones,
+  multilinea = false,
+  filas = 5,
+  ayuda,
+  obligatorio = false,
+  min,
+  max,
+  paso,
+  marcador,
+  clase = '',
+} = Astro.props;
+
+const v = valor === null || valor === undefined ? '' : String(valor);
+const control =
+  'w-full rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2.5 text-sm text-texto transition-colors hover:border-dorado focus:border-verde focus:outline-none aria-[invalid=true]:border-red-600';
+---
+
+<div class:list={['flex flex-col gap-1.5', clase]}>
+  <label for={id} class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave">
+    {etiqueta}
+    {
+      obligatorio && (
+        <span class="text-rosa" aria-hidden="true">
+          *
+        </span>
+      )
+    }
+    {obligatorio && <span class="sr-only">(obligatorio)</span>}
+  </label>
+
+  {
+    opciones ? (
+      <select id={id} name={nombre} class={control} data-campo={nombre}>
+        {opciones.map((o) => (
+          <option value={o.valor} selected={v === o.valor}>
+            {o.etiqueta}
+          </option>
+        ))}
+      </select>
+    ) : multilinea ? (
+      <textarea
+        id={id}
+        name={nombre}
+        rows={filas}
+        class={control}
+        data-campo={nombre}
+        set:text={v}
+      />
+    ) : (
+      <input
+        id={id}
+        name={nombre}
+        type={tipo}
+        value={v}
+        min={min}
+        max={max}
+        step={paso}
+        placeholder={marcador}
+        class={control}
+        data-campo={nombre}
+      />
+    )
+  }
+
+  {ayuda && <p class="text-xs text-texto-suave">{ayuda}</p>}
+
+  {/* Hueco fijo para el error del servidor: el script lo llena por nombre. */}
+  <p data-error-de={nombre} class="hidden text-xs text-red-700"></p>
+</div>

@@ -1,0 +1,77 @@
+---
+import Panel from '../../../layouts/Panel.astro';
+import FormularioPropiedad from '../../../components/admin/FormularioPropiedad.astro';
+import { obtenerCatalogos } from '../../../lib/panel';
+import { getDb } from '../../../../../backend/db/client';
+import { obtenerPropiedadDelPanel } from '../../../../../backend/lib/propiedades';
+
+/** Edición de una propiedad. */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const propiedad = await obtenerPropiedadDelPanel(getDb(), Astro.params.id!);
+
+if (!propiedad) return Astro.redirect('/admin/propiedades?noexiste=1');
+
+const catalogos = await obtenerCatalogos();
+
+// Avisos que deja el guardado al volver de un alta.
+const params = Astro.url.searchParams;
+const recienGuardada = params.has('guardada');
+const recienPublicada = params.has('publicada');
+const noSePudoPublicar = params.get('sinpublicar');
+---
+
+<Panel titulo={propiedad.titleEs} usuario={sesion?.name} activo="/admin/propiedades">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-texto-suave">
+      {`Dirección en el sitio: /propiedades/${propiedad.slug}`}
+    </p>
+    {
+      propiedad.status === 'publicado' && (
+        <a
+          href={`/propiedades/${propiedad.slug}`}
+          target="_blank"
+          rel="noopener"
+          class="text-sm font-semibold text-verde underline-offset-4 hover:underline"
+        >
+          Ver en el sitio ↗
+        </a>
+      )
+    }
+  </div>
+
+  {
+    recienPublicada && (
+      <p class="mt-4 rounded-[var(--radius-campo)] bg-[#e4ede9] px-4 py-3 text-sm text-[#1e4f4c]">
+        Publicada. Ya se ve en el sitio.
+      </p>
+    )
+  }
+  {
+    recienGuardada && !noSePudoPublicar && (
+      <p class="mt-4 rounded-[var(--radius-campo)] bg-[#e4ede9] px-4 py-3 text-sm text-[#1e4f4c]">
+        Borrador guardado.
+      </p>
+    )
+  }
+  {
+    noSePudoPublicar && (
+      /* Se creó pero no se pudo publicar. Hay que decir las dos cosas: si solo
+         se mostrara el error, parecería que se perdió lo cargado. */
+      <p class="mt-4 rounded-[var(--radius-campo)] bg-[#f7eeda] px-4 py-3 text-sm text-[#8a6a28]">
+        {`La propiedad se guardó como borrador, pero no se pudo publicar: ${noSePudoPublicar}`}
+      </p>
+    )
+  }
+
+  <FormularioPropiedad
+    catalogos={catalogos}
+    propiedad={propiedad}
+    amenidadesElegidas={propiedad.amenityIds}
+    imagenes={propiedad.imagenes}
+  />
+
+  <script is:inline defer src="/js/propiedad.js"></script>
+  <script is:inline defer src="/js/galeria-admin.js"></script>
+</Panel>

@@ -1,0 +1,109 @@
+---
+import CardPropiedad from './CardPropiedad.astro';
+import SeparadorCorona from './SeparadorCorona.astro';
+import Boton from './Boton.astro';
+import type { PropiedadLista } from '../../lib/datos';
+
+/**
+ * Carrusel de destacadas.
+ *
+ * El desplazamiento es **nativo del navegador**: `scroll-snap` da los gestos
+ * táctiles y el teclado sin una línea de JavaScript, y el navegador lleva la
+ * vista al elemento que recibe el foco. Las flechas se agregan después por
+ * script, y solo si hacen falta — si el script no corre, el carrusel sigue
+ * funcionando igual (mismo criterio que D-14).
+ *
+ * Correcciones que pidió la clienta, aplicadas:
+ *  · el badge de dormitorios se reemplaza por el de país
+ *  · **no va bajada bajo el título "DESTACADAS"**
+ */
+interface Props {
+  propiedades: PropiedadLista[];
+}
+const { propiedades } = Astro.props;
+---
+
+{
+  propiedades.length > 0 && (
+    <section class="aparece bg-crema py-16 sm:py-24" aria-labelledby="titulo-destacadas">
+      <div class="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12">
+        <h2
+          id="titulo-destacadas"
+          class="text-center font-titulo text-[26px] uppercase tracking-[0.08em] text-verde sm:text-4xl"
+        >
+          Destacadas
+        </h2>
+        <SeparadorCorona clase="mt-4" />
+      </div>
+
+      <div class="relative mt-10">
+        <div
+          class="carrusel flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-5 pb-4 [justify-content:safe_center] sm:px-8 lg:px-12"
+          role="group"
+          aria-label="Propiedades destacadas"
+          tabindex="0"
+        >
+          {propiedades.map((p, i) => (
+            <div class="w-[85vw] max-w-[380px] shrink-0 snap-start sm:w-[46vw] lg:w-[356px]">
+              <CardPropiedad
+                slug={p.slug}
+                titulo={p.titulo}
+                pais={p.pais}
+                ubicacion={p.ubicacion}
+                precioUsd={p.precioUsd}
+                precioAConsultar={p.precioAConsultar}
+                metros={p.metrosTotales ?? p.metrosCubiertos}
+                dormitorios={p.dormitorios}
+                banos={p.banos}
+                esTerreno={p.esTerreno}
+                imagenSrc={p.portada?.src}
+                imagenSrcset={p.portada?.srcset}
+                imagenAlt={p.portada?.alt}
+                imagenAncho={p.portada?.width}
+                imagenAlto={p.portada?.height}
+                prioridad={i === 0}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="mt-10 flex justify-center px-5">
+        <Boton variante="terciario" href="/propiedades">
+          Ver todas las propiedades
+          <span aria-hidden="true">→</span>
+        </Boton>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  /* Barra de desplazamiento discreta, en los colores de la marca */
+  .carrusel {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-dorado) transparent;
+  }
+  .carrusel::-webkit-scrollbar {
+    height: 6px;
+  }
+  .carrusel::-webkit-scrollbar-thumb {
+    background: var(--color-dorado);
+    border-radius: 999px;
+  }
+  .carrusel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* El contenedor recibe foco para poder recorrerlo con las flechas del
+     teclado; el borde de foco se dibuja solo cuando se navega con teclado. */
+  .carrusel:focus {
+    outline: none;
+  }
+  .carrusel:focus-visible {
+    outline: 3px solid var(--color-rosa);
+    outline-offset: 4px;
+  }
+</style>
+
+<script is:inline defer src="/js/carrusel.js"></script>

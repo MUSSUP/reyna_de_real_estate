@@ -1,0 +1,87 @@
+---
+import { fechaISO, fechaLegible } from '../../lib/articulos';
+
+/**
+ * Card de noticia. Se usa en el listado de `/noticias`.
+ *
+ * El enlace envuelve la card entera: el área de clic es toda la tarjeta y no
+ * un "leer más" de doce píxeles, que en el celular no le acierta nadie.
+ */
+interface Props {
+  slug: string;
+  titulo: string;
+  bajada?: string | null | undefined;
+  fecha?: Date | string | null | undefined;
+  imagenSrc?: string | undefined;
+  imagenSrcset?: string | undefined;
+  imagenAlt?: string | undefined;
+  imagenAncho?: number | undefined;
+  imagenAlto?: number | undefined;
+  /** La primera card visible carga su imagen de inmediato; el resto, al acercarse. */
+  prioridad?: boolean;
+}
+
+const {
+  slug,
+  titulo,
+  bajada,
+  fecha,
+  imagenSrc,
+  imagenSrcset,
+  imagenAlt,
+  imagenAncho,
+  imagenAlto,
+  prioridad = false,
+} = Astro.props;
+---
+
+<article class="group h-full">
+  <a
+    href={`/noticias/${slug}`}
+    class="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] bg-white transition-shadow duration-[400ms] ease-[var(--ease-marca)] hover:shadow-[0_10px_40px_-18px_rgba(15,30,29,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rosa"
+  >
+    <div class="aspect-[16/9] w-full overflow-hidden bg-crema">
+      {
+        imagenSrc ? (
+          <img
+            src={imagenSrc}
+            srcset={imagenSrcset}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            alt={imagenAlt ?? ''}
+            width={imagenAncho}
+            height={imagenAlto}
+            loading={prioridad ? 'eager' : 'lazy'}
+            decoding="async"
+            class="h-full w-full object-cover transition-transform duration-[600ms] ease-[var(--ease-marca)] group-hover:scale-[1.03]"
+          />
+        ) : (
+          // Sin foto la card no se rompe: queda un bloque de marca, que se ve
+          // intencional en vez de un hueco gris.
+          <div
+            class="flex h-full w-full items-center justify-center bg-verde/10"
+            aria-hidden="true"
+          >
+            <span class="texto-claim text-xs text-verde/50">Reyna de Real Estate</span>
+          </div>
+        )
+      }
+    </div>
+
+    <div class="flex flex-1 flex-col gap-2 p-5">
+      {
+        fecha && (
+          <time datetime={fechaISO(fecha)} class="texto-claim text-[11px] text-texto-suave">
+            {fechaLegible(fecha)}
+          </time>
+        )
+      }
+      <h3 class="font-titulo text-lg leading-snug text-verde">{titulo}</h3>
+      {bajada && <p class="line-clamp-3 text-sm text-texto-suave">{bajada}</p>}
+      <span
+        class="mt-auto pt-3 font-cuerpo text-xs font-semibold uppercase tracking-[0.12em] text-rosa"
+      >
+        Leer la nota →
+      </span>
+    </div>
+  </a>
+</article>

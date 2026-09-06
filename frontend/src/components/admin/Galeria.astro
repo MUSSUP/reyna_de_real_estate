@@ -1,0 +1,202 @@
+---
+import { prepararImagen } from '../../lib/datos';
+import { MAXIMO_IMAGENES_GALERIA } from '../../../../backend/lib/imageValidation';
+import type { propertyImages } from '../../../../backend/db/schema';
+
+/**
+ * Portada y galería de una propiedad.
+ *
+ * Solo aparece en la edición: hasta que la propiedad no existe no hay dónde
+ * colgar las fotos. En el alta se explica eso en vez de mostrar un cargador
+ * que fallaría.
+ *
+ * Se puede reordenar arrastrando **y con botones**. El arrastre solo deja
+ * afuera a quien navega con teclado, y reordenar fotos es justamente lo que
+ * define qué se ve primero en el sitio.
+ */
+interface Props {
+  propiedadId: string;
+  coverPath?: string | null | undefined;
+  coverWidth?: number | null | undefined;
+  coverHeight?: number | null | undefined;
+  coverAlt?: string | null | undefined;
+  imagenes: (typeof propertyImages.$inferSelect)[];
+}
+
+const { propiedadId, coverPath, coverWidth, coverHeight, coverAlt, imagenes } = Astro.props;
+
+const portada = prepararImagen(coverPath, coverWidth, coverHeight, coverAlt ?? '');
+const conVista = imagenes.map((i) => ({
+  ...i,
+  vista: prepararImagen(i.storagePath, i.width, i.height, i.altEs ?? ''),
+}));
+---
+
+<div data-galeria data-propiedad={propiedadId} class="flex flex-col gap-8">
+  <!-- Imagen principal -->
+  <section>
+    <h3 class="font-titulo text-base text-verde">Imagen principal</h3>
+    <p class="mt-1 text-xs text-texto-suave">
+      Es la que se ve en el catálogo y la que se comparte en redes. Sin ella no se puede publicar.
+    </p>
+
+    <div class="mt-3 flex flex-wrap items-start gap-4">
+      <div
+        data-vista-portada
+        class="flex h-[120px] w-40 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-campo)] border border-dashed border-black/15 bg-white"
+      >
+        {
+          portada ? (
+            <img src={portada.src} alt="" class="h-full w-full object-cover" />
+          ) : (
+            <span class="px-3 text-center text-xs text-texto-suave">Sin imagen</span>
+          )
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label
+          class="inline-flex min-h-[40px] w-fit cursor-pointer items-center rounded-full border border-verde px-5 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white"
+        >
+          {portada ? 'Reemplazar' : 'Subir imagen'}
+          <input
+            type="file"
+            data-subir-portada
+            accept="image/jpeg,image/png,image/webp"
+            class="sr-only"
+          />
+        </label>
+
+        {
+          portada && (
+            <button
+              type="button"
+              data-borrar-portada
+              class="w-fit text-xs text-texto-suave underline-offset-4 hover:text-red-700 hover:underline"
+            >
+              Quitar imagen principal
+            </button>
+          )
+        }
+
+        <p class="text-xs text-texto-suave">JPG, PNG o WebP. Hasta 10 MB.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Galería -->
+  <section>
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h3 class="font-titulo text-base text-verde">Galería</h3>
+      <p class="text-xs text-texto-suave">
+        <span data-contador-galeria>{conVista.length}</span>
+        {` de ${MAXIMO_IMAGENES_GALERIA}`}
+      </p>
+    </div>
+
+    <div
+      data-soltar
+      class="mt-3 rounded-[var(--radius-campo)] border-2 border-dashed border-black/15 bg-white p-6 text-center transition-colors"
+    >
+      <p class="text-sm text-texto-suave">Arrastrá las fotos acá</p>
+      <label
+        class="mt-3 inline-flex min-h-[40px] cursor-pointer items-center rounded-full border border-verde px-5 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white"
+      >
+        Elegir archivos
+        <input
+          type="file"
+          data-subir-galeria
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          class="sr-only"
+        />
+      </label>
+    </div>
+
+    <p
+      data-aviso-galeria
+      role="alert"
+      class="mt-3 hidden rounded-[var(--radius-campo)] px-4 py-3 text-sm"
+    >
+    </p>
+
+    <ul data-lista-galeria class="mt-4 flex flex-col gap-3">
+      {
+        conVista.map((img, i) => (
+          <li
+            data-imagen={img.id}
+            draggable="true"
+            class="flex flex-wrap items-center gap-3 rounded-[var(--radius-campo)] border border-black/10 bg-white p-3"
+          >
+            <span
+              class="cursor-grab select-none px-1 text-texto-suave"
+              aria-hidden="true"
+              title="Arrastrá para reordenar"
+            >
+              ⠿
+            </span>
+
+            <span data-posicion class="w-6 text-center text-xs font-semibold text-texto-suave">
+              {i + 1}
+            </span>
+
+            {img.vista && (
+              <img src={img.vista.src} alt="" class="h-14 w-20 shrink-0 rounded object-cover" />
+            )}
+
+            <label class="min-w-[180px] flex-1">
+              <span class="sr-only">Descripción de la imagen {i + 1}</span>
+              <input
+                type="text"
+                data-alt
+                value={img.altEs ?? ''}
+                maxlength="300"
+                placeholder="Qué se ve en la foto"
+                class="w-full rounded-[var(--radius-campo)] border border-black/10 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                data-subir-uno
+                aria-label={`Mover la imagen ${i + 1} hacia arriba`}
+                class="rounded border border-black/10 px-2 py-1 text-xs text-texto-suave hover:border-verde hover:text-verde"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                data-bajar-uno
+                aria-label={`Mover la imagen ${i + 1} hacia abajo`}
+                class="rounded border border-black/10 px-2 py-1 text-xs text-texto-suave hover:border-verde hover:text-verde"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                data-borrar-imagen
+                aria-label={`Borrar la imagen ${i + 1}`}
+                class="ml-1 rounded border border-black/10 px-2 py-1 text-xs text-texto-suave hover:border-red-600 hover:text-red-700"
+              >
+                Borrar
+              </button>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    {
+      conVista.length === 0 && (
+        <p class="mt-3 text-sm text-texto-suave">
+          Todavía no hay fotos en la galería. La ficha funciona igual con la imagen principal sola.
+        </p>
+      )
+    }
+
+    <p class="mt-4 text-xs text-texto-suave">
+      El orden y las descripciones se guardan solos al cambiarlos.
+    </p>
+  </section>
+</div>

@@ -1,0 +1,138 @@
+---
+/**
+ * Campo de formulario con etiqueta arriba y error debajo.
+ *
+ * El error se muestra SIEMPRE con texto, nunca solo pintando el borde de rojo:
+ * quien no distingue colores necesita leer qué pasó (RNF-04). Y se enlaza con
+ * `aria-describedby` para que los lectores de pantalla lo anuncien.
+ */
+interface Props {
+  id: string;
+  nombre: string;
+  etiqueta: string;
+  tipo?: 'text' | 'email' | 'tel' | 'number' | 'url';
+  multilinea?: boolean;
+  /** Si viene, el campo se dibuja como lista desplegable. */
+  opciones?: { valor: string; etiqueta: string }[] | undefined;
+  obligatorio?: boolean;
+  valor?: string | undefined;
+  ayuda?: string | undefined;
+  error?: string | undefined;
+  placeholder?: string | undefined;
+  maximo?: number | undefined;
+  filas?: number;
+}
+
+const {
+  id,
+  nombre,
+  etiqueta,
+  tipo = 'text',
+  multilinea = false,
+  opciones,
+  obligatorio = false,
+  valor,
+  ayuda,
+  error,
+  placeholder,
+  maximo,
+  filas = 4,
+} = Astro.props;
+
+const idError = `${id}-error`;
+const idAyuda = `${id}-ayuda`;
+const descritoPor = [error ? idError : null, ayuda ? idAyuda : null].filter(Boolean).join(' ');
+
+const clasesControl = [
+  'w-full rounded-[var(--radius-campo)] border bg-white px-4 py-3',
+  'font-cuerpo text-base text-texto',
+  'placeholder:text-texto-suave/60',
+  'transition-colors duration-200',
+  error ? 'border-red-600' : 'border-crema hover:border-dorado',
+].join(' ');
+---
+
+<div class="flex flex-col gap-1.5">
+  <label for={id} class="text-xs font-semibold uppercase tracking-[0.1em] text-texto-suave">
+    {etiqueta}
+    {
+      obligatorio && (
+        <span class="text-rosa" aria-hidden="true">
+          *
+        </span>
+      )
+    }
+    {obligatorio && <span class="sr-only">(obligatorio)</span>}
+  </label>
+
+  {
+    opciones ? (
+      // La flecha se dibuja aparte: el triángulo nativo no se puede teñir.
+      <div class="relative">
+        <select
+          id={id}
+          name={nombre}
+          required={obligatorio}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={descritoPor || undefined}
+          class={`${clasesControl} appearance-none pr-10`}
+        >
+          {opciones.map((o) => (
+            <option value={o.valor} selected={valor === o.valor}>
+              {o.etiqueta}
+            </option>
+          ))}
+        </select>
+        <span
+          class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dorado"
+          aria-hidden="true"
+        >
+          ▾
+        </span>
+      </div>
+    ) : multilinea ? (
+      <textarea
+        id={id}
+        name={nombre}
+        rows={filas}
+        required={obligatorio}
+        maxlength={maximo}
+        placeholder={placeholder}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={descritoPor || undefined}
+        class={`${clasesControl} resize-y`}
+        set:text={valor}
+      />
+    ) : (
+      <input
+        id={id}
+        name={nombre}
+        type={tipo}
+        value={valor}
+        required={obligatorio}
+        maxlength={maximo}
+        placeholder={placeholder}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={descritoPor || undefined}
+        class={clasesControl}
+      />
+    )
+  }
+
+  {
+    ayuda && (
+      <p id={idAyuda} class="text-sm text-texto-suave">
+        {ayuda}
+      </p>
+    )
+  }
+
+  {
+    error && (
+      <p id={idError} class="flex items-start gap-1.5 text-sm text-red-700">
+        <span aria-hidden="true">⚠</span>
+        <span>{error}</span>
+      </p>
+    )
+  }
+</div>

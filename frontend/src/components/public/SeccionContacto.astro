@@ -1,0 +1,81 @@
+---
+import Contenedor from './Contenedor.astro';
+import SeparadorCorona from './SeparadorCorona.astro';
+import FormularioContacto from './FormularioContacto.astro';
+import { valor, type Configuracion } from '../../lib/datos';
+import { enlaceWhatsApp } from '../../lib/whatsapp';
+
+/**
+ * Sección de contacto. Es el destino del botón "CONTACTO" de la barra y del
+ * "Consultar" de cada ficha.
+ *
+ * Además del formulario ofrece WhatsApp y correo: si el envío falla —o si la
+ * persona simplemente prefiere escribir— siempre queda una puerta abierta.
+ */
+interface Props {
+  config: Configuracion;
+  origen: string;
+  propiedadSlug?: string | undefined;
+  propiedadTitulo?: string | undefined;
+  interesInicial?: 'invertir' | 'rentar' | 'consulta';
+  titulo?: string;
+}
+
+const {
+  config,
+  origen,
+  propiedadSlug,
+  propiedadTitulo,
+  interesInicial = 'consulta',
+  titulo = 'Comencemos',
+} = Astro.props;
+
+const email = valor(config, 'contacto.email', 'reynaderealestate@gmail.com');
+const whatsapp = enlaceWhatsApp(config, { propiedad: propiedadTitulo });
+---
+
+<section id="contacto" class="aparece scroll-mt-24 bg-crema py-16 sm:py-24">
+  <Contenedor>
+    <div class="text-center">
+      <h2 class="font-titulo text-3xl text-verde sm:text-4xl">{titulo}</h2>
+      <SeparadorCorona clase="mt-4" />
+      <p class="mx-auto mt-5 max-w-[52ch] text-texto-suave">
+        Contanos qué estás buscando y te acompañamos desde la primera consulta.
+      </p>
+    </div>
+
+    <div class="mx-auto mt-10 max-w-[760px] rounded-[var(--radius-card)] bg-white p-6 sm:p-10">
+      <FormularioContacto
+        origen={origen}
+        propiedadSlug={propiedadSlug}
+        propiedadTitulo={propiedadTitulo}
+        interesInicial={interesInicial}
+      />
+    </div>
+
+    <div class="mt-8 text-center text-sm text-texto-suave">
+      <p>¿Preferís escribirnos directo?</p>
+      <div class="mt-3 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-6">
+        {
+          whatsapp && (
+            <a
+              href={whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-verde underline-offset-4 hover:underline"
+            >
+              Escribir por WhatsApp
+              <span class="sr-only">(se abre en una pestaña nueva)</span>
+            </a>
+          )
+        }
+        <a
+          href={`mailto:${email}`}
+          class="font-semibold text-verde underline-offset-4 hover:underline">{email}</a
+        >
+      </div>
+    </div>
+  </Contenedor>
+</section>
+
+<script is:inline defer src="/js/formulario.js"></script>

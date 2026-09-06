@@ -1,0 +1,59 @@
+---
+import Contenedor from './Contenedor.astro';
+
+/**
+ * La entrada al informe desde la home.
+ *
+ * **Sin logo en esta pieza**, como pide el diseño aprobado: el informe se
+ * presenta como contenido de análisis, no como publicidad de la marca.
+ *
+ * Si no hay informe cargado, la sección no se muestra. Es preferible que
+ * falte a que aparezca un bloque prometiendo algo que no existe.
+ */
+interface Props {
+  slug: string;
+  titulo: string;
+  bajada?: string | null | undefined;
+  imagenFondo?: string | undefined;
+}
+const { slug, titulo, bajada, imagenFondo = '/video/hero-respaldo.jpg' } = Astro.props;
+---
+
+<section class="aparece relative isolate overflow-hidden bg-verde-oscuro">
+  <img
+    src={imagenFondo}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    class="absolute inset-0 -z-10 h-full w-full object-cover"
+  />
+  {/* Velo: el texto tiene que leerse sobre cualquier foto que se cargue. */}
+  <div
+    class="absolute inset-0 -z-10 bg-gradient-to-b from-verde-oscuro/85 via-verde-oscuro/75 to-verde-oscuro/90"
+    aria-hidden="true"
+  >
+  </div>
+
+  <Contenedor>
+    <div class="mx-auto max-w-[760px] py-20 text-center sm:py-28">
+      <p class="texto-claim text-[11px] text-dorado sm:text-xs">
+        Reyna Insights · Análisis del mercado inmobiliario
+      </p>
+
+      <h2 class="mt-5 font-titulo text-[26px] leading-tight text-white sm:text-4xl">
+        {titulo}
+      </h2>
+
+      {bajada && <p class="mx-auto mt-5 max-w-[54ch] text-white/80">{bajada}</p>}
+
+      <a
+        href={`/insights/${slug}`}
+        class="mt-9 inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/70 px-9 py-3 font-cuerpo text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-white hover:text-verde"
+      >
+        Leer el informe completo
+        <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+  </Contenedor>
+</section>

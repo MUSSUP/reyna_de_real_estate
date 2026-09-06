@@ -1,0 +1,44 @@
+---
+import Panel from '../../../layouts/Panel.astro';
+import FormularioPropiedad from '../../../components/admin/FormularioPropiedad.astro';
+import { obtenerCatalogos } from '../../../lib/panel';
+
+/** Alta de una propiedad. Nace siempre en borrador. */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const catalogos = await obtenerCatalogos();
+const faltanCatalogos = catalogos.zonas.length === 0 || catalogos.tipologias.length === 0;
+---
+
+<Panel titulo="Nueva propiedad" usuario={sesion?.name} activo="/admin/propiedades">
+  {
+    faltanCatalogos ? (
+      /* Sin zonas ni tipologías el formulario no se puede completar: mejor
+         decirlo acá que dejarla pelear con dos listas vacías. */
+      <div class="rounded-[var(--radius-card)] border border-dashed border-[#ddc79a] bg-[#f7eeda] p-8 text-center">
+        <p class="font-titulo text-lg text-[#8a6a28]">
+          Faltan datos para poder cargar una propiedad
+        </p>
+        <p class="mx-auto mt-2 max-w-[52ch] text-sm text-[#8a6a28]">
+          Toda propiedad necesita una zona y una tipología. Cargá al menos una de cada una y volvé.
+        </p>
+        <a
+          href="/admin/catalogos"
+          class="mt-6 inline-block rounded-full bg-verde px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:bg-verde-claro"
+        >
+          Ir a Catálogos
+        </a>
+      </div>
+    ) : (
+      <>
+        <p class="text-texto-suave">
+          Se guarda como borrador. Vas a poder publicarla cuando tenga la imagen principal.
+        </p>
+        <FormularioPropiedad catalogos={catalogos} />
+      </>
+    )
+  }
+
+  <script is:inline defer src="/js/propiedad.js"></script>
+</Panel>

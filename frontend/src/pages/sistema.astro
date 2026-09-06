@@ -1,0 +1,253 @@
+---
+import Base from '../layouts/Base.astro';
+import Contenedor from '../components/public/Contenedor.astro';
+import Boton from '../components/public/Boton.astro';
+import Badge from '../components/public/Badge.astro';
+import Campo from '../components/public/Campo.astro';
+import CardPropiedad from '../components/public/CardPropiedad.astro';
+import SeparadorCorona from '../components/public/SeparadorCorona.astro';
+import Corona from '../components/public/Corona.astro';
+import IconoSocial from '../components/public/IconoSocial.astro';
+
+/**
+ * Muestrario de componentes (IT-05). Página interna de referencia visual:
+ * no se indexa y no aparece en la navegación.
+ */
+const propiedades = [
+  {
+    slug: 'casa-abaton',
+    titulo: 'Casa Abaton',
+    pais: 'México',
+    ubicacion: 'Tulum',
+    precioUsd: 1680000,
+    metros: 800,
+    dormitorios: 6,
+    banos: 5,
+  },
+  {
+    slug: 'torre-mirador',
+    titulo: 'Torre Mirador',
+    pais: 'México',
+    ubicacion: 'Holbox',
+    precioUsd: 185000,
+    metros: 1200,
+    dormitorios: 2,
+    banos: 2,
+  },
+  {
+    slug: 'lote-selva-norte',
+    titulo: 'Lote Selva Norte',
+    pais: 'México',
+    ubicacion: 'Tulum',
+    precioAConsultar: true,
+    metros: 2400,
+    esTerreno: true,
+  },
+];
+
+const escala = [
+  { nombre: 'Display', clase: 'text-[32px] md:text-[56px]', ejemplo: 'Tu sueño' },
+  { nombre: 'H1', clase: 'text-[28px] md:text-[44px]', ejemplo: 'Nuestro propósito' },
+  { nombre: 'H2', clase: 'text-[24px] md:text-[36px]', ejemplo: 'Destacadas' },
+  { nombre: 'H3', clase: 'text-[20px] md:text-[24px]', ejemplo: 'Casa Abaton' },
+];
+
+const colores = [
+  { n: 'Rosa', c: 'bg-rosa', v: '#FB5696', uso: 'CTA de conversión y corona' },
+  { n: 'Verde', c: 'bg-verde', v: '#1E4F4C', uso: 'Títulos, botones de card' },
+  { n: 'Verde oscuro', c: 'bg-verde-oscuro', v: '#0F1E1D', uso: 'Bandas de contraste' },
+  { n: 'Dorado', c: 'bg-dorado', v: '#C9A96E', uso: 'Filetes. Uso escaso' },
+  { n: 'Crema', c: 'bg-crema', v: '#F2E9E4', uso: 'Superficies' },
+];
+---
+
+<Base
+  titulo="Sistema de diseño — Reyna de Real Estate"
+  descripcion="Muestrario interno de componentes."
+  noIndexar={true}
+>
+  <main class="bg-white pb-24">
+    <header class="bg-verde py-16 text-white">
+      <Contenedor>
+        <p class="texto-claim text-xs text-rosa">Reyna de Real Estate</p>
+        <h1 class="mt-3 font-titulo text-4xl text-white md:text-5xl">Sistema de diseño</h1>
+        <p class="mt-3 max-w-[60ch] text-white/70">
+          Muestrario interno de IT-05. Cada pieza acá se usa tal cual en el sitio.
+        </p>
+      </Contenedor>
+    </header>
+
+    <Contenedor clase="mt-16 flex flex-col gap-20">
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Color</h2>
+        <div class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+          {
+            colores.map((color) => (
+              <div class="overflow-hidden rounded-[var(--radius-card)] border border-crema">
+                <div class={`h-20 ${color.c}`} />
+                <div class="p-3">
+                  <p class="text-sm font-semibold text-verde">{color.n}</p>
+                  <p class="font-mono text-xs text-texto-suave">{color.v}</p>
+                  <p class="mt-1 text-xs text-texto-suave">{color.uso}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+        <p class="mt-4 max-w-[65ch] text-sm text-texto-suave">
+          El rosa sobre blanco no alcanza el contraste mínimo para texto chico: se usa en botones
+          con texto blanco, en títulos grandes o en elementos no textuales, nunca en párrafos.
+        </p>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Tipografía</h2>
+        <div class="mt-6 flex flex-col gap-6">
+          {
+            escala.map((e) => (
+              <div class="border-b border-crema pb-4">
+                <p class="text-xs uppercase tracking-wider text-texto-suave">{e.nombre}</p>
+                <p class={`font-titulo text-verde ${e.clase}`}>{e.ejemplo}</p>
+              </div>
+            ))
+          }
+          <div class="border-b border-crema pb-4">
+            <p class="text-xs uppercase tracking-wider text-texto-suave">Claim · Cinzel</p>
+            <p class="texto-claim text-lg text-verde md:text-2xl">Your dream is reality</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wider text-texto-suave">Cuerpo · Montserrat</p>
+            <p class="max-w-[65ch] text-base md:text-[17px]">
+              Propiedades de lujo en Riviera Maya para invertir o rentar, con acompañamiento en cada
+              decisión. El cuerpo nunca baja de 16px.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Botones</h2>
+        <div class="mt-6 flex flex-wrap items-center gap-4">
+          <Boton variante="primario">Comencemos</Boton>
+          <Boton variante="secundario">Ver detalle</Boton>
+          <Boton variante="terciario">Ver todas las propiedades</Boton>
+          <Boton variante="primario" deshabilitado>Enviando…</Boton>
+        </div>
+        <div class="mt-4 max-w-sm">
+          <Boton variante="secundario" anchoCompleto>A todo el ancho</Boton>
+        </div>
+        <p class="mt-4 max-w-[65ch] text-sm text-texto-suave">
+          Un solo botón rosa por pantalla visible. Dentro de las cards se usa el verde: el rosa se
+          reserva para la conversión.
+        </p>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Píldoras</h2>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <Badge variante="pais">México</Badge>
+          <Badge variante="ubicacion">Tulum</Badge>
+          <Badge variante="estado">En pozo</Badge>
+        </div>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Card de propiedad</h2>
+        <p class="mt-2 max-w-[65ch] text-sm text-texto-suave">
+          La tercera es un terreno: no muestra dormitorios ni baños, porque un lote sin construir no
+          los tiene.
+        </p>
+        <div class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {propiedades.map((p, i) => <CardPropiedad {...p} prioridad={i === 0} />)}
+        </div>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Formulario</h2>
+        <div class="mt-6 grid max-w-2xl gap-5">
+          <Campo
+            id="m-nombre"
+            nombre="nombre"
+            etiqueta="Nombre"
+            obligatorio
+            placeholder="Tu nombre"
+          />
+          <Campo
+            id="m-email"
+            nombre="email"
+            etiqueta="Email"
+            tipo="email"
+            obligatorio
+            valor="no-es-un-email"
+            error="Escribí un email válido, por ejemplo nombre@correo.com"
+          />
+          <Campo
+            id="m-tel"
+            nombre="telefono"
+            etiqueta="Teléfono"
+            tipo="tel"
+            ayuda="Opcional. Con código de país si estás fuera de México."
+          />
+          <Campo id="m-msj" nombre="mensaje" etiqueta="Mensaje" multilinea maximo={2000} />
+          <div><Boton variante="primario" tipo="submit">Comencemos</Boton></div>
+        </div>
+        <p class="mt-4 max-w-[65ch] text-sm text-texto-suave">
+          Los errores se explican con texto, nunca solo pintando el borde de rojo: quien no
+          distingue colores necesita leer qué pasó.
+        </p>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">Redes</h2>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <IconoSocial
+            red="instagram"
+            href="https://instagram.com/reynaderealestate"
+            etiqueta="Instagram"
+          />
+          <IconoSocial
+            red="facebook"
+            href="https://facebook.com/reynaderealestate"
+            etiqueta="Facebook"
+          />
+          <IconoSocial
+            red="youtube"
+            href="https://youtube.com/@REYNAderealestate"
+            etiqueta="YouTube"
+          />
+          <IconoSocial red="whatsapp" href="https://wa.me/529843115530" etiqueta="WhatsApp" />
+          <IconoSocial red="web" href="https://reynaderealestate.com" etiqueta="Sitio web" />
+          <IconoSocial red="mail" href="mailto:reynaderealestate@gmail.com" etiqueta="Email" />
+        </div>
+      </section>
+
+      <SeparadorCorona />
+
+      <section class="aparece">
+        <h2 class="font-titulo text-3xl text-verde">La corona</h2>
+        <div class="mt-6 flex items-end gap-6 text-rosa">
+          <Corona tamano={20} />
+          <Corona tamano={32} />
+          <Corona tamano={48} />
+          <Corona tamano={64} />
+        </div>
+        <p class="mt-4 max-w-[65ch] text-sm text-texto-suave">
+          Es decorativa: los lectores de pantalla la ignoran. Anunciar "corona" en cada aparición
+          sería ruido para quien navega escuchando.
+        </p>
+      </section>
+    </Contenedor>
+  </main>
+</Base>

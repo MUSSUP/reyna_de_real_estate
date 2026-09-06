@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+import BarraSuperior from '../components/public/BarraSuperior.astro';
+import Hero from '../components/public/Hero.astro';
+import PieDePagina from '../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../components/public/BotonWhatsApp.astro';
+import Destacadas from '../components/public/Destacadas.astro';
+import Buscador from '../components/public/Buscador.astro';
+import SeccionInsights from '../components/public/SeccionInsights.astro';
+import SeccionNosotros from '../components/public/SeccionNosotros.astro';
+import SeccionContacto from '../components/public/SeccionContacto.astro';
+import {
+  obtenerConfiguracion,
+  obtenerDestacadas,
+  obtenerInformeDestacado,
+  obtenerTipologias,
+  obtenerZonas,
+  valor,
+} from '../lib/datos';
+
+// Se lee al construir el sitio, no en cada visita (D-04).
+const config = await obtenerConfiguracion();
+const destacadas = await obtenerDestacadas();
+const informe = await obtenerInformeDestacado();
+const zonas = await obtenerZonas();
+const tipologias = await obtenerTipologias();
+---
+
+<Base
+  titulo="Reyna de Real Estate — Propiedades de lujo en Riviera Maya"
+  descripcion="Venta y renta de propiedades de lujo en Tulum, Playa del Carmen y Holbox. Acompañamiento personalizado de Laura Cabral en cada decisión."
+>
+  <BarraSuperior sobreHero={true} />
+
+  <main id="contenido">
+    <Hero
+      titulo={valor(config, 'hero.title', 'Tu sueño. Nuestro propósito')}
+      pregunta={valor(config, 'hero.question', '¿Qué estás buscando hoy?')}
+      textoInvertir={valor(config, 'hero.cta_invertir', 'Invertir')}
+      textoRentar={valor(config, 'hero.cta_rentar', 'Rentar')}
+      videoUrl={valor(config, 'hero.video_url') || undefined}
+    />
+
+    {/* El buscador va antes de las destacadas, en la misma sección (wireframe) */}
+    <section class="aparece bg-crema pt-14 sm:pt-20">
+      <div class="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12">
+        <Buscador zonas={zonas} tipologias={tipologias} />
+      </div>
+    </section>
+
+    <Destacadas propiedades={destacadas} />
+
+    {
+      informe && (
+        <SeccionInsights slug={informe.slug} titulo={informe.titleEs} bajada={informe.excerptEs} />
+      )
+    }
+
+    <SeccionNosotros config={config} />
+
+    <SeccionContacto config={config} origen="/" />
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+</Base>

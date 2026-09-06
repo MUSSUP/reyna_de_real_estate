@@ -1,0 +1,27 @@
+---
+/**
+ * Píldora de la card de propiedad.
+ *
+ * `pais` en gris claro y `ubicacion` en verde sólido: es la corrección que pidió
+ * la clienta — antes el primer badge mostraba los dormitorios, que ya aparecen
+ * repetidos en la fila de atributos.
+ */
+interface Props {
+  variante?: 'pais' | 'ubicacion' | 'estado';
+  clase?: string | undefined;
+}
+
+const { variante = 'ubicacion', clase = '' } = Astro.props;
+
+const variantes = {
+  pais: 'bg-crema text-texto',
+  ubicacion: 'bg-verde text-white',
+  estado: 'bg-dorado text-verde-oscuro',
+};
+---
+
+<span
+  class={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium tracking-wide ${variantes[variante]} ${clase}`}
+>
+  <slot />
+</span>

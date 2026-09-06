@@ -1,0 +1,116 @@
+---
+import type { ImagenLista } from '../../lib/datos';
+
+/**
+ * Galería de la propiedad.
+ *
+ * La imagen grande y las miniaturas funcionan **sin JavaScript**: las
+ * miniaturas son enlaces internos y el navegador desplaza la imagen
+ * correspondiente. El botón de pantalla completa lo agrega
+ * `/js/galeria.js`, y si ese archivo no carga la galería se recorre igual.
+ *
+ * Con una sola imagen no se muestran miniaturas ni controles: no tiene
+ * sentido ofrecer navegación donde no hay a dónde ir.
+ */
+interface Props {
+  imagenes: ImagenLista[];
+  titulo: string;
+}
+
+const { imagenes, titulo } = Astro.props;
+const hayVarias = imagenes.length > 1;
+---
+
+{
+  imagenes.length > 0 && (
+    <figure class="galeria">
+      <div
+        class="galeria-visor relative flex snap-x snap-mandatory overflow-x-auto rounded-[var(--radius-card)] bg-crema"
+        tabindex="0"
+        role="group"
+        aria-label={`Fotos de ${titulo}`}
+      >
+        {imagenes.map((img, i) => (
+          <div id={`foto-${i + 1}`} class="w-full shrink-0 snap-center">
+            <img
+              src={img.src}
+              srcset={img.srcset}
+              sizes="(min-width: 1024px) 760px, 100vw"
+              alt={img.alt}
+              width={img.width}
+              height={img.height}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              fetchpriority={i === 0 ? 'high' : 'auto'}
+              decoding="async"
+              class="aspect-[4/3] w-full cursor-zoom-in object-cover"
+              data-indice={i + 1}
+            />
+          </div>
+        ))}
+
+        {hayVarias && (
+          <p class="pointer-events-none absolute bottom-3 right-3 rounded-full bg-verde-oscuro/75 px-3 py-1 text-xs text-white">
+            {imagenes.length} fotos
+          </p>
+        )}
+      </div>
+
+      {hayVarias && (
+        <ul class="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {imagenes.map((img, i) => (
+            <li class="shrink-0">
+              <a
+                href={`#foto-${i + 1}`}
+                class="block overflow-hidden rounded-[var(--radius-campo)] border-2 border-transparent transition-colors hover:border-rosa focus-visible:border-rosa"
+              >
+                <img
+                  src={img.src}
+                  alt=""
+                  width="112"
+                  height="84"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-16 w-[84px] object-cover sm:h-[84px] sm:w-28"
+                />
+                <span class="sr-only">
+                  Ver foto {i + 1} de {imagenes.length}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </figure>
+  )
+}
+
+<style>
+  .galeria-visor {
+    scrollbar-width: none;
+  }
+  .galeria-visor::-webkit-scrollbar {
+    display: none;
+  }
+  .galeria-visor:focus {
+    outline: none;
+  }
+  .galeria-visor:focus-visible {
+    outline: 3px solid var(--color-rosa);
+    outline-offset: 3px;
+  }
+
+  /* La clase la pone `galeria.js` al volver las fotos operables con teclado.
+     Sin foco visible, quien navega con tabulador no sabe dónde está parado. */
+  .galeria-ampliable {
+    cursor: zoom-in;
+  }
+  .galeria-ampliable:focus-visible {
+    outline: 3px solid var(--color-rosa);
+    outline-offset: -3px;
+  }
+
+  /* El salto entre fotos no debe arrastrar la página entera */
+  .galeria-visor > div {
+    scroll-margin: 0;
+  }
+</style>

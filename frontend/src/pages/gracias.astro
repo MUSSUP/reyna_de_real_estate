@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import BarraSuperior from '../components/public/BarraSuperior.astro';
+import PieDePagina from '../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../components/public/BotonWhatsApp.astro';
+import Corona from '../components/public/Corona.astro';
+import Boton from '../components/public/Boton.astro';
+import { obtenerConfiguracion } from '../lib/datos';
+import { t } from '../i18n';
+
+/**
+ * Adónde llega quien envía la consulta **sin JavaScript**.
+ *
+ * Con el script la persona nunca ve esta página: el agradecimiento aparece en
+ * el mismo lugar del formulario. Esta existe para que el camino sin script
+ * termine en algo con sentido y no en un JSON en pantalla.
+ *
+ * No se indexa: no tiene contenido propio y llegar por buscador sería raro.
+ */
+const config = await obtenerConfiguracion();
+---
+
+<Base
+  titulo="Gracias por tu consulta — Reyna de Real Estate"
+  descripcion="Recibimos tu consulta. Te vamos a responder a la brevedad."
+  noIndexar={true}
+>
+  <BarraSuperior />
+
+  <main class="flex min-h-[70vh] items-center justify-center px-6 pt-24">
+    <div class="text-center">
+      <Corona tamano={48} clase="mx-auto text-rosa" />
+      <h1 class="mt-6 font-titulo text-3xl text-verde sm:text-4xl">{t('formulario.gracias')}</h1>
+      <p class="mx-auto mt-4 max-w-[46ch] text-texto-suave">
+        Revisá tu correo: te vamos a escribir desde ahí. Si es urgente, escribinos por WhatsApp.
+      </p>
+      <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Boton variante="primario" href="/propiedades">Ver propiedades</Boton>
+        <Boton variante="terciario" href="/">Volver al inicio</Boton>
+      </div>
+    </div>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+</Base>

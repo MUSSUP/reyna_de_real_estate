@@ -1,0 +1,124 @@
+---
+import Base from '../../layouts/Base.astro';
+import BarraSuperior from '../../components/public/BarraSuperior.astro';
+import PieDePagina from '../../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../../components/public/BotonWhatsApp.astro';
+import Buscador from '../../components/public/Buscador.astro';
+import CardPropiedad from '../../components/public/CardPropiedad.astro';
+import Boton from '../../components/public/Boton.astro';
+import Corona from '../../components/public/Corona.astro';
+import {
+  obtenerConfiguracion,
+  obtenerPublicadas,
+  obtenerTipologias,
+  obtenerZonas,
+} from '../../lib/datos';
+
+/**
+ * Catálogo completo.
+ *
+ * Se generan **todas** las propiedades en el HTML y el filtrado ocurre en el
+ * navegador. Así los buscadores indexan el catálogo entero, la respuesta es
+ * instantánea, y **sin JavaScript se ven todas** en vez de una página vacía.
+ *
+ * Con pocas decenas de propiedades esto es lo más simple y rápido. Si algún día
+ * el catálogo crece a varios cientos, habría que paginar o filtrar en servidor.
+ */
+const config = await obtenerConfiguracion();
+const propiedades = await obtenerPublicadas();
+const zonas = await obtenerZonas();
+const tipologias = await obtenerTipologias();
+
+// Destacadas primero, en el orden que fijó la clienta; después, por fecha.
+const ordenadas = [...propiedades].sort((a, b) => {
+  if (a.destacada !== b.destacada) return Number(b.destacada) - Number(a.destacada);
+  if (a.destacada && b.destacada) {
+    return (a.ordenDestacada ?? 99) - (b.ordenDestacada ?? 99);
+  }
+  return 0;
+});
+---
+
+<Base
+  titulo="Propiedades en venta y renta — Reyna de Real Estate"
+  descripcion="Casas, departamentos, villas y terrenos en Tulum, Playa del Carmen y Holbox. Filtrá por ubicación, tipo, habitaciones y presupuesto."
+>
+  <BarraSuperior />
+
+  <main class="bg-crema pb-20 pt-24">
+    <div class="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12">
+      <header class="py-8 text-center">
+        <h1 class="font-titulo text-3xl text-verde sm:text-4xl">Propiedades</h1>
+        <p class="mt-3 text-texto-suave">
+          <span id="contador-resultados" data-total={ordenadas.length}>{ordenadas.length}</span>{
+            ' '
+          }
+          <span id="contador-palabra">{ordenadas.length === 1 ? 'propiedad' : 'propiedades'}</span>{
+            ' '
+          }
+          <span id="contador-sufijo">disponibles</span>
+        </p>
+      </header>
+
+      <Buscador zonas={zonas} tipologias={tipologias} />
+
+      <!-- Aviso de filtro por operación, cuando se llega desde el hero -->
+      <p id="aviso-operacion" class="mt-4 hidden text-center text-sm text-texto-suave"></p>
+
+      <div id="grilla" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          ordenadas.map((p, i) => (
+            <div
+              class="resultado"
+              data-zona={p.zonaSlug}
+              data-tipo={p.tipologiaSlug}
+              data-dormitorios={p.dormitorios}
+              data-precio={p.precioUsd ?? ''}
+              data-a-consultar={p.precioAConsultar ? '1' : '0'}
+              data-operacion={p.operacion}
+            >
+              <CardPropiedad
+                slug={p.slug}
+                titulo={p.titulo}
+                pais={p.pais}
+                ubicacion={p.ubicacion}
+                precioUsd={p.precioUsd}
+                precioAConsultar={p.precioAConsultar}
+                metros={p.metrosTotales ?? p.metrosCubiertos}
+                dormitorios={p.dormitorios}
+                banos={p.banos}
+                esTerreno={p.esTerreno}
+                imagenSrc={p.portada?.src}
+                imagenSrcset={p.portada?.srcset}
+                imagenAlt={p.portada?.alt}
+                imagenAncho={p.portada?.width}
+                imagenAlto={p.portada?.height}
+                prioridad={i < 3}
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Se muestra solo cuando ningún resultado pasa los filtros -->
+      <div id="sin-resultados" class="hidden py-16 text-center">
+        <Corona tamano={44} clase="mx-auto text-rosa" />
+        <p class="mt-6 font-titulo text-2xl text-verde">
+          No encontramos propiedades con esos criterios
+        </p>
+        <p class="mx-auto mt-3 max-w-[46ch] text-texto-suave">
+          Probá ampliando la búsqueda, o escribinos y te contamos qué tenemos disponible.
+        </p>
+        <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Boton variante="primario" href="/propiedades">Ver todas</Boton>
+          <Boton variante="terciario" href="/#contacto">Escribinos</Boton>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+
+  <script is:inline defer src="/js/filtros.js"></script>
+</Base>

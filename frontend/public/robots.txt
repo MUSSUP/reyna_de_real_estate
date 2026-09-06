@@ -1,0 +1,10 @@
+# ⚠️ ENSAYO — QUITAR ANTES DE LA ENTREGA (acción A-11)
+#
+# Mientras el sitio muestre datos de demostración, no debe indexarse. Ocho
+# propiedades inventadas con precios inventados, bajo la marca de Laura, es
+# lo peor que podría aparecer si alguien la busca.
+#
+# El día que salga en serio: borrar este archivo y quitar la cabecera
+# `X-Robots-Tag` de netlify.toml. Son las dos cosas, no una.
+User-agent: *
+Disallow: /

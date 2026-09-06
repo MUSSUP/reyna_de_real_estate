@@ -1,0 +1,44 @@
+---
+import '../styles/global.css';
+import { IDIOMA_POR_DEFECTO } from '../i18n';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  imagenSocial?: string | undefined;
+  noIndexar?: boolean | undefined;
+}
+
+const { titulo, descripcion, imagenSocial, noIndexar = false } = Astro.props;
+
+const urlCanonica = new URL(Astro.url.pathname, Astro.site ?? 'https://reynaderealestate.com');
+const urlImagen = imagenSocial
+  ? new URL(imagenSocial, urlCanonica).toString()
+  : new URL('/logos/og-default.png', urlCanonica).toString();
+---
+
+<!doctype html>
+<html lang={IDIOMA_POR_DEFECTO}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo}</title>
+    <meta name="description" content={descripcion} />
+    <link rel="canonical" href={urlCanonica.toString()} />
+    {noIndexar && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:image" content={urlImagen} />
+    <meta property="og:url" content={urlCanonica.toString()} />
+    <meta property="og:locale" content="es_MX" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="/logos/favicon.png" />
+    <meta name="theme-color" content="#1E4F4C" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

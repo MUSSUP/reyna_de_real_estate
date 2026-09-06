@@ -1,0 +1,129 @@
+---
+import Base from '../../layouts/Base.astro';
+import BarraSuperior from '../../components/public/BarraSuperior.astro';
+import PieDePagina from '../../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../../components/public/BotonWhatsApp.astro';
+import Contenedor from '../../components/public/Contenedor.astro';
+import SeparadorCorona from '../../components/public/SeparadorCorona.astro';
+import CuerpoArticulo from '../../components/public/CuerpoArticulo.astro';
+import Corona from '../../components/public/Corona.astro';
+import Boton from '../../components/public/Boton.astro';
+import { obtenerConfiguracion, obtenerInformeDestacado, valor } from '../../lib/datos';
+import { enlaceWhatsApp } from '../../lib/whatsapp';
+import { bloquesDeTexto, fechaISO, fechaLegible, minutosDeLectura } from '../../lib/articulos';
+
+/**
+ * El informe Reyna Insights.
+ *
+ * Es la pieza de autoridad de la marca: no vende una propiedad, argumenta por
+ * qué invertir. Por eso cierra con los datos de contacto de Laura y no con un
+ * botón de catálogo (punto 5.1 del acuerdo).
+ *
+ * **Sin logo en la portada**, como pide el diseño aprobado.
+ *
+ * El cuerpo lo escribe la clienta desde el panel y **nunca se inserta como
+ * HTML**: se parte en bloques y cada uno se renderiza con el texto
+ * interpolado, que Astro escapa solo. Ver `lib/articulos.ts`.
+ */
+export async function getStaticPaths() {
+  const informe = await obtenerInformeDestacado();
+  // Sin informe cargado no se genera ninguna página, en vez de una vacía.
+  if (!informe) return [];
+  return [{ params: { slug: informe.slug }, props: { informe } }];
+}
+
+const { informe } = Astro.props;
+const config = await obtenerConfiguracion();
+
+const bloques = bloquesDeTexto(informe.bodyEs);
+const minutos = minutosDeLectura(informe.bodyEs);
+
+const email = valor(config, 'contacto.email', 'reynaderealestate@gmail.com');
+const whatsapp = enlaceWhatsApp(config);
+
+const descripcion =
+  informe.excerptEs ?? 'Análisis del mercado inmobiliario — Reyna de Real Estate.';
+
+const datosEstructurados = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: informe.titleEs,
+  description: descripcion,
+  datePublished: fechaISO(informe.publishedAt),
+  author: { '@type': 'Person', name: 'Laura Cabral' },
+  publisher: { '@type': 'Organization', name: 'Reyna de Real Estate' },
+};
+---
+
+<Base
+  titulo={`${informe.titleEs} — Reyna Insights`}
+  descripcion={descripcion}
+  imagenSocial={undefined}
+>
+  <BarraSuperior />
+
+  <main id="contenido" class="pt-24">
+    <Contenedor>
+      <article class="mx-auto max-w-[720px] py-10 sm:py-14">
+        <header class="text-center">
+          <p class="texto-claim text-xs text-texto-suave">
+            Reyna Insights · Análisis del mercado inmobiliario
+          </p>
+          <h1 class="mt-4 font-titulo text-3xl leading-tight text-verde sm:text-[40px]">
+            {informe.titleEs}
+          </h1>
+          <SeparadorCorona clase="mt-5" />
+          <p class="mt-4 text-sm text-texto-suave">
+            {
+              informe.publishedAt && (
+                <time datetime={fechaISO(informe.publishedAt)}>
+                  {fechaLegible(informe.publishedAt)}
+                </time>
+              )
+            }
+            {informe.publishedAt && <span aria-hidden="true"> · </span>}
+            {minutos} min de lectura
+          </p>
+        </header>
+
+        <div class="mt-10">
+          <CuerpoArticulo bloques={bloques} />
+        </div>
+
+        {/* Cierre con los datos de Laura: la pieza busca que la contacten. */}
+        <section class="mt-14 rounded-[var(--radius-card)] bg-crema p-7 text-center sm:p-10">
+          <Corona tamano={38} clase="mx-auto text-rosa" />
+          <p class="mt-4 font-titulo text-xl text-verde sm:text-2xl">
+            ¿Querés analizar una oportunidad concreta?
+          </p>
+          <p class="mx-auto mt-3 max-w-[48ch] text-texto-suave">
+            Soy Laura Cabral, fundadora de Reyna de Real Estate. Contame qué estás buscando y lo
+            vemos con tu caso.
+          </p>
+
+          <div class="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Boton variante="primario" href="/#contacto">Escribime</Boton>
+            {
+              whatsapp && (
+                <Boton variante="terciario" href={whatsapp} nuevaPestana>
+                  WhatsApp
+                </Boton>
+              )
+            }
+          </div>
+
+          <p class="mt-5 text-sm text-texto-suave">
+            <a href={`mailto:${email}`} class="break-all underline-offset-4 hover:underline">
+              {email}
+            </a>
+          </p>
+        </section>
+      </article>
+    </Contenedor>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(datosEstructurados)} />
+</Base>
