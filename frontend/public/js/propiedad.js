@@ -24,13 +24,36 @@
   var pestanas = Array.prototype.slice.call(formulario.querySelectorAll('[data-pestana]'));
   var paneles = Array.prototype.slice.call(formulario.querySelectorAll('[data-panel]'));
 
-  function mostrar(nombre) {
+  /**
+   * La pestaña abierta vive en la dirección.
+   *
+   * Subir o borrar una foto recarga la página, y sin esto la operadora
+   * volvía a "Datos" cada vez: cargaba una imagen desde "Material" y el
+   * panel la mandaba al principio. Con la sección en la dirección, la
+   * recarga la deja donde estaba.
+   *
+   * Se usa `replaceState` y no un salto: cambiar de pestaña no es navegar,
+   * y no debería llenar el historial ni romper el botón "atrás".
+   */
+  function recordarEnLaDireccion(nombre) {
+    try {
+      var url = new URL(window.location.href);
+      url.searchParams.set('seccion', nombre);
+      window.history.replaceState(null, '', url);
+    } catch (e) {
+      // Si el navegador no deja tocar el historial, la pestaña funciona
+      // igual: solo se pierde al recargar.
+    }
+  }
+
+  function mostrar(nombre, recordar) {
     pestanas.forEach(function (t) {
       t.setAttribute('aria-selected', t.getAttribute('data-pestana') === nombre ? 'true' : 'false');
     });
     paneles.forEach(function (s) {
       s.hidden = s.getAttribute('data-panel') !== nombre;
     });
+    if (recordar !== false) recordarEnLaDireccion(nombre);
   }
 
   if (listaPestanas && pestanas.length) {
@@ -62,7 +85,17 @@
       mostrar(siguiente.getAttribute('data-pestana'));
     });
 
-    mostrar(pestanas[0].getAttribute('data-pestana'));
+    // Al cargar se respeta la sección de la dirección, si es una que existe.
+    var pedida = null;
+    try {
+      pedida = new URL(window.location.href).searchParams.get('seccion');
+    } catch (e) {
+      pedida = null;
+    }
+    var existe = pestanas.some(function (t) {
+      return t.getAttribute('data-pestana') === pedida;
+    });
+    mostrar(existe ? pedida : pestanas[0].getAttribute('data-pestana'), false);
   }
 
   /** Deja visible la pestaña que contiene un campo dado. */

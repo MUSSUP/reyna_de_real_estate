@@ -1,0 +1,15 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+
+export const prerender = false;
+const sesion = Astro.locals.sesion;
+---
+
+<Panel titulo="Artículos" usuario={sesion?.name}>
+  <EnConstruccion
+    para="Acá vas a escribir y publicar noticias, y editar el informe de mercado."
+    mientrasTanto="Las noticias que ya están cargadas se ven en el sitio."
+    enlace={{ href: '/noticias', texto: 'Ver las noticias del sitio' }}
+  />
+</Panel>

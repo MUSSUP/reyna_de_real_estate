@@ -1,0 +1,15 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+
+export const prerender = false;
+const sesion = Astro.locals.sesion;
+---
+
+<Panel titulo="Consultas" usuario={sesion?.name}>
+  <EnConstruccion
+    para="Acá vas a ver todas las consultas que llegaron del sitio, con sus datos, el mensaje y por qué propiedad preguntaron."
+    mientrasTanto="Las últimas cinco ya se ven en el Tablero, y ninguna se pierde aunque falle el aviso por mail."
+    enlace={{ href: '/admin', texto: 'Ir al Tablero' }}
+  />
+</Panel>

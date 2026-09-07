@@ -1,0 +1,14 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+
+export const prerender = false;
+const sesion = Astro.locals.sesion;
+---
+
+<Panel titulo="Configuración" usuario={sesion?.name}>
+  <EnConstruccion
+    para="Acá vas a editar los textos del sitio, los teléfonos, el mail de contacto y las redes, sin tocar código."
+    mientrasTanto="Si necesitás cambiar alguno de esos datos ahora, avisame y lo hago."
+  />
+</Panel>

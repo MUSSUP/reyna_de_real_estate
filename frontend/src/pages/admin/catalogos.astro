@@ -1,0 +1,14 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+
+export const prerender = false;
+const sesion = Astro.locals.sesion;
+---
+
+<Panel titulo="Catálogos" usuario={sesion?.name}>
+  <EnConstruccion
+    para="Acá vas a administrar las zonas, tipologías, desarrollistas, amenidades y propietarios que aparecen en el formulario de una propiedad."
+    mientrasTanto="Por ahora esas listas se cargan por sistema. Si necesitás sumar una zona o una tipología, avisame."
+  />
+</Panel>

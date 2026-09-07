@@ -1,0 +1,47 @@
+---
+/**
+ * Pantalla del panel que todavía no existe.
+ *
+ * Está porque el menú lateral ya nombra estas secciones, y un enlace del
+ * propio menú que lleva a "no encontramos esta página" se lee como algo roto,
+ * no como algo pendiente. Acá dice qué va a hacer y qué se puede hacer
+ * mientras tanto.
+ */
+interface Props {
+  /** Qué va a poder hacer acá, en una línea. */
+  para: string;
+  /** Qué puede hacer hoy, si hay algo. */
+  mientrasTanto?: string | undefined;
+  enlace?: { href: string; texto: string } | undefined;
+}
+const { para, mientrasTanto, enlace } = Astro.props;
+---
+
+<div
+  class="rounded-[var(--radius-card)] border border-dashed border-black/15 bg-white px-6 py-12 text-center"
+>
+  <span
+    class="inline-flex items-center rounded-full bg-[#f7eeda] px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#8a6a28]"
+  >
+    En construcción
+  </span>
+
+  <p class="mx-auto mt-5 max-w-[52ch] text-texto-suave">{para}</p>
+
+  {
+    mientrasTanto && (
+      <p class="mx-auto mt-3 max-w-[52ch] text-sm text-texto-suave">{mientrasTanto}</p>
+    )
+  }
+
+  {
+    enlace && (
+      <a
+        href={enlace.href}
+        class="mt-7 inline-block rounded-full bg-verde px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-verde-claro"
+      >
+        {enlace.texto}
+      </a>
+    )
+  }
+</div>

@@ -1553,3 +1553,35 @@ Corregido: los anchos viven en `backend/lib/anchosImagen.ts`, sin dependencias. 
 **Pendiente**: conectar el repositorio para que construya Netlify y no la máquina de desarrollo. Es lo que hace que `sharp` se instale para Linux.
 
 `astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 80 pruebas en verde
+
+---
+
+## Correcciones desde el sitio en producción
+
+**2026-09-07.** Cuatro observaciones de la usuaria probando el panel publicado.
+
+**1 · La solapa volvía a "Datos" al subir o borrar una foto**
+
+Subir una imagen recarga la página —es la forma de que las miniaturas queden bien sin reconstruirlas a mano en el navegador—, y al recargar el formulario arrancaba de nuevo en la primera solapa. La operadora cargaba una foto desde "Material" y el panel la mandaba al principio.
+
+**La solapa abierta pasa a vivir en la dirección** (`?seccion=material`), con `replaceState` y no un salto: cambiar de pestaña no es navegar y no debe llenar el historial. De paso, ahora una pestaña concreta se puede compartir por enlace.
+
+Verificado en el navegador subiendo y borrando una foto de verdad: la pantalla se queda en Material en los dos casos.
+
+**2 · Los cambios no se ven en el sitio — no es un error**
+
+El sitio público **es estático** (D-04): se genera al construir y las visitas no tocan la base. Guardar y republicar cambia el dato, pero la página que ve el visitante sigue siendo la generada la última vez.
+
+Falta el botón "Publicar cambios" que dispara la reconstrucción, que es **UJ-13**. Hoy `NETLIFY_BUILD_HOOK_URL` está vacío.
+
+> Es un modo de fallo silencioso y caro: la clienta cree que publicó y no pasa nada. Sube la prioridad de UJ-13 por encima del resto del Hito 2.
+
+**3 · Más filtros en el listado**: tipología, zona, desarrollista y operación, sumados a estado y búsqueda. Son campos de un formulario `GET`, así que **funcionan sin JavaScript** y el estado vive en la dirección — una búsqueda se comparte, igual que en el catálogo público.
+
+Un id inventado (`?zona=999`) devuelve cero resultados en vez de romper.
+
+**4 · Las secciones del menú devolvían 404**
+
+Cinco entradas del menú lateral llevaban a "no encontramos esta página", que se lee como algo roto y no como algo pendiente. Ahora cada una tiene su pantalla con el sello **En construcción**, qué va a poder hacer ahí, y **qué puede hacer mientras tanto** — con enlace a donde sí se puede.
+
+`astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 80 pruebas en verde

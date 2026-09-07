@@ -2,6 +2,7 @@
 import Panel from '../../../layouts/Panel.astro';
 import { getDb } from '../../../../../backend/db/client';
 import { listarPropiedades } from '../../../../../backend/lib/propiedades';
+import { obtenerCatalogos } from '../../../lib/panel';
 import { prepararImagen } from '../../../lib/datos';
 
 /**
@@ -16,12 +17,46 @@ const sesion = Astro.locals.sesion;
 const params = Astro.url.searchParams;
 const estado = params.get('estado') ?? '';
 const texto = params.get('q') ?? '';
+const tipo = params.get('tipo') ?? '';
+const zona = params.get('zona') ?? '';
+const desarrollista = params.get('desarrollista') ?? '';
+const operacion = params.get('operacion') ?? '';
+
+const catalogos = await obtenerCatalogos();
 
 const listado = await listarPropiedades(getDb(), {
   estado: estado || undefined,
   texto: texto || undefined,
+  tipoId: tipo || undefined,
+  zonaId: zona || undefined,
+  desarrollistaId: desarrollista || undefined,
+  operacion: operacion || undefined,
   porPagina: 100,
 });
+
+const hayFiltros = Boolean(estado || texto || tipo || zona || desarrollista || operacion);
+
+const TODAS = { valor: '', etiqueta: 'Todas' };
+const opcTipos = [
+  TODAS,
+  ...catalogos.tipologias.map((t) => ({ valor: String(t.id), etiqueta: t.nombre })),
+];
+const opcZonas = [
+  TODAS,
+  ...catalogos.zonas.map((z) => ({
+    valor: String(z.id),
+    etiqueta: z.zona ? `${z.ciudad} · ${z.zona}` : z.ciudad,
+  })),
+];
+const opcDesarrollistas = [
+  TODAS,
+  ...catalogos.desarrollistas.map((d) => ({ valor: String(d.id), etiqueta: d.nombre })),
+];
+const opcOperaciones = [
+  TODAS,
+  { valor: 'venta', etiqueta: 'En venta' },
+  { valor: 'renta', etiqueta: 'En renta' },
+];
 
 const ETIQUETA_ESTADO = {
   borrador: { texto: 'Borrador', clase: 'bg-[#f2ece9] text-[#837873]' },
@@ -45,7 +80,7 @@ const FILTROS = [
     <p class="text-texto-suave">
       {
         `${listado.total} ${listado.total === 1 ? 'propiedad' : 'propiedades'}${
-          estado || texto ? ' con estos criterios' : ' en total'
+          hayFiltros ? ' con estos criterios' : ' en total'
         }`
       }
     </p>
@@ -82,6 +117,49 @@ const FILTROS = [
       </select>
     </div>
 
+    {
+      /* Cada filtro es un campo del formulario: sin JavaScript funcionan igual,
+         y el estado vive en la dirección, así que una búsqueda se comparte. */
+      [
+        { id: 'f-tipo', nombre: 'tipo', etiqueta: 'Tipología', opciones: opcTipos, valor: tipo },
+        { id: 'f-zona', nombre: 'zona', etiqueta: 'Zona', opciones: opcZonas, valor: zona },
+        {
+          id: 'f-desarrollista',
+          nombre: 'desarrollista',
+          etiqueta: 'Desarrollista',
+          opciones: opcDesarrollistas,
+          valor: desarrollista,
+        },
+        {
+          id: 'f-operacion',
+          nombre: 'operacion',
+          etiqueta: 'Operación',
+          opciones: opcOperaciones,
+          valor: operacion,
+        },
+      ].map((f) => (
+        <div class="flex flex-col gap-1.5">
+          <label
+            for={f.id}
+            class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+          >
+            {f.etiqueta}
+          </label>
+          <select
+            id={f.id}
+            name={f.nombre}
+            class="min-w-[140px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+          >
+            {f.opciones.map((o) => (
+              <option value={o.valor} selected={f.valor === o.valor}>
+                {o.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))
+    }
+
     <div class="flex flex-col gap-1.5">
       <label for="f-q" class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave">
         Buscar
@@ -104,7 +182,7 @@ const FILTROS = [
     </button>
 
     {
-      (estado || texto) && (
+      hayFiltros && (
         <a href="/admin/propiedades" class="py-2.5 text-sm text-texto-suave hover:text-verde">
           Limpiar
         </a>
@@ -116,20 +194,20 @@ const FILTROS = [
     listado.items.length === 0 ? (
       <div class="mt-6 rounded-[var(--radius-card)] border border-dashed border-black/10 bg-white p-10 text-center">
         <p class="font-titulo text-lg text-verde">
-          {estado || texto
+          {hayFiltros
             ? 'No hay propiedades con esos criterios'
             : 'Todavía no cargaste ninguna propiedad'}
         </p>
         <p class="mx-auto mt-2 max-w-[46ch] text-sm text-texto-suave">
-          {estado || texto
-            ? 'Probá con otro estado o limpiá la búsqueda.'
+          {hayFiltros
+            ? 'Probá con otros criterios o limpiá la búsqueda.'
             : 'Cargá la primera y va a aparecer acá. Podés guardarla como borrador y publicarla cuando esté lista.'}
         </p>
         <a
-          href={estado || texto ? '/admin/propiedades' : '/admin/propiedades/nueva'}
+          href={hayFiltros ? '/admin/propiedades' : '/admin/propiedades/nueva'}
           class="mt-6 inline-block rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:bg-rosa-hover"
         >
-          {estado || texto ? 'Ver todas' : 'Cargar la primera'}
+          {hayFiltros ? 'Ver todas' : 'Cargar la primera'}
         </a>
       </div>
     ) : (

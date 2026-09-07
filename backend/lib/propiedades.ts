@@ -138,8 +138,20 @@ export async function editarPropiedad(
 export interface FiltrosListado {
   estado?: string | undefined;
   texto?: string | undefined;
+  /** Ids de catálogo. Un valor que no sea un número se ignora. */
+  tipoId?: string | number | undefined;
+  zonaId?: string | number | undefined;
+  desarrollistaId?: string | number | undefined;
+  operacion?: string | undefined;
   pagina?: number | undefined;
   porPagina?: number | undefined;
+}
+
+/** Un id de catálogo que llegó de la dirección. Vacío o basura → sin filtro. */
+function idValido(v: string | number | undefined): number | null {
+  if (v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : null;
 }
 
 /** El listado del panel. Nunca devuelve datos de propietarios (RNF-10). */
@@ -154,6 +166,19 @@ export async function listarPropiedades(db: Db, filtros: FiltrosListado = {}) {
   if (filtros.texto?.trim()) {
     const patron = `%${filtros.texto.trim()}%`;
     condiciones.push(or(ilike(properties.titleEs, patron), ilike(properties.slug, patron))!);
+  }
+
+  const tipo = idValido(filtros.tipoId);
+  if (tipo) condiciones.push(eq(properties.propertyTypeId, tipo));
+
+  const zona = idValido(filtros.zonaId);
+  if (zona) condiciones.push(eq(properties.zoneId, zona));
+
+  const desarrollista = idValido(filtros.desarrollistaId);
+  if (desarrollista) condiciones.push(eq(properties.developerId, desarrollista));
+
+  if (filtros.operacion === 'venta' || filtros.operacion === 'renta') {
+    condiciones.push(eq(properties.operation, filtros.operacion));
   }
   const donde = condiciones.length ? and(...condiciones) : undefined;
 

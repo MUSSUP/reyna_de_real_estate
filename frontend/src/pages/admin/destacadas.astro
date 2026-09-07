@@ -1,0 +1,15 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+
+export const prerender = false;
+const sesion = Astro.locals.sesion;
+---
+
+<Panel titulo="Destacadas" usuario={sesion?.name}>
+  <EnConstruccion
+    para="Acá vas a elegir qué propiedades se muestran en la portada y en qué orden, arrastrándolas."
+    mientrasTanto="Mientras tanto, cada propiedad tiene una casilla de destacada en su pestaña de Publicación."
+    enlace={{ href: '/admin/propiedades', texto: 'Ir a Propiedades' }}
+  />
+</Panel>
