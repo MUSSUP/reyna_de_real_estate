@@ -106,7 +106,22 @@ const estaActivo = (href: string) =>
         >
           <h1 class="font-titulo text-xl text-verde sm:text-2xl">{titulo}</h1>
 
-          <div class="flex items-center gap-4 text-sm">
+          <div class="flex flex-wrap items-center gap-3 text-sm">
+            {
+              /* Estado de la publicación. Lo llena `publicar.js`; sin script
+                queda oculto, porque sin script el botón no haría nada. */
+            }
+            <div data-publicacion hidden class="flex items-center gap-3">
+              <span data-estado-publicacion class="text-xs text-texto-suave"></span>
+              <button
+                type="button"
+                data-publicar
+                class="rounded-full bg-rosa px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Publicar cambios
+              </button>
+            </div>
+
             {usuario && <span class="hidden text-texto-suave sm:inline">{usuario}</span>}
             <button
               type="button"
@@ -125,5 +140,6 @@ const estaActivo = (href: string) =>
     </div>
 
     <script is:inline defer src="/js/panel.js"></script>
+    <script is:inline defer src="/js/publicar.js"></script>
   </body>
 </html>

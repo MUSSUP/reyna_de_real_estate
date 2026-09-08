@@ -1585,3 +1585,54 @@ Un id inventado (`?zona=999`) devuelve cero resultados en vez de romper.
 Cinco entradas del menú lateral llevaban a "no encontramos esta página", que se lee como algo roto y no como algo pendiente. Ahora cada una tiene su pantalla con el sello **En construcción**, qué va a poder hacer ahí, y **qué puede hacer mientras tanto** — con enlace a donde sí se puede.
 
 `astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 80 pruebas en verde
+
+---
+
+## UJ-13 · Publicar los cambios — ✅ Completada
+
+El journey que cierra el agujero más caro del panel: hasta ahora la clienta guardaba, veía "publicada", y el sitio seguía igual. Sin ninguna señal de que faltaba un paso.
+
+**Construido**
+
+- `backend/lib/publicacion.ts` — disparo, agrupado y estado
+- Migración `0004_publicaciones` y su tabla
+- `api/admin/publish.ts` — `GET` para el estado, `POST` para disparar
+- `frontend/src/pages/build.json.ts` — la marca de cuándo se generó el sitio
+- La barra del panel y `public/js/publicar.js`
+
+**Por qué una tabla y no una clave de configuración**
+
+Guardar la fecha de publicación en `site_settings` habría actualizado `site_settings.updated_at`, y **el propio acto de publicar habría contado como un cambio pendiente**: el panel diría "tenés cambios sin publicar" para siempre. Hay una prueba que fija justamente eso.
+
+**Cómo sabe que ya está en vivo**
+
+El sitio publica en `/build.json` la fecha en que se generó. El panel la guarda antes de disparar y la vuelve a mirar cada cinco segundos; cuando cambia, el cambio **ya lo ve el visitante**.
+
+Preguntarle a la API de Netlify era lo obvio, pero exigía otra credencial y respondería "el build terminó", que no es lo mismo que "ya se ve". Lo segundo es lo que le importa a la clienta.
+
+**Tres decisiones que evitan mentiras**
+
+_Sin webhook configurado no se ofrece el botón._ Se avisa que la publicación automática no está lista. Un botón que no puede funcionar es peor que no tener botón.
+
+_La publicación se anota **después** de que el disparo salió bien._ Si se anotara antes, un webhook caído dejaría la ventana de agrupado bloqueando los reintentos durante un minuto — justo cuando hay que reintentar.
+
+_Se distingue "la pedí" de "ya había una en camino"._ El panel no dice que disparó algo cuando en realidad se sumó a una publicación anterior.
+
+**Verificado**
+
+_En pruebas (12 casos nuevos)_
+✅ **Cinco pedidos seguidos producen un solo build** — el criterio del journey
+✅ Pasada la ventana de 60 segundos, un pedido nuevo sí dispara
+✅ Sin webhook: no dispara, no anota, y no dice que publicó
+✅ Webhook que falla o que revienta: se avisa y **no queda anotado**, así el reintento funciona enseguida
+✅ Publicar no se cuenta a sí mismo como cambio pendiente
+
+_En el navegador_
+✅ Sin webhook, la barra dice "Publicación automática sin configurar" y **esconde el botón**
+✅ Con webhook: primer disparo `yaEstaba: false`, los tres siguientes `yaEstaba: true` — un solo disparo recibido
+✅ Con una publicación reciente, la barra dice "Publicando…" y esconde el botón
+✅ `GET` y `POST` devuelven 401 sin sesión
+
+**Pendiente de configuración**: falta crear el webhook en Netlify y cargar `NETLIFY_BUILD_HOOK_URL`. Hasta entonces el panel lo dice en vez de fallar.
+
+`astro check`: 0 errores · ESLint: 0 · Prettier: limpio · **92 pruebas en verde**

@@ -377,6 +377,30 @@ export const rateLimitHits = pgTable(
   (t) => [index('login_attempts_ip_time_idx').on(t.scope, t.ipHash, t.createdAt)],
 );
 
+/**
+ * Cada vez que se pide regenerar el sitio.
+ *
+ * Hace falta guardarlo por dos motivos. Uno: **agrupar** — varios guardados
+ * seguidos no deben producir varios builds, así que hay que saber cuándo fue
+ * el último disparo. Dos: saber si hay **cambios sin publicar**, comparando la
+ * última modificación de contenido contra el último disparo.
+ *
+ * Va en su propia tabla y no en `site_settings` a propósito: guardar la fecha
+ * ahí actualizaría `site_settings.updated_at`, y el propio acto de publicar
+ * contaría como un cambio pendiente. El panel diría "tenés cambios sin
+ * publicar" para siempre.
+ */
+export const publicaciones = pgTable(
+  'publicaciones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** Quién la pidió. Queda el mail, no el identificador interno. */
+    pedidaPor: text('pedida_por'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('publicaciones_created_idx').on(t.createdAt)],
+);
+
 // ---------------------------------------------------------------------------
 // Configuración del sitio
 // ---------------------------------------------------------------------------
