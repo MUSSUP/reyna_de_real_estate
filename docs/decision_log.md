@@ -321,3 +321,31 @@ Una librería nativa de procesamiento de imágenes terminaba en el paquete de p�
 **La regla que deja**: antes de importar algo de `backend/lib` desde el frontend, mirar qué arrastra ese archivo. Un `import` de dos funciones puede traer una librería nativa entera, y eso no se nota hasta que el servidor de producción es de otro sistema operativo que el de desarrollo.
 
 > El despliegue local seguirá subiendo binarios de macOS. Se resuelve construyendo del lado de Netlify, con el repositorio conectado.
+
+---
+
+## D-20 · El repositorio es público, y las comunicaciones sobre la clienta viven fuera
+
+**2026-10-04 — destrabando el despliegue**
+
+**Qué pasó**: durante un mes **ningún build de Netlify llegó a correr**. Todos quedaban en `Build blocked: unrecognized Git contributor. This plan allows only verified account members to push to private repos`.
+
+**Tres diagnósticos equivocados antes de dar con el bueno.** Vale anotarlos porque cada uno parecía explicarlo:
+
+1. _El mail del commit no coincide con la cuenta de Netlify._ Se reescribió la autoría de `marciamussi88@gmail.com` a `reynaderealestate@gmail.com`. Siguió bloqueado.
+2. _El push nunca había salido._ Era cierto —`--force-with-lease` fallaba por una referencia que `filter-branch` había dejado vieja— y había que arreglarlo igual, pero no era la causa.
+3. _La cuenta de Netlify no tenía GitHub conectado_ (entraba con Google). Se conectó. Siguió bloqueado.
+
+**La causa real era la restricción tal como está escrita**: el plan gratuito no construye **repositorios privados** de contribuidores que no sean miembros pagos del equipo. No había vuelta que darle.
+
+**Decisión**: el repositorio pasa a **público**.
+
+**Lo que hubo que sacar primero.** El repositorio contenía dos documentos que no son código sino **comunicaciones comerciales sobre la clienta**: la estrategia para plantearle el cierre de alcance, y un mensaje de estado con un bloque de notas internas. Más menciones sueltas a la relación personal con ella y al encuadre comercial del acuerdo.
+
+Se sacaron del repositorio **y de todo el historial**, y las menciones restantes se reescribieron para dejar el hecho sin el comentario. Viven ahora en `../_privado_reyna/`, fuera del control de versiones.
+
+> Esos documentos no debían estar en el repositorio **aunque fuera privado**. Sacarlos es higiene, no un parche para poder publicarlo.
+
+**Lo último que faltaba**: Netlify tenía cacheado `public_repo: False`. Hubo que **volver a vincular el repositorio** para que releyera la visibilidad. Recién ahí construyó.
+
+**La regla que deja**: en este repositorio no entra nada sobre la relación con la clienta — ni acuerdos, ni estrategia de conversación, ni notas internas. Va en `../_privado_reyna/`. Lo que sí entra: decisiones técnicas, registro de trabajo y seguimiento de tareas.

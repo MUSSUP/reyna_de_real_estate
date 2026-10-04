@@ -101,7 +101,7 @@ Bloquean la entrega pero no son código.
 | A-04     | Reunir fotos reales y armar una carpeta de Drive por propiedad                                                                                                                                                         | Clienta          | Antes de la entrega      |
 | ~~A-05~~ | ~~Confirmar a qué mail llegan las consultas~~ ✅ **Resuelto** (2026-08-23): `reynaderealestate@gmail.com`, confirmado por la clienta                                                                                   | —                | —                        |
 | A-06     | Confirmar derechos de uso de fotos de cartera compartida                                                                                                                                                               | Clienta          | Antes de publicar (R-07) |
-| A-07     | **Confirmar el alcance final por escrito con la clienta.** El borrador vive fuera del repositorio                                                                                                            | Musapp           | **Antes de construir**   |
+| A-07     | **Confirmar el alcance final por escrito con la clienta.** El borrador vive fuera del repositorio                                                                                                                      | Musapp           | **Antes de construir**   |
 
 ---
 

@@ -1636,3 +1636,31 @@ _En el navegador_
 **Pendiente de configuración**: falta crear el webhook en Netlify y cargar `NETLIFY_BUILD_HOOK_URL`. Hasta entonces el panel lo dice en vez de fallar.
 
 `astro check`: 0 errores · ESLint: 0 · Prettier: limpio · **92 pruebas en verde**
+
+---
+
+## Despliegue destrabado — ✅
+
+**2026-10-04.** Durante casi un mes ningún build llegó a correr: el plan gratuito de Netlify no construye repositorios privados de contribuidores que no sean miembros pagos. Ver D-20, con los tres diagnósticos equivocados que probé antes de aceptar la restricción de frente.
+
+**Qué se hizo**
+
+- Los dos documentos sobre la clienta salieron del repositorio **y de todo el historial**; las menciones sueltas se reescribieron
+- El repositorio pasó a público
+- Hubo que **volver a vincularlo** en Netlify, que tenía cacheada la visibilidad anterior
+
+**Auditoría antes de publicar** — commit por commit, sobre todo el historial
+✅ **Cero** apariciones de las nueve frases sobre la clienta y la relación comercial
+✅ Los dos documentos: **0 commits**
+✅ **Ninguna credencial** — se buscaron los cinco valores reales del `.env` uno por uno
+✅ `.env` nunca estuvo versionado
+
+**Verificado en vivo, después del build**
+✅ Las cinco pantallas del menú que daban 404 ahora redirigen al ingreso: existen
+✅ `/build.json` responde con fecha fresca — la señal que usa el botón "Publicar cambios"
+✅ Portada, catálogo, ficha y noticias responden
+✅ **Las fotos vuelven a verse**: se comprobaron tres contra el bucket
+
+Con esto quedan en producción las tres tandas que estaban trabadas: las correcciones del panel, UJ-13 y la limpieza del repositorio.
+
+`astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 92 pruebas en verde
