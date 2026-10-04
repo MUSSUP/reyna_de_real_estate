@@ -1664,3 +1664,52 @@ _En el navegador_
 Con esto quedan en producción las tres tandas que estaban trabadas: las correcciones del panel, UJ-13 y la limpieza del repositorio.
 
 `astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 92 pruebas en verde
+
+---
+
+## UJ-11 · Revisar los contactos — ✅ Completada
+
+Más la sección de noticias que faltaba en la portada y una corrección del encabezado.
+
+**La bandeja de consultas**
+
+- `backend/lib/consultasPanel.ts` · `api/admin/leads/` (listado, edición, exportación) · `pages/admin/leads.astro` · `public/js/consultas.js`
+- Filtros por estado y por rango de fechas, con el conteo de cada estado a la vista
+- Estado y notas **guardan solos**: cambiar el estado es una acción completa, pedir además un "guardar" es una forma de perder el cambio
+
+**Dos reglas que gobiernan el módulo**
+
+_Lo que dejó el visitante es inmutable._ Solo cambian estado y notas. El endpoint toma esos dos campos y descarta el resto del cuerpo: si el nombre o el mensaje se pudieran editar, la bandeja dejaría de ser un registro de lo que pasó.
+
+_Las notas son de la clienta y no salen al sitio._ Se verificó buscándolas en el sitio construido entero.
+
+**El CSV tenía un riesgo que no era obvio**
+
+Excel interpreta como **fórmula** cualquier celda que empiece con `=`, `+`, `-` o `@`. El mensaje lo escribe cualquiera desde internet, así que alguien podía dejar `=HYPERLINK(...)` y que se ejecutara al abrir el archivo **en la computadora de Laura**. Ahora esos valores se prefijan con una comilla simple y quedan como texto.
+
+Y lleva **BOM**: sin él, Excel abre "Teléfono" como "TelÃ©fono".
+
+**Verificado — con una consulta hostil de verdad**
+
+Se cargó una con `=HYPERLINK("http://malo.example") y <script>alert(1)</script> y "comillas"`:
+
+✅ En pantalla se ve **como texto literal**: 0 scripts inyectados, 0 elementos HTML dentro del párrafo
+✅ En el CSV la fórmula sale neutralizada, y las comillas no rompen las columnas
+✅ En la base el mensaje queda **crudo**: se escapa al mostrarlo, no al guardarlo
+✅ Cambiar estado y anotar persiste; el sello se actualiza sin recargar
+✅ Los tres endpoints devuelven 401 sin sesión
+✅ Las notas no aparecen en ninguna página del sitio construido
+
+_Pruebas_: 16 casos nuevos — filtros, fechas ilegibles, estado inventado, inmutabilidad, nota vacía que borra en vez de guardar cadena vacía, BOM, fórmulas y comillas. **108 en verde.**
+
+---
+
+## Dos correcciones de la misma tanda
+
+**Faltaba la sección de noticias en la portada.** Era la única del diseño aprobado que no estaba (wireframe 4b): las últimas tres con enlace a "Ver todas". **Si no hay noticias, la sección no se muestra** — un bloque titulado con un hueco debajo se lee como algo roto.
+
+**El encabezado se perdía sobre fondos claros.** Arrancaba transparente y se pintaba de verde con una animación ligada al scroll; cuando esa animación no avanza —el soporte todavía es despareja entre navegadores— la barra quedaba invisible sobre las secciones claras y el logo y el menú, que son blancos, desaparecían.
+
+El punto de partida pasó a ser un velo oscuro al 45% con desenfoque: imperceptible sobre el hero, que ya es oscuro, y suficiente para que el blanco se lea sobre el crema. **Es D-14 aplicado acá: si el efecto falla, se tiene que seguir leyendo.**
+
+`astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 108 pruebas en verde

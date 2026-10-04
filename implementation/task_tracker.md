@@ -13,9 +13,9 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | ---------------------------- | ------ | -------------------------------------------------- |
 | Infraestructura              | 8      | 🟢 6/8 (+2 parciales)                              |
 | Hito 1 · Visitante           | 6      | ✅ 6/6                                             |
-| Hito 2 · Administración      | 7      | 🟢 3/7                                             |
+| Hito 2 · Administración      | 7      | 🟢 4/7                                             |
 | Hito 3 · Contenido y entrega | 7      | 🟢 3/7                                             |
-| **Total**                    | **28** | **18/28** terminadas · 2 parciales · 9 sin empezar |
+| **Total**                    | **28** | **19/28** terminadas · 2 parciales · 8 sin empezar |
 
 ---
 
@@ -60,7 +60,7 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | UJ-08 | Publicar una propiedad       | ✅     | Formulario, portada y galería. Faltan los catálogos (UJ-08b) |
 | UJ-09 | Elegir y ordenar destacadas  | ⬜     |                                                              |
 | UJ-10 | Publicar noticias e informes | ⬜     | **Nuevo (D-11)**                                             |
-| UJ-11 | Revisar contactos            | ⬜     |                                                              |
+| UJ-11 | Revisar contactos            | ✅     |                                                              |
 | UJ-12 | Editar textos del sitio      | ⬜     |                                                              |
 | UJ-13 | Publicar cambios             | ✅     | Webhook de rebuild                                           |
 

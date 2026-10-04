@@ -7,12 +7,14 @@ import BotonWhatsApp from '../components/public/BotonWhatsApp.astro';
 import Destacadas from '../components/public/Destacadas.astro';
 import Buscador from '../components/public/Buscador.astro';
 import SeccionInsights from '../components/public/SeccionInsights.astro';
+import SeccionNoticias from '../components/public/SeccionNoticias.astro';
 import SeccionNosotros from '../components/public/SeccionNosotros.astro';
 import SeccionContacto from '../components/public/SeccionContacto.astro';
 import {
   obtenerConfiguracion,
   obtenerDestacadas,
   obtenerInformeDestacado,
+  obtenerNoticias,
   obtenerTipologias,
   obtenerZonas,
   valor,
@@ -22,6 +24,8 @@ import {
 const config = await obtenerConfiguracion();
 const destacadas = await obtenerDestacadas();
 const informe = await obtenerInformeDestacado();
+// Las últimas tres, según el wireframe 4b.
+const noticias = await obtenerNoticias(3);
 const zonas = await obtenerZonas();
 const tipologias = await obtenerTipologias();
 ---
@@ -55,6 +59,8 @@ const tipologias = await obtenerTipologias();
         <SeccionInsights slug={informe.slug} titulo={informe.titleEs} bajada={informe.excerptEs} />
       )
     }
+
+    <SeccionNoticias noticias={noticias} />
 
     <SeccionNosotros config={config} />
 

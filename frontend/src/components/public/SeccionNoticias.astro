@@ -1,0 +1,68 @@
+---
+import Contenedor from './Contenedor.astro';
+import SeparadorCorona from './SeparadorCorona.astro';
+import CardNoticia from './CardNoticia.astro';
+import { prepararImagen } from '../../lib/datos';
+import { t } from '../../i18n';
+import type { articles } from '../../../../backend/db/schema';
+
+/**
+ * Las últimas noticias, en la portada.
+ *
+ * **Si no hay noticias, la sección no se muestra** (wireframe 4b). Un bloque
+ * titulado "Noticias" con un hueco debajo se lee como algo roto; no estar es
+ * lo correcto hasta que la clienta publique la primera.
+ */
+interface Props {
+  noticias: (typeof articles.$inferSelect)[];
+}
+const { noticias } = Astro.props;
+---
+
+{
+  noticias.length > 0 && (
+    <section class="aparece bg-crema py-16 sm:py-20">
+      <Contenedor>
+        <div class="text-center">
+          <h2 class="font-titulo text-3xl text-verde sm:text-4xl">{t('noticias.titulo')}</h2>
+          <SeparadorCorona clase="mt-4" />
+        </div>
+
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {noticias.map((n, i) => {
+            const portada = prepararImagen(
+              n.coverPath,
+              n.coverWidth,
+              n.coverHeight,
+              n.coverAltEs ?? n.titleEs,
+            );
+            return (
+              <CardNoticia
+                slug={n.slug}
+                titulo={n.titleEs}
+                bajada={n.excerptEs}
+                fecha={n.publishedAt}
+                imagenSrc={portada?.src}
+                imagenSrcset={portada?.srcset}
+                imagenAlt={portada?.alt}
+                imagenAncho={portada?.width}
+                imagenAlto={portada?.height}
+                prioridad={i === 0}
+              />
+            );
+          })}
+        </div>
+
+        <div class="mt-10 text-center">
+          <a
+            href="/noticias"
+            class="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border border-rosa px-8 py-3 font-cuerpo text-xs font-semibold uppercase tracking-[0.12em] text-rosa transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-rosa hover:text-white"
+          >
+            Ver todas las noticias
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </Contenedor>
+    </section>
+  )
+}

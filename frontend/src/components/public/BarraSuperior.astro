@@ -21,7 +21,7 @@ const enlaces = [
 <header
   class:list={[
     'fixed inset-x-0 top-0 z-50 transition-colors duration-[400ms] ease-[var(--ease-marca)]',
-    sobreHero ? 'barra-sobre-hero bg-verde' : 'bg-verde',
+    sobreHero ? 'barra-sobre-hero' : 'bg-verde',
   ]}
 >
   <nav
@@ -59,11 +59,26 @@ const enlaces = [
 </header>
 
 <style>
-  /* Sobre el hero arranca transparente y se vuelve verde al bajar 120px.
-     Solo donde el navegador soporta animaciones ligadas al scroll. */
+  /* Sobre el hero se ve casi transparente y se vuelve verde al bajar 120px.
+     Solo donde el navegador soporta animaciones ligadas al scroll.
+
+     **El punto de partida no es transparente del todo**, y es a propósito.
+     Antes lo era, y cuando la animación no avanzaba —el soporte de `scroll()`
+     todavía es despareja entre navegadores— la barra quedaba invisible sobre
+     las secciones claras y el logo y el menú, que son blancos, se perdían.
+
+     Es el principio de D-14 aplicado acá: si el efecto falla, tiene que
+     seguir leyéndose. Un velo oscuro al 45% con desenfoque es casi
+     imperceptible sobre el hero, que ya es oscuro, y alcanza para que el
+     blanco se lea sobre el crema. */
+  .barra-sobre-hero {
+    background-color: rgb(15 30 29 / 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
   @supports (animation-timeline: scroll()) {
     .barra-sobre-hero {
-      background-color: transparent;
       animation: pintar-barra linear both;
       animation-timeline: scroll();
       animation-range: 0 120px;
@@ -72,7 +87,7 @@ const enlaces = [
 
   @keyframes pintar-barra {
     from {
-      background-color: transparent;
+      background-color: rgb(15 30 29 / 0.45);
       box-shadow: none;
     }
     to {

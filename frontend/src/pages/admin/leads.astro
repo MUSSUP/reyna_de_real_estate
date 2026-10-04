@@ -1,15 +1,287 @@
 ---
 import Panel from '../../layouts/Panel.astro';
-import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+import { getDb } from '../../../../backend/db/client';
+import {
+  contarPorEstado,
+  listarConsultas,
+  ESTADOS_CONSULTA,
+  ETIQUETA_ESTADO,
+  ETIQUETA_INTERES,
+  type EstadoConsulta,
+} from '../../../../backend/lib/consultasPanel';
+import { fechaLegible } from '../../lib/articulos';
 
+/**
+ * La bandeja de consultas.
+ *
+ * **El mensaje y las notas se interpolan, nunca se insertan como HTML.** El
+ * mensaje lo escribe cualquiera desde internet y se lee acá, en la sesión de
+ * la clienta: es el lugar exacto donde un XSS haría daño.
+ */
 export const prerender = false;
+
 const sesion = Astro.locals.sesion;
+const params = Astro.url.searchParams;
+const estado = params.get('status') ?? '';
+const desde = params.get('from') ?? '';
+const hasta = params.get('to') ?? '';
+
+const db = getDb();
+const [listado, conteo] = await Promise.all([
+  listarConsultas(db, {
+    estado: estado || undefined,
+    desde: desde || undefined,
+    hasta: hasta || undefined,
+    porPagina: 200,
+  }),
+  contarPorEstado(db),
+]);
+
+const hayFiltros = Boolean(estado || desde || hasta);
+const total = Object.values(conteo).reduce((a, b) => a + b, 0);
+
+const COLORES: Record<EstadoConsulta, string> = {
+  nuevo: 'bg-[#fdeaf1] text-[#9e2a5c] border-[#f5c3d8]',
+  contactado: 'bg-[#e4ede9] text-[#1e4f4c] border-[#b6cec6]',
+  cerrado: 'bg-[#f2ece9] text-[#6b6b6b] border-[#ddd0c9]',
+  descartado: 'bg-[#f2ece9] text-[#948a85] border-[#ddd0c9]',
+};
+
+const queryExport = new URLSearchParams();
+if (estado) queryExport.set('status', estado);
+if (desde) queryExport.set('from', desde);
+if (hasta) queryExport.set('to', hasta);
+const urlExport = `/api/admin/leads/export${queryExport.size ? `?${queryExport}` : ''}`;
 ---
 
 <Panel titulo="Consultas" usuario={sesion?.name}>
-  <EnConstruccion
-    para="Acá vas a ver todas las consultas que llegaron del sitio, con sus datos, el mensaje y por qué propiedad preguntaron."
-    mientrasTanto="Las últimas cinco ya se ven en el Tablero, y ninguna se pierde aunque falle el aviso por mail."
-    enlace={{ href: '/admin', texto: 'Ir al Tablero' }}
-  />
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <p class="text-texto-suave">
+      {
+        `${listado.total} ${listado.total === 1 ? 'consulta' : 'consultas'}${hayFiltros ? ' con estos criterios' : ' en total'}`
+      }
+    </p>
+
+    {
+      listado.total > 0 && (
+        <a
+          href={urlExport}
+          class="rounded-full border border-verde px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white"
+        >
+          Exportar CSV
+        </a>
+      )
+    }
+  </div>
+
+  {
+    /* Filtros como formulario de verdad: andan sin JavaScript y el estado
+      queda en la dirección, así una búsqueda se puede compartir. */
+  }
+  <form method="GET" class="mt-5 flex flex-wrap items-end gap-3">
+    <div class="flex flex-col gap-1.5">
+      <label
+        for="f-estado"
+        class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+      >
+        Estado
+      </label>
+      <select
+        id="f-estado"
+        name="status"
+        class="min-w-[170px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+      >
+        <option value="" selected={estado === ''}>{`Todas (${total})`}</option>
+        {
+          ESTADOS_CONSULTA.map((e) => (
+            <option value={e} selected={estado === e}>
+              {`${ETIQUETA_ESTADO[e]} (${conteo[e]})`}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label
+        for="f-desde"
+        class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+      >
+        Desde
+      </label>
+      <input
+        id="f-desde"
+        name="from"
+        type="date"
+        value={desde}
+        class="rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+      />
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label
+        for="f-hasta"
+        class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+      >
+        Hasta
+      </label>
+      <input
+        id="f-hasta"
+        name="to"
+        type="date"
+        value={hasta}
+        class="rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+      />
+    </div>
+
+    <button
+      type="submit"
+      class="rounded-full bg-verde px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-verde-claro"
+    >
+      Filtrar
+    </button>
+
+    {
+      hayFiltros && (
+        <a href="/admin/leads" class="py-2.5 text-sm text-texto-suave hover:text-verde">
+          Limpiar
+        </a>
+      )
+    }
+  </form>
+
+  <p
+    data-aviso-consulta
+    role="alert"
+    class="mt-5 hidden rounded-[var(--radius-campo)] px-4 py-3 text-sm"
+  >
+  </p>
+
+  {
+    listado.items.length === 0 ? (
+      <div class="mt-6 rounded-[var(--radius-card)] border border-dashed border-black/10 bg-white p-10 text-center">
+        <p class="font-titulo text-lg text-verde">
+          {hayFiltros ? 'No hay consultas con esos criterios' : 'Todavía no llegaron consultas'}
+        </p>
+        <p class="mx-auto mt-2 max-w-[48ch] text-sm text-texto-suave">
+          {hayFiltros
+            ? 'Probá con otro estado o con otras fechas.'
+            : 'Cuando alguien escriba desde el formulario del sitio, va a aparecer acá con sus datos y su mensaje.'}
+        </p>
+        {hayFiltros && (
+          <a
+            href="/admin/leads"
+            class="mt-6 inline-block rounded-full bg-verde px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:bg-verde-claro"
+          >
+            Ver todas
+          </a>
+        )}
+      </div>
+    ) : (
+      <ul class="mt-6 flex flex-col gap-3">
+        {listado.items.map((c) => (
+          <li
+            data-consulta={c.id}
+            class="rounded-[var(--radius-card)] border border-black/5 bg-white p-5"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-titulo text-lg text-verde">{c.nombre}</p>
+                <p class="mt-0.5 text-sm text-texto-suave">
+                  <a href={`mailto:${c.email}`} class="underline-offset-4 hover:underline">
+                    {c.email}
+                  </a>
+                  {c.telefono && <span> · {c.telefono}</span>}
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                {!c.avisado && (
+                  /* El mail no salió. La consulta está igual, pero conviene
+                     que se vea: es lo que se puede perder sin enterarse. */
+                  <span class="rounded-full bg-[#f7eeda] px-2.5 py-1 text-xs font-semibold text-[#8a6a28]">
+                    Sin aviso
+                  </span>
+                )}
+                <span
+                  data-sello
+                  class:list={[
+                    'rounded-full border px-2.5 py-1 text-xs font-semibold',
+                    COLORES[c.estado as EstadoConsulta],
+                  ]}
+                >
+                  {ETIQUETA_ESTADO[c.estado as EstadoConsulta]}
+                </span>
+              </div>
+            </div>
+
+            <p class="mt-3 text-xs text-texto-suave">
+              {fechaLegible(c.creado)} ·{' '}
+              {ETIQUETA_INTERES[c.interes as keyof typeof ETIQUETA_INTERES]}
+              {c.propiedad && ' · '}
+              {c.propiedad && (
+                <a
+                  href={`/propiedades/${c.propiedadSlug}`}
+                  target="_blank"
+                  rel="noopener"
+                  class="underline-offset-4 hover:text-verde hover:underline"
+                >
+                  {c.propiedad}
+                </a>
+              )}
+            </p>
+
+            {/* El mensaje se interpola: Astro lo escapa solo. Nunca `set:html`. */}
+            {c.mensaje && (
+              <p class="mt-3 whitespace-pre-line rounded-[var(--radius-campo)] bg-[#f7f4f2] px-4 py-3 text-sm leading-relaxed text-texto">
+                {c.mensaje}
+              </p>
+            )}
+
+            <div class="mt-4 flex flex-wrap items-end gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label
+                  for={`estado-${c.id}`}
+                  class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+                >
+                  Estado
+                </label>
+                <select
+                  id={`estado-${c.id}`}
+                  data-estado
+                  class="min-w-[150px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+                >
+                  {ESTADOS_CONSULTA.map((e) => (
+                    <option value={e} selected={c.estado === e}>
+                      {ETIQUETA_ESTADO[e]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div class="flex min-w-[240px] flex-1 flex-col gap-1.5">
+                <label
+                  for={`notas-${c.id}`}
+                  class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+                >
+                  Notas internas
+                </label>
+                <input
+                  id={`notas-${c.id}`}
+                  data-notas
+                  type="text"
+                  value={c.notas ?? ''}
+                  maxlength="5000"
+                  placeholder="Para vos. No se muestra en el sitio"
+                  class="w-full rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <script is:inline defer src="/js/consultas.js"></script>
 </Panel>
