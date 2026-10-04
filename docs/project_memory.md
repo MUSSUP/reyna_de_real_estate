@@ -89,13 +89,13 @@ El muestrario de componentes vive en `/sistema` (sin indexar). Sirve de referenc
 
 Ninguno bloquea el Hito 2, pero conviene cerrarlos antes de entregar. El informe completo está en `docs/work_log.md`.
 
-| # | Qué | Por qué importa |
+| #     | Qué                                                                                                   | Por qué importa                                                            |
 | ----- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| I-4 | La ficha ignora `coverPath`: propiedad con portada y sin galería queda con la columna izquierda vacía | La card sí tiene respaldo; la ficha no |
-| I-5 | Las miniaturas bajan la variante de 1600 px para pintarla a 112 | Invisible con la semilla; con fotos reales son más de 1 MB extra por ficha |
-| I-7 | No hay pruebas de autenticación ni una que proteja RNF-10 | El NFR nombra la autenticación como camino crítico |
-| menor | **No hay menú móvil**: desde una ficha en el celular no se llega al catálogo | Se ve en la primera visita desde un teléfono |
-| menor | Falta `robots.txt` y `sitemap.xml`, y no son tarea de nadie en el plan | Sin dueño, no se hacen |
+| I-4   | La ficha ignora `coverPath`: propiedad con portada y sin galería queda con la columna izquierda vacía | La card sí tiene respaldo; la ficha no                                     |
+| I-5   | Las miniaturas bajan la variante de 1600 px para pintarla a 112                                       | Invisible con la semilla; con fotos reales son más de 1 MB extra por ficha |
+| I-7   | No hay pruebas de autenticación ni una que proteja RNF-10                                             | El NFR nombra la autenticación como camino crítico                         |
+| menor | **No hay menú móvil**: desde una ficha en el celular no se llega al catálogo                          | Se ve en la primera visita desde un teléfono                               |
+| menor | Falta `robots.txt` y `sitemap.xml`, y no son tarea de nadie en el plan                                | Sin dueño, no se hacen                                                     |
 
 ---
 
@@ -116,15 +116,15 @@ Ninguno bloquea el Hito 2, pero conviene cerrarlos antes de entregar. El informe
 
 ## Bloqueos y pendientes
 
-| # | Pendiente | Impacto |
+| #        | Pendiente                                                                                                         | Impacto                                                              |
 | -------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| ~~A-01~~ | ✅ Resuelto: dominio en **Don Web, cuenta de Musapp**. Acceso total al DNS | — |
-| A-08 | **Transferir el dominio a la clienta** después de entregar. Hoy está a nombre de Musapp | Pendiente, no bloquea |
-| ~~A-02~~ | ✅ Resuelto: Supabase creado con `reynaderealestate@gmail.com`, base y bucket funcionando | — |
-| A-03 | Falta el video del hero. La carpeta de Drive de la clienta está vacía | Bloquea UJ-01. Hay un `.mp4` en los assets locales que podría servir |
-| ~~A-05~~ | ✅ Resuelto: las consultas van a `reynaderealestate@gmail.com` | — |
-| A-09 | **Qué nombre manda**: el logo dice "Laura Cabral", el pie dice "Reyna de Real Estate" | No bloquea, pero se ve en toda página |
-| A-07 | **Enviar el aviso de alcance final a la clienta** antes de construir. Borrador en `docs/aviso_alcance_clienta.md` | Deja registro de qué incluye la entrega |
+| ~~A-01~~ | ✅ Resuelto: dominio en **Don Web, cuenta de Musapp**. Acceso total al DNS                                        | —                                                                    |
+| A-08     | **Transferir el dominio a la clienta** después de entregar. Hoy está a nombre de Musapp                           | Pendiente, no bloquea                                                |
+| ~~A-02~~ | ✅ Resuelto: Supabase creado con `reynaderealestate@gmail.com`, base y bucket funcionando                         | —                                                                    |
+| A-03     | Falta el video del hero. La carpeta de Drive de la clienta está vacía                                             | Bloquea UJ-01. Hay un `.mp4` en los assets locales que podría servir |
+| ~~A-05~~ | ✅ Resuelto: las consultas van a `reynaderealestate@gmail.com`                                                    | —                                                                    |
+| A-09     | **Qué nombre manda**: el logo dice "Laura Cabral", el pie dice "Reyna de Real Estate"                             | No bloquea, pero se ve en toda página                                |
+| A-07     | **Confirmar el alcance final por escrito con la clienta** antes de entregar. El borrador vive fuera del repositorio                      | Deja registro de qué incluye la entrega                              |
 
 ---
 
@@ -140,4 +140,4 @@ Ninguno bloquea el Hito 2, pero conviene cerrarlos antes de entregar. El informe
 
 ## Contexto humano
 
-El acuerdo es de largo plazo. La prioridad es **llegar a algo presentable pronto**: el Hito 1 está diseñado para eso — al terminarlo hay un sitio real para mostrar, aunque el panel todavía no exista.
+El acuerdo es de largo plazo y la prioridad es **llegar a algo presentable pronto**: el Hito 1 está diseñado para eso — al terminarlo hay un sitio real para mostrar, aunque el panel todavía no exista.

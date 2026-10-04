@@ -26,3 +26,8 @@ npm-debug.log*
 
 # Datos locales
 /data/
+
+# Comunicaciones comerciales sobre la clienta. No son código y no van al
+# repositorio, que es público. Viven en ../_privado_reyna/
+docs/mensaje_estado_y_cierre_alcance.md
+docs/aviso_alcance_clienta.md

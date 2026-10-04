@@ -79,7 +79,7 @@ El proyecto empezó como landing y ya incluye buscador, catálogo, CMS y panel. 
 
 En julio pidió noticias administrables, un cuarto filtro y galería de fotos. **Los tres entraron al alcance.** Lo único que queda afuera de lo que pidió es el sitio bilingüe.
 
-**Mitigación**: enviarle el **aviso de alcance final por escrito antes de construir** (acción A-07), dejando claro qué incluye la entrega y que cierra el proyecto. Borrador en `docs/aviso_alcance_clienta.md`.
+**Mitigación**: confirmar el **alcance final por escrito antes de construir** (acción A-07), dejando claro qué incluye la entrega y que cierra el proyecto. Borrador en `docs/aviso_alcance_clienta.md`.
 
 ---
 
