@@ -1874,3 +1874,49 @@ _Pruebas_: 28 casos nuevos — nace en borrador, dirección desde el título, do
 `astro check`: 0 errores · ESLint: 0 · `astro build`: completo
 
 > **Nota del entorno**: el servidor de desarrollo se cayó dos veces durante la verificación porque el adaptador de Netlify intenta alcanzar `api.netlify.com` al arrancar y la red del entorno no siempre lo resuelve. No es del proyecto: no toca el código ni el despliegue. Si pasa, volver a arrancarlo.
+
+---
+
+## UJ-08b · Los catálogos — ✅ Completada. **Hito 2 cerrado.**
+
+Zonas, tipologías, desarrollistas, propietarios y amenidades: las cinco listas que alimentan el formulario de una propiedad. **Hasta hoy había que entrar a la base para sumar una zona.** Esto es lo que saca a Musapp del camino.
+
+Una sola pantalla con los cinco, no cinco pantallas. Cada catálogo tiene entre uno y cinco campos y se tocan de a poco; repartirlos en cinco secciones del menú sería menú de más para contenido de menos. El catálogo abierto viaja en la dirección, y las pestañas son enlaces de verdad.
+
+**Lo importante es el borrado, y no es obvio.**
+
+La base impide borrar una zona o una tipología en uso — pero con un error de restricción que nadie entiende. Y para los otros tres **no lo impide**:
+
+- un desarrollista o un propietario borrado quedaría **en nulo** en todas las propiedades que lo tenían (`on delete set null`),
+- una amenidad borrada **desaparecería** de todas las propiedades que la tenían (`on delete cascade`).
+
+En los tres casos el dato se pierde en silencio, que es la peor clase de pérdida. Así que la decisión se toma en el código, igual para los cinco: **nada se borra si está en uso**, y el mensaje dice cuántas propiedades lo usan. El botón de borrar aparece deshabilitado cuando hay uso, con el motivo en el `title`, y la lista dice al lado de cada uno cuántas propiedades lo usan.
+
+**Un error real de castellano, encontrado al escribirlo**: el título del formulario se armaba con `'Nueva ' + singular`, y daba **"Nueva desarrollista"** y **"Nueva propietario"**. El género es del sustantivo, así que ahora vive con el sustantivo: cada catálogo trae sus títulos escritos. Tiene prueba, porque es exactamente la clase de cosa que alguien vuelve a concatenar.
+
+**Otras decisiones**
+
+- **El slug no se recalcula** al renombrar: el de una zona forma parte de las direcciones del sitio.
+- **Un desarrollista repetido se avisa**, no revienta. El nombre es único en la base y sin este control devolvía un error de restricción.
+- **El campo `icon` de las amenidades no se usa en ninguna parte del sitio** —se pintan con un rombo genérico—, pero la columna es obligatoria. Se deriva del slug en vez de pedirle a alguien que escriba un nombre de ícono que no hace nada.
+- **Los propietarios son internos** (D-09, RNF-10) y la pantalla lo dice. Están acá porque el formulario de la propiedad los necesita, y en ningún otro lado.
+- **El nombre del catálogo llega de la dirección y se valida contra la lista.** Un catálogo inventado devuelve 404 — pero recién **después** del control de sesión, así que a quien no entró no se le informa qué catálogos existen.
+
+**Esta pantalla necesita JavaScript, y lo dice.** No se hizo el camino sin JavaScript, a diferencia de destacadas y configuración. Allá existe por una razón concreta: arrastrar no dispara nada en pantallas táctiles. Acá los botones comunes funcionan en cualquier lado, y el panel ya necesita JavaScript para la galería y el formulario de una propiedad. Lo que no se puede es dejar a alguien apretando un botón muerto, así que hay un `<noscript>` que lo explica.
+
+**Verificado**
+
+✅ `/admin/catalogos` sin sesión redirige al ingreso conservando la vuelta
+✅ Los cinco GET, el POST, el PATCH y el DELETE sin sesión devuelven 401
+✅ Un catálogo inventado devuelve 401 antes que 404: no filtra qué existe
+⏳ Falta la prueba visual, por lo mismo que las anteriores
+
+_Pruebas_: 29 casos nuevos — zona con y sin barrio, slug único, país y código por defecto, código en mayúsculas, código de tres letras rechazado, nombre de un carácter, desarrollista repetido al crear y al editar, desarrollista que se guarda con su propio nombre, sitio que no es dirección, sitio vacío que queda nulo, correo mal escrito, amenidad con slug derivado, edición que no toca el slug, edición de algo que no existe, los cinco casos de borrado en uso (incluidos los tres que la base no protege), singular y plural del mensaje, borrado de lo que quedó libre, conteo que no mezcla, los cinco catálogos vacíos, y la concordancia de género. **220 en verde.**
+
+`astro check`: 0 errores · ESLint: 0 · `astro build`: completo
+
+### El Hito 2 queda cerrado
+
+Las siete journeys del panel están construidas. La clienta puede, sin que nadie toque código: cargar y publicar propiedades con su galería, elegir y ordenar las destacadas, escribir noticias e informes, revisar y exportar las consultas, editar los textos del sitio, administrar las cinco listas, y publicar los cambios.
+
+**Lo que no se puede todavía es ver ninguna de las cuatro pantallas nuevas funcionando**, porque no hay con qué entrar al panel. Están construidas y probadas; falta mirarlas.

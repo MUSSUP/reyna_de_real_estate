@@ -1,14 +1,237 @@
 ---
 import Panel from '../../layouts/Panel.astro';
-import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+import { getDb } from '../../../../backend/db/client';
+import {
+  CAMPOS,
+  CATALOGOS,
+  esCatalogo,
+  listarCatalogo,
+  META,
+  type NombreCatalogo,
+} from '../../../../backend/lib/catalogos';
 
+/**
+ * Las listas que alimentan el formulario de una propiedad.
+ *
+ * Hasta ahora había que entrar a la base para sumar una zona. Esto es lo que
+ * saca a Musapp del camino.
+ *
+ * Una sola pantalla con los cinco catálogos, no cinco pantallas: cada uno
+ * tiene entre uno y cinco campos, y se tocan de a poco. Repartirlos en cinco
+ * secciones del menú sería menú de más para contenido de menos.
+ *
+ * El catálogo abierto viaja en la dirección: se puede compartir y volver con
+ * el botón atrás.
+ */
 export const prerender = false;
+
 const sesion = Astro.locals.sesion;
+
+const pedido = Astro.url.searchParams.get('lista') ?? '';
+const abierto: NombreCatalogo = esCatalogo(pedido) ? pedido : 'zonas';
+
+const items = await listarCatalogo(getDb(), abierto);
+const meta = META[abierto];
+const campos = CAMPOS[abierto];
+
+const control =
+  'w-full rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2.5 text-sm text-texto transition-colors hover:border-dorado focus:border-verde focus:outline-none aria-[invalid=true]:border-red-600';
 ---
 
 <Panel titulo="Catálogos" usuario={sesion?.name}>
-  <EnConstruccion
-    para="Acá vas a administrar las zonas, tipologías, desarrollistas, amenidades y propietarios que aparecen en el formulario de una propiedad."
-    mientrasTanto="Por ahora esas listas se cargan por sistema. Si necesitás sumar una zona o una tipología, avisame."
-  />
+  <p class="max-w-[64ch] text-sm text-texto-suave">
+    Las listas que aparecen en el formulario de una propiedad. Nada se borra si hay propiedades que
+    lo usan — primero hay que cambiarlas.
+  </p>
+
+  {
+    /*
+    Esta pantalla necesita JavaScript para dar de alta, editar y borrar, igual
+    que el formulario de una propiedad y la galería. No se hizo el camino sin
+    JavaScript porque acá no hay motivo: en destacadas existe porque arrastrar
+    no funciona en pantallas táctiles, y los botones comunes sí. Lo que no se
+    puede es dejar a alguien apretando un botón que no hace nada.
+  */
+  }
+  <noscript>
+    <p
+      class="mt-5 rounded-[var(--radius-campo)] border border-[#f0dfb9] bg-[#fdf6e7] px-4 py-3 text-sm text-[#7a5f22]"
+    >
+      Para cargar o cambiar estas listas hace falta tener JavaScript activado. Las listas se ven
+      igual, pero los botones no van a responder.
+    </p>
+  </noscript>
+
+  {/* Las pestañas son enlaces de verdad: sin JavaScript se cambia igual. */}
+  <nav aria-label="Catálogos" class="mt-5 flex flex-wrap gap-2">
+    {
+      CATALOGOS.map((n) => (
+        <a
+          href={`/admin/catalogos?lista=${n}`}
+          aria-current={n === abierto ? 'page' : undefined}
+          class:list={[
+            'rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] transition-colors',
+            n === abierto
+              ? 'bg-verde text-white'
+              : 'border border-black/10 text-texto-suave hover:border-verde hover:text-verde',
+          ]}
+        >
+          {META[n].titulo}
+        </a>
+      ))
+    }
+  </nav>
+
+  <section
+    data-catalogo={abierto}
+    data-nuevo={meta.nuevo}
+    data-editar={meta.editar}
+    class="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]"
+  >
+    {/* --- La lista ----------------------------------------------------- */}
+    <div class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+      <h2 class="font-titulo text-base text-verde">{meta.titulo}</h2>
+      <p class="mt-1 text-xs text-texto-suave">{meta.descripcion}</p>
+
+      {
+        meta.interno && (
+          <p class="mt-3 rounded-[var(--radius-campo)] border border-[#f0dfb9] bg-[#fdf6e7] px-3 py-2 text-xs text-[#7a5f22]">
+            Estos datos son internos. No aparecen en ninguna página del sitio.
+          </p>
+        )
+      }
+
+      <p
+        data-error-lista
+        role="alert"
+        class="mt-4 hidden rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+      >
+      </p>
+
+      {
+        items.length === 0 ? (
+          <p class="mt-5 rounded-[var(--radius-campo)] border border-dashed border-black/15 px-4 py-8 text-center text-sm text-texto-suave">
+            {`${meta.vacio} Cargá el primero con el formulario de al lado.`}
+          </p>
+        ) : (
+          <ul class="mt-5 flex flex-col gap-2">
+            {items.map((i) => (
+              <li
+                data-item
+                data-id={i.id}
+                data-valores={JSON.stringify(i.campos)}
+                class="flex items-center gap-3 rounded-[var(--radius-campo)] border border-black/10 p-3"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm font-semibold text-texto">{i.nombre}</span>
+                  <span class="mt-0.5 block text-xs text-texto-suave">
+                    {i.enUso === 0
+                      ? 'No la usa ninguna propiedad'
+                      : i.enUso === 1
+                        ? 'La usa 1 propiedad'
+                        : `La usan ${i.enUso} propiedades`}
+                  </span>
+                </span>
+
+                <button
+                  type="button"
+                  data-editar
+                  class="shrink-0 rounded border border-black/10 px-2.5 py-1 text-xs text-texto-suave hover:border-verde hover:text-verde"
+                >
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  data-borrar
+                  disabled={i.enUso > 0}
+                  title={i.enUso > 0 ? 'Hay propiedades que la usan' : undefined}
+                  class="shrink-0 rounded border border-black/10 px-2.5 py-1 text-xs text-texto-suave hover:border-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  Borrar
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+
+    {/* --- El formulario ----------------------------------------------- */}
+    <form data-forma class="h-fit rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+      <h2 data-titulo-forma class="font-titulo text-base text-verde">{meta.nuevo}</h2>
+
+      {/* Vacío = alta. Con número = edición. Lo pone y lo saca el script. */}
+      <input type="hidden" data-id-editando value="" />
+
+      <div class="mt-4 flex flex-col gap-4">
+        {
+          campos.map((c) => (
+            <div class="flex flex-col gap-1.5">
+              <label
+                for={`c-${c.nombre}`}
+                class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+              >
+                {c.etiqueta}
+                {c.obligatorio && (
+                  <span class="text-rosa" aria-hidden="true">
+                    *
+                  </span>
+                )}
+                {c.obligatorio && <span class="sr-only">(obligatorio)</span>}
+              </label>
+
+              {c.multilinea ? (
+                <textarea
+                  id={`c-${c.nombre}`}
+                  name={c.nombre}
+                  rows="3"
+                  class={control}
+                  data-campo={c.nombre}
+                />
+              ) : (
+                <input
+                  id={`c-${c.nombre}`}
+                  name={c.nombre}
+                  type={c.tipo ?? 'text'}
+                  class={control}
+                  data-campo={c.nombre}
+                />
+              )}
+
+              {c.ayuda && <p class="text-xs text-texto-suave">{c.ayuda}</p>}
+              <p data-error-de={c.nombre} class="hidden text-xs text-red-700" />
+            </div>
+          ))
+        }
+      </div>
+
+      <p
+        data-error-forma
+        role="alert"
+        class="mt-4 hidden rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800"
+      >
+      </p>
+
+      <div class="mt-5 flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          data-guardar
+          class="rounded-full bg-rosa px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Guardar
+        </button>
+        <button
+          type="button"
+          data-cancelar
+          hidden
+          class="text-xs text-texto-suave underline-offset-4 hover:text-texto hover:underline"
+        >
+          Cancelar la edición
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <script is:inline defer src="/js/catalogos.js"></script>
 </Panel>

@@ -1,6 +1,6 @@
 # Seguimiento — Reyna de Real Estate
 
-Actualizado: 2026-10-17 · Estado: **en ejecución — Hito 2**
+Actualizado: 2026-10-17 · Estado: **en ejecución — Hito 3**
 Alcance: **v3.0 — híbrido ampliado, español** (decisiones B5 y D-11)
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
@@ -13,9 +13,9 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | ---------------------------- | ------ | -------------------------------------------------- |
 | Infraestructura              | 8      | 🟢 6/8 (+2 parciales)                              |
 | Hito 1 · Visitante           | 6      | ✅ 6/6                                             |
-| Hito 2 · Administración      | 7      | 🟢 7/7 (falta UJ-08b, los catálogos)               |
+| Hito 2 · Administración      | 7      | ✅ 7/7 · **cerrado**                               |
 | Hito 3 · Contenido y entrega | 7      | 🟢 3/7                                             |
-| **Total**                    | **28** | **22/28** terminadas · 2 parciales · 5 sin empezar |
+| **Total**                    | **28** | **23/28** terminadas · 2 parciales · 4 sin empezar |
 
 ---
 
@@ -63,6 +63,8 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | UJ-11 | Revisar contactos            | ✅     |                                                               |
 | UJ-12 | Editar textos del sitio      | ✅     | 19 claves. Las direcciones se validan al guardar y al dibujar |
 | UJ-13 | Publicar cambios             | ✅     | Webhook de rebuild                                            |
+
+| UJ-08b | Catálogos | ✅ | Las cinco listas. Nada se borra si está en uso |
 
 **🔍 Revisión de hito** tras UJ-13 — `/review`
 
@@ -116,6 +118,7 @@ Bloquean la entrega pero no son código.
 | 2026-08-20 | Planificación completa v2.0                                                                                                                                                                                                                                   |
 | 2026-08-21 | Dominio resuelto: Don Web, con acceso de Musapp. Riesgo R-04 cerrado                                                                                                                                                                                          |
 | 2026-08-21 | Decisión D-11: se suman galería y noticias/informes. Bilingüe sigue afuera. Plan a v3.0 — 28 tareas                                                                                                                                                           |
+| 2026-10-17 | **UJ-08b completada. Hito 2 cerrado.** Las cinco listas del formulario se administran desde el panel: hasta hoy había que entrar a la base para sumar una zona. Nada se borra si está en uso — para tres de los cinco, la base lo habría borrado en silencio  |
 | 2026-10-17 | **UJ-10 completada.** La clienta ya puede escribir noticias e informes: era el último hueco de autonomía. La página pública existía desde agosto y las que estaban las había cargado yo con la siembra                                                        |
 | 2026-10-17 | **UJ-12 completada.** Los textos del sitio se editan desde el panel. Lo importante es de seguridad: tres de esas claves van dentro de un atributo, y un `javascript:` en un `href` se ejecuta aunque se escape. Se valida en positivo y dos veces             |
 | 2026-10-17 | **UJ-09 completada.** Dos listas que se arrastran, y botones de verdad para que ande desde el celular. El orden del carrusel no existía: `featured_order` quedaba nulo y la portada se armaba distinta en cada construcción                                   |
