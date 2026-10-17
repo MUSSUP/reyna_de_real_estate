@@ -1,14 +1,196 @@
 ---
 import Panel from '../../layouts/Panel.astro';
-import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+import { getDb } from '../../../../backend/db/client';
+import {
+  LARGO_PARRAFO,
+  LARGO_TEXTO,
+  LARGO_URL,
+  listarConfiguracion,
+} from '../../../../backend/lib/configuracion';
 
+/**
+ * Los textos y datos del sitio, editables sin tocar código.
+ *
+ * **Vaciar un campo no rompe nada**: cada lugar que lee una clave tiene su
+ * respaldo, así que borrar un texto devuelve el que vino de fábrica en vez de
+ * dejar un hueco. Eso se dice en la pantalla, porque si no, nadie se anima a
+ * borrar nada.
+ *
+ * Es un formulario de verdad: sin JavaScript guarda igual, con una recarga.
+ */
 export const prerender = false;
+
 const sesion = Astro.locals.sesion;
+const params = Astro.url.searchParams;
+
+const grupos = await listarConfiguracion(getDb());
+
+// Resultado del guardado sin JavaScript. Con JavaScript nada de esto se usa:
+// el aviso aparece sin recargar.
+const guardado = params.get('guardado');
+const cambios = guardado !== null && guardado !== 'ilegible' ? Number(guardado) : null;
+
+let errores: Record<string, string> = {};
+const revisar = params.get('revisar');
+if (revisar) {
+  try {
+    const leido: unknown = JSON.parse(revisar);
+    if (leido && typeof leido === 'object' && !Array.isArray(leido)) {
+      // Se queda solo con lo que es texto: el parámetro lo puede escribir
+      // cualquiera, y de acá sale a la pantalla.
+      errores = Object.fromEntries(
+        Object.entries(leido as Record<string, unknown>)
+          .filter(([, v]) => typeof v === 'string')
+          .map(([k, v]) => [k, String(v).slice(0, 200)]),
+      );
+    }
+  } catch {
+    errores = {};
+  }
+}
+
+const largoMaximo = (tipo: string) =>
+  tipo === 'parrafo' ? LARGO_PARRAFO : tipo === 'url' ? LARGO_URL : LARGO_TEXTO;
+
+const tipoHtml = (tipo: string) =>
+  tipo === 'email' ? 'email' : tipo === 'telefono' ? 'tel' : tipo === 'url' ? 'url' : 'text';
+
+const claseCampo =
+  'w-full rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm';
 ---
 
 <Panel titulo="Configuración" usuario={sesion?.name}>
-  <EnConstruccion
-    para="Acá vas a editar los textos del sitio, los teléfonos, el mail de contacto y las redes, sin tocar código."
-    mientrasTanto="Si necesitás cambiar alguno de esos datos ahora, avisame y lo hago."
-  />
+  <form id="forma-config" method="POST" action="/api/admin/settings" data-forma-config>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <p class="max-w-[62ch] text-sm text-texto-suave">
+        Los textos del sitio, los contactos y las redes. Si vaciás un campo, el sitio vuelve a
+        mostrar el texto que venía de fábrica — no queda un hueco. Los cambios se ven después de
+        publicar.
+      </p>
+
+      <div class="flex items-center gap-3">
+        <span data-aviso class="hidden text-sm text-verde" role="status"></span>
+        <button
+          type="submit"
+          data-guardar
+          class="rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    {
+      cambios !== null && (
+        <p
+          role="status"
+          class="mt-4 rounded-[var(--radius-campo)] border border-[#b6cec6] bg-[#e4ede9] px-4 py-3 text-sm text-verde"
+        >
+          {cambios === 0 ? 'No había nada para cambiar.' : 'Cambios guardados.'}
+        </p>
+      )
+    }
+
+    {
+      (guardado === 'ilegible' || Object.keys(errores).length > 0) && (
+        <p
+          role="alert"
+          class="mt-4 rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+          {guardado === 'ilegible'
+            ? 'No pudimos leer los datos. Probá de nuevo.'
+            : 'No se guardó nada: revisá los campos marcados y volvé a escribirlos.'}
+        </p>
+      )
+    }
+
+    <p
+      data-error-general
+      role="alert"
+      class="mt-4 hidden rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+    >
+    </p>
+
+    <div class="mt-6 flex flex-col gap-6">
+      {
+        grupos.map((g) => (
+          <section
+            class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5"
+            aria-labelledby={`g-${g.id}`}
+          >
+            <h2 id={`g-${g.id}`} class="font-titulo text-base text-verde">
+              {g.titulo}
+            </h2>
+            <p class="mt-1 text-xs text-texto-suave">{g.descripcion}</p>
+
+            <div class="mt-5 grid gap-5 md:grid-cols-2">
+              {g.campos.map((c) => {
+                const malo = errores[c.key];
+                const id = `c-${c.key.replace(/\./g, '-')}`;
+                return (
+                  <div
+                    class:list={[
+                      'flex flex-col gap-1.5',
+                      { 'md:col-span-2': c.tipo === 'parrafo' },
+                    ]}
+                  >
+                    <label
+                      for={id}
+                      class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+                    >
+                      {c.etiqueta}
+                    </label>
+
+                    {c.tipo === 'parrafo' ? (
+                      <textarea
+                        id={id}
+                        name={c.key}
+                        rows="8"
+                        maxlength={largoMaximo(c.tipo)}
+                        aria-describedby={
+                          malo ? `${id}-error` : c.ayuda ? `${id}-ayuda` : undefined
+                        }
+                        aria-invalid={malo ? 'true' : undefined}
+                        class:list={[claseCampo, { 'border-red-400': malo }]}
+                        set:text={c.valor}
+                      />
+                    ) : (
+                      <input
+                        id={id}
+                        name={c.key}
+                        type={tipoHtml(c.tipo)}
+                        value={c.valor}
+                        maxlength={largoMaximo(c.tipo)}
+                        aria-describedby={
+                          malo ? `${id}-error` : c.ayuda ? `${id}-ayuda` : undefined
+                        }
+                        aria-invalid={malo ? 'true' : undefined}
+                        class:list={[claseCampo, { 'border-red-400': malo }]}
+                      />
+                    )}
+
+                    {c.ayuda && (
+                      <p id={`${id}-ayuda`} class="text-xs text-texto-suave">
+                        {c.ayuda}
+                      </p>
+                    )}
+
+                    <p
+                      id={`${id}-error`}
+                      data-error-campo={c.key}
+                      class:list={['text-xs text-red-700', { hidden: !malo }]}
+                    >
+                      {malo ?? ''}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </form>
+
+  <script is:inline defer src="/js/configuracion.js"></script>
 </Panel>

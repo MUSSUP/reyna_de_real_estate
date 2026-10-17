@@ -1,7 +1,7 @@
 ---
 import Contenedor from './Contenedor.astro';
 import Corona from './Corona.astro';
-import { valor, type Configuracion } from '../../lib/datos';
+import { type Configuracion, valor, valorUrl } from '../../lib/datos';
 
 /**
  * "Conóceme": quién es Laura.
@@ -32,7 +32,7 @@ const { config } = Astro.props;
 const titulo = valor(config, 'nosotros.title', 'Conóceme');
 const cuerpo = valor(config, 'nosotros.body');
 const claim = valor(config, 'nosotros.claim', 'Your dream is reality');
-const foto = valor(config, 'nosotros.photo');
+const foto = valorUrl(config, 'nosotros.photo');
 
 // El texto se guarda con líneas en blanco entre párrafos.
 const parrafos = cuerpo

@@ -13,9 +13,9 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | ---------------------------- | ------ | -------------------------------------------------- |
 | Infraestructura              | 8      | 🟢 6/8 (+2 parciales)                              |
 | Hito 1 · Visitante           | 6      | ✅ 6/6                                             |
-| Hito 2 · Administración      | 7      | 🟢 5/7                                             |
+| Hito 2 · Administración      | 7      | 🟢 6/7                                             |
 | Hito 3 · Contenido y entrega | 7      | 🟢 3/7                                             |
-| **Total**                    | **28** | **20/28** terminadas · 2 parciales · 7 sin empezar |
+| **Total**                    | **28** | **21/28** terminadas · 2 parciales · 6 sin empezar |
 
 ---
 
@@ -61,7 +61,7 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | UJ-09 | Elegir y ordenar destacadas  | ✅     | Se arrastra, y sin JavaScript también anda                   |
 | UJ-10 | Publicar noticias e informes | ⬜     | **Nuevo (D-11)**                                             |
 | UJ-11 | Revisar contactos            | ✅     |                                                              |
-| UJ-12 | Editar textos del sitio      | ⬜     |                                                              |
+| UJ-12 | Editar textos del sitio      | ✅     | 19 claves. Las direcciones se validan al guardar y al dibujar |
 | UJ-13 | Publicar cambios             | ✅     | Webhook de rebuild                                           |
 
 **🔍 Revisión de hito** tras UJ-13 — `/review`
@@ -116,6 +116,7 @@ Bloquean la entrega pero no son código.
 | 2026-08-20 | Planificación completa v2.0                                                                                                                                                                                                           |
 | 2026-08-21 | Dominio resuelto: Don Web, con acceso de Musapp. Riesgo R-04 cerrado                                                                                                                                                                  |
 | 2026-08-21 | Decisión D-11: se suman galería y noticias/informes. Bilingüe sigue afuera. Plan a v3.0 — 28 tareas                                                                                                                                   |
+| 2026-10-17 | **UJ-12 completada.** Los textos del sitio se editan desde el panel. Lo importante es de seguridad: tres de esas claves van dentro de un atributo, y un `javascript:` en un `href` se ejecuta aunque se escape. Se valida en positivo y dos veces |
 | 2026-10-17 | **UJ-09 completada.** Dos listas que se arrastran, y botones de verdad para que ande desde el celular. El orden del carrusel no existía: `featured_order` quedaba nulo y la portada se armaba distinta en cada construcción       |
 | 2026-10-17 | **Supabase se mantiene despierta sola.** Función programada en Netlify que consulta la base cada tres días. El plan gratuito pausaba el proyecto tras una semana sin actividad y las fotos del sitio desaparecían solas: pasó dos veces durante el desarrollo |
 | 2026-10-17 | Corregidos errores de revisión de código que había introducido en `propiedad.js` y no vi, porque solo miré la última línea de la salida                                                                                                                      |

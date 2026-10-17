@@ -1,7 +1,7 @@
 ---
 import Corona from './Corona.astro';
 import IconoSocial from './IconoSocial.astro';
-import { valor, type Configuracion } from '../../lib/datos';
+import { type Configuracion, valor, valorUrl } from '../../lib/datos';
 import { enlaceWhatsApp, soloDigitos } from '../../lib/whatsapp';
 
 /**
@@ -20,15 +20,15 @@ const telAr = valor(config, 'contacto.phone_ar');
 
 const redes = [
   { red: 'web' as const, href: '/', etiqueta: 'Sitio web' },
-  { red: 'instagram' as const, href: valor(config, 'redes.instagram'), etiqueta: 'Instagram' },
-  { red: 'facebook' as const, href: valor(config, 'redes.facebook'), etiqueta: 'Facebook' },
+  { red: 'instagram' as const, href: valorUrl(config, 'redes.instagram'), etiqueta: 'Instagram' },
+  { red: 'facebook' as const, href: valorUrl(config, 'redes.facebook'), etiqueta: 'Facebook' },
   {
     red: 'whatsapp' as const,
     href: enlaceWhatsApp(config),
     etiqueta: 'WhatsApp',
   },
   { red: 'mail' as const, href: `mailto:${email}`, etiqueta: 'Enviar un correo' },
-  { red: 'youtube' as const, href: valor(config, 'redes.youtube'), etiqueta: 'YouTube' },
+  { red: 'youtube' as const, href: valorUrl(config, 'redes.youtube'), etiqueta: 'YouTube' },
 ].filter((r) => r.href !== '');
 
 const anio = new Date().getFullYear();

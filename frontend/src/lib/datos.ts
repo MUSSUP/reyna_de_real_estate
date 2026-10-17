@@ -24,6 +24,7 @@ import { crearAlmacenamientoS3 } from '../../../backend/lib/storage';
 // Del módulo sin dependencias, no de `images.ts`: ese arrastra sharp, que
 // no hace falta para calcular anchos y no carga en el servidor de Netlify.
 import { ANCHOS, anchosPara } from '../../../backend/lib/anchosImagen';
+import { urlSegura } from '../../../backend/lib/urlSegura';
 
 const db = getDb();
 
@@ -45,6 +46,20 @@ export async function obtenerConfiguracion(): Promise<Configuracion> {
 export function valor(config: Configuracion, clave: string, respaldo = ''): string {
   const v = config[clave];
   return v && v.trim() !== '' ? v : respaldo;
+}
+
+/**
+ * Lo mismo, para una dirección que va a terminar en un `href` o un `src`.
+ *
+ * El panel ya rechaza lo que no sea `http` o `https` al guardar. Esto es la
+ * segunda red: una clave puede venir de la siembra, de una edición directa en
+ * la base o de una versión anterior del panel, y **escapar no protege de un
+ * `javascript:` en un `href`** — se ejecuta igual. Lo que no pasa el control
+ * se trata como vacío, que es exactamente lo que `valor()` ya sabe manejar.
+ */
+export function valorUrl(config: Configuracion, clave: string, respaldo = ''): string {
+  const v = valor(config, clave, respaldo);
+  return urlSegura(v) ? v : '';
 }
 
 // --- Imágenes ---------------------------------------------------------------

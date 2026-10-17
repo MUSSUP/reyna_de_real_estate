@@ -18,6 +18,7 @@ import {
   obtenerTipologias,
   obtenerZonas,
   valor,
+  valorUrl,
 } from '../lib/datos';
 
 // Se lee al construir el sitio, no en cada visita (D-04).
@@ -42,7 +43,7 @@ const tipologias = await obtenerTipologias();
       pregunta={valor(config, 'hero.question', '¿Qué estás buscando hoy?')}
       textoInvertir={valor(config, 'hero.cta_invertir', 'Invertir')}
       textoRentar={valor(config, 'hero.cta_rentar', 'Rentar')}
-      videoUrl={valor(config, 'hero.video_url') || undefined}
+      videoUrl={valorUrl(config, 'hero.video_url') || undefined}
     />
 
     {/* El buscador va antes de las destacadas, en la misma sección (wireframe) */}

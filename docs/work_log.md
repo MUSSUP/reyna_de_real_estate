@@ -1799,3 +1799,40 @@ Las dos columnas comparten la misma fila (`FilaDestacada.astro`), y qué botones
 _Pruebas_: 24 casos nuevos — orden que se guarda, orden que se limpia, rechazo sin foto y sin publicar, todo-o-nada, repetidas, identificador inválido, propiedad borrada, `updated_at` que no se toca, las tres columnas de la pantalla, la casilla del formulario, y los cuatro movimientos del camino sin JavaScript. **132 en verde.**
 
 `astro check`: 0 errores · ESLint: 0 · `astro build`: completo
+
+---
+
+## UJ-12 · Editar los textos del sitio — ✅ Completada
+
+Diecinueve claves en cuatro grupos: portada, "Conóceme", contacto y redes. Los títulos, la presentación de Laura, los teléfonos, los correos, el mensaje con el que arranca WhatsApp y los enlaces del pie. Sin tocar código, que era el punto.
+
+**Lo importante de esta journey es de seguridad, y no es evidente.**
+
+Tres de esas claves terminan dentro de un atributo: `redes.instagram` en un `href`, `hero.video_url` en un `<video src>` y `nosotros.photo` en una `<img src>`. **Escapar no protege de eso**: `javascript:alert(1)` en un `href` se ejecuta igual, porque el problema no es el texto sino el esquema. Hasta hoy esos valores los había puesto yo en la siembra; desde que la clienta los puede editar, el campo es una entrada externa y hay que tratarla como tal.
+
+Se valida **en positivo**: solo `http` y `https`. No con una lista de esquemas prohibidos, porque esa lista siempre se queda corta — hoy es `javascript:`, `data:` y `vbscript:`, y el año que viene es otro.
+
+Y se valida **dos veces**. Al guardar, en el panel. Y otra vez al dibujar, con `valorUrl()`, porque una clave puede venir de la siembra, de una edición directa en la base o de una versión anterior del panel: el que dibuja no tiene por qué confiar en lo que lee. `urlSegura` vive en su propio archivo sin dependencias, por D-19 — el módulo de configuración arrastra la base entera y eso no puede llegar a las páginas públicas.
+
+**Las otras reglas**
+
+- **Vaciar un campo no rompe nada.** Cada lugar que lee una clave tiene su respaldo, así que borrar un texto devuelve el de fábrica en vez de dejar un hueco. Se dice en la pantalla, porque si no nadie se anima a borrar nada.
+- **Todo o nada.** Con un campo mal no se guarda ninguno, y vuelven todos los errores juntos. Guardar la mitad deja la pantalla diciendo una cosa y el sitio mostrando otra.
+- **Solo claves del catálogo, y no se crean claves nuevas.** Una clave que llega y no está en el catálogo se ignora: el formulario nunca la manda, así que si llega es porque alguien armó el pedido a mano.
+- **Solo se escriben las filas que cambian**, por lo mismo que en destacadas: tocar `updated_at` haría decir "tenés cambios sin publicar" por haber abierto la pantalla.
+- Los mensajes dicen qué arreglar — "No parece un correo electrónico", "Dejá solo números, espacios, + y guiones" — y no "inválido".
+
+**Una clave de la base que no está en el catálogo se muestra**, en un grupo "Otros" al final. Ocultarla dejaría una clave sin forma de editarse y sin nadie que supiera que existe.
+
+**Lo que se pierde sin JavaScript**: si un campo está mal, la recarga se lleva lo que se acababa de escribir. Es inherente al redirect y no tiene arreglo limpio; con JavaScript —el caso normal— los errores se marcan en su lugar y el texto queda donde estaba. El guardado en sí funciona en los dos caminos.
+
+**Verificado**
+
+✅ `/admin/configuracion` sin sesión redirige al ingreso conservando la vuelta
+✅ `PUT /api/admin/settings` sin sesión devuelve 401
+✅ Formulario desde otro origen: 403
+⏳ Falta la prueba visual en el navegador, por lo mismo que UJ-09: necesita entrar al panel.
+
+_Pruebas_: 30 casos nuevos — siete variantes de dirección peligrosa (con mayúsculas, con espacios, `data:`, `vbscript:`, `file:`), las tres claves que van a atributos, correos, teléfonos como los escribe cualquiera, título con salto de línea, pegado enorme, todo-o-nada, errores juntos, clave fuera del catálogo, clave que no existe, valor que no es texto, cuerpo que no es un objeto, y `updated_at` que no se toca. **162 en verde.**
+
+`astro check`: 0 errores · ESLint: 0 · `astro build`: completo
