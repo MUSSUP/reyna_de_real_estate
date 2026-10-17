@@ -1,143 +1,130 @@
 # Memoria del Proyecto — Reyna de Real Estate
 
-Actualizado: 2026-08-23
+Actualizado: 2026-10-17
 
 ---
 
 ## Estado
 
-**En ejecución. 15 de 28 terminadas, 2 parciales, 12 sin empezar. 🎯 El sitio público está entero; falta el panel.**
+**En ejecución. 21 de 28 terminadas, 2 parciales, 6 sin empezar.**
+**🎯 El sitio público está entero y en vivo. El panel está casi completo.**
 
-> El conteo venía diciendo 17/28 y estaba inflado desde antes: nunca cerró la cuenta. Corregido contando los estados uno por uno.
+**En vivo**: <https://reyna-de-real-estate.netlify.app> · Panel: `/admin`
 
-✅ IT-01 · Esqueleto del proyecto
-✅ IT-02 · Base de datos y migraciones
-✅ IT-03 · Imágenes y almacenamiento
-✅ IT-04 · Autenticación del panel
-✅ IT-05 · Sistema de diseño
-🟡 IT-06 · Envío de correo — implementado y verificado; falta probar un envío real (necesita cuenta de Resend)
-✅ IT-07 · Datos de demostración — cargados en Supabase real
-🟡 IT-08 · Entorno Docker y despliegue — configuración lista y verificada; falta probar `docker compose up` (Docker no está instalado)
+**Infraestructura**
 
-**Hito 1 — el visitante encuentra y consulta una propiedad**
-✅ UJ-01 · Home: hero, barra, pie, WhatsApp y 404
-✅ UJ-02 · Carrusel de destacadas
-✅ UJ-03 · Buscador y catálogo `/propiedades`
-✅ UJ-04 · Ficha de propiedad con galería
-✅ UJ-05 · Contacto por WhatsApp
-✅ UJ-06 · Formulario de consulta
-✅ **Revisión del Hito 1**: 0 críticos, 8 importantes, 13 menores. Se cerraron 4
-✅ UJ-15 · Noticias — **adelantada del Hito 3**: el menú la enlazaba y la página no existía
-▶️ **Próximo: el Hito 2 (panel), empezando por UJ-08**
+✅ IT-01 a IT-05, IT-07 — esqueleto, base, imágenes, autenticación, diseño, datos de demostración
+🟡 IT-06 · Envío de correo — implementado y verificado; **falta la cuenta de Resend**, así que los avisos no salen
+🟡 IT-08 · Docker y despliegue — desplegado y funcionando en Netlify; falta probar `docker compose up` (Docker no está instalado en el equipo)
+
+**Hito 1 — el visitante (completo)**
+✅ UJ-01 a UJ-06 · home, carrusel, buscador, ficha, WhatsApp, formulario
+✅ UJ-14, UJ-15, UJ-16 · informe Insights, noticias, Conóceme
+✅ Revisión del Hito 1: 0 críticos, 8 importantes, 13 menores
+
+**Hito 2 — el panel**
+✅ UJ-07 · Entrar al panel
+✅ UJ-08 · Publicar una propiedad — formulario, portada y galería (faltan los catálogos, UJ-08b)
+✅ UJ-09 · Elegir y ordenar destacadas
+✅ UJ-11 · Revisar las consultas
+✅ UJ-12 · Editar los textos del sitio
+✅ UJ-13 · Publicar cambios (webhook de rebuild)
+⬜ UJ-10 · Publicar noticias e informes ← **próximo**
+⬜ UJ-08b · Catálogos (zonas, tipologías, desarrollistas, amenidades)
+
+**Hito 3 — calidad y entrega**
+⬜ IT-09 · Auditoría de rendimiento y accesibilidad
+⬜ IT-10 · Auditoría de seguridad final (obligatoria — verificar que `owners` no se filtre)
+⬜ IT-11 · Verificación con y sin datos (obligatoria)
+⬜ IT-12 · Despliegue y entrega, DNS en Don Web
+
+---
+
+## ⚠️ Lo primero al retomar
+
+**No se puede entrar al panel: la contraseña de la administradora se perdió.**
+Bloquea la prueba visual de UJ-09, UJ-11 y UJ-12 — están construidas y probadas, pero nadie las vio funcionando en un navegador. Se arregla con `npm run db:crear-admin`, que es además la acción A-10 de la entrega.
+
+**Firmar una sesión a mano con el `JWT_SECRET` queda bloqueado por la política de credenciales, y está bien que quede bloqueado.** No insistir por ahí: la contraseña la pone la persona.
 
 ---
 
 ## Qué es
 
-Sitio de captación para **Laura Cabral** (marca: **Reyna de Real Estate**), broker de propiedades de lujo en Riviera Maya. Cliente de Musapp; el acuerdo tiene alrededor de un año y sufrió interrupciones.
+Sitio de captación para **Laura Cabral** (marca: **Reyna de Real Estate**), broker de propiedades de lujo en Riviera Maya. Clienta y amiga de Musapp; el acuerdo tiene alrededor de un año y sufrió interrupciones.
 
-Dominio `reynaderealestate.com`, ya administrado por la clienta.
+Dominio `reynaderealestate.com` en Don Web, hoy a nombre de Musapp.
 Reemplaza una versión a medio construir en Bubble cuyo diseño está aprobado.
 
----
+**El alcance está cerrado** por el "Documento de Cierre de Alcance V1" (Drive, 29/06/2026) más las correcciones de julio (D-06, D-11). Apareció durante la planificación y contradecía el plan en nueve puntos; se reescribió todo. **Lo único fuera de alcance es el sitio bilingüe**: el costo no está en el código sino en obligar a la clienta a cargar todo dos veces, para siempre.
 
-## Lo más importante para retomar
-
-**El alcance está definido por el "Documento de Cierre de Alcance V1"** (Drive, 29/06/2026) **más las correcciones de julio.** Ver decisiones D-06 y D-11.
-
-Ese documento apareció durante la planificación y **contradecía el plan en nueve puntos**. Se reescribió todo (v1 → v2), y luego se amplió al evaluar el costo real de cada pedido (v2 → v3).
-
-**Lo único fuera de alcance es el sitio bilingüe** (D-11): el costo no está en el código sino en obligar a la clienta a cargar todo dos veces, para siempre.
-
-**El sitio sale en español.** Incluye galería de fotos y noticias e informes administrables.
+**La intención de Musapp es terminar y desligarse.** No sumar nada que no esté en el alcance.
 
 ---
 
-## Próximo paso
+## Patrones que hay que respetar
 
-Continuar el **Hito 1** según el tracker. El recorrido del visitante ya funciona de punta a punta: entrar → buscar → filtrar → ver la ficha → consultar por WhatsApp.
+- **El sitio público es estático** (D-04). Las visitas no tocan la base. Publicar dispara un rebuild. Única excepción: `POST /api/leads`.
+- **Los formularios funcionan sin JavaScript** (D-16). Nació para el sitio público y desde UJ-09 también rige el panel: cada botón es un `submit` con nombre, el servidor aplica y responde 303 a una página real. El JavaScript es la mejora, nunca el requisito — **arrastrar no dispara nada en pantallas táctiles, y la clienta entra desde el celular.**
+- **La lógica va en `backend/lib/`, con base y servicios por parámetro** (D-17). `npm test` corre vitest sobre PGlite con las migraciones reales: **162 casos**.
+- **Un solo middleware de sesión** (D-13). Todo endpoint del panel usa `requerirSesion`.
+- **Lo que necesita el navegador no comparte archivo con lo que solo corre en el servidor** (D-19). Dos archivos sin dependencias existen por eso: `anchosImagen.ts` y `urlSegura.ts`. Importar aritmética desde el módulo de imágenes arrastraba `sharp` a todas las páginas y rompió un despliegue.
+- **Ningún efecto decorativo esconde contenido** (D-14). Si la animación falla se ve el contenido sin animar, nunca al revés.
+- **Solo se escriben las filas que de verdad cambian.** Tocar `updated_at` al guardar sin cambios haría que el panel diga "tenés cambios sin publicar" por haber abierto la pantalla.
+- **Una dirección que escribe alguien y termina en un `href` es código.** Se valida en positivo (solo `http`/`https`) al guardar **y** al dibujar (`valorUrl`). Escapar no protege de `javascript:`.
+- **Los enlaces de WhatsApp se arman en un solo lugar**: `frontend/src/lib/whatsapp.ts`.
+- **El texto editable nunca se inserta como HTML**: `CuerpoArticulo.astro` con el separador de `lib/articulos.ts`.
+- **El logo es el real de la clienta** (D-15). Los originales en `design/marca/` no se editan; lo de `frontend/public/logos/` se regenera con `node design/marca/generar-assets.mjs`. **Solo la corona rosa**; la paleta quedó intacta.
+- **Astro 7, no Astro 5** (D-12): la rama 5 tenía XSS en el framework. `sharp` fijado a ≥0.35.3 por `overrides` — no bajarlo.
+- **El repositorio es público** (D-20). Las comunicaciones sobre la clienta viven fuera.
 
-**El Hito 1 está completo.** El recorrido del visitante funciona de punta a punta: entrar → buscar → filtrar → ver la ficha → consultar por WhatsApp o por formulario.
+---
 
-**El formulario funciona sin JavaScript** (D-16): es un formulario de verdad y el servidor responde 303 a `/gracias`. Cualquier formulario nuevo del sitio público debe seguir ese patrón.
+## Lo que quedó abierto de la revisión del Hito 1
 
-**Hay pruebas**: `npm test` corre 35 casos con vitest sobre un Postgres real (PGlite) con las migraciones aplicadas. La lógica de la consulta vive en `backend/lib/consultas.ts` y recibe base y correo por parámetro (D-17) — ese es el criterio para los próximos endpoints.
+| #     | Qué                                                                                     | Estado                          |
+| ----- | --------------------------------------------------------------------------------------- | ------------------------------- |
+| I-4   | La ficha ignora `coverPath`: con portada y sin galería queda la columna izquierda vacía | Abierto                         |
+| I-5   | Las miniaturas bajaban la variante de 1600 px para pintarla a 112                       | ✅ Cerrado en UJ-09             |
+| I-7   | No hay pruebas de autenticación ni una que proteja RNF-10                               | Abierto — lo pide el NFR        |
+| menor | **No hay menú móvil**: desde una ficha en el celular no se llega al catálogo            | Abierto — se ve en la 1ª visita |
 
-> **Los avisos por mail todavía no salen**: falta `RESEND_API_KEY`. Ninguna consulta se pierde — quedan en la base con `notified_at` nulo, y así se ven en la bandeja del panel.
+---
 
-**El logo es el real de la clienta** (D-15, 2026-08-22). Los originales viven en `design/marca/` — son irreemplazables y no se editan a mano. Todo lo de `frontend/public/logos/` es derivado: se regenera con `node design/marca/generar-assets.mjs`. Se usa **solo la corona rosa** y la paleta quedó intacta; las variantes turquesa están archivadas sin usar.
+## Infraestructura
 
-**El cuerpo de noticias e informes se pinta en un solo lugar**: `CuerpoArticulo.astro`, con el separador de `lib/articulos.ts`. Reconoce `##`, `###`, `>` y párrafos, y nada más — el texto **nunca** se inserta como HTML. Cualquier página nueva con texto editable debe usar ese componente.
+**Supabase** (`reynaderealestate@gmail.com`): Postgres 17.6, bucket de imágenes. Las credenciales viven en `.env`, que no se versiona.
 
-**Los enlaces de WhatsApp se arman en un solo lugar**: `frontend/src/lib/whatsapp.ts`. Ninguna página debe volver a construir un `wa.me` a mano. Los textos viven en `site_settings` (`whatsapp.message` y `whatsapp.message_property`, con marcador `{propiedad}`), no en el código.
-
-**El sitio ya se puede ver**: `npm run dev` → `http://localhost:4321`
-
-**La base ya tiene datos de demostración** (`npm run seed -- --limpiar` los recarga). A partir de acá, cada journey se puede ver con contenido real.
-
-**Pendiente de credenciales**: `RESEND_API_KEY` para probar un envío real, y verificar el dominio en Resend con DNS en Don Web para poder enviar desde `web@reynaderealestate.com`.
-
-El muestrario de componentes vive en `/sistema` (sin indexar). Sirve de referencia visual al construir cada journey.
-
-**Infraestructura real ✅ conectada** (2026-08-21): Supabase creado con el mail de la marca. Migraciones aplicadas sobre Postgres 17.6 y subida de imágenes verificada contra el bucket real. Las credenciales viven en `.env`, que no se versiona.
+> **El plan gratuito pausa el proyecto tras unos días sin actividad, y pasó dos veces.** Cuando pasa, el sitio público sigue en pie —es estático— pero **las fotos desaparecen**, porque se sirven desde el almacenamiento en el momento de mirar la página. Se resolvió con `netlify/functions/mantener-despierta.mjs`, que consulta la base cada tres días. **Si el sitio vuelve a aparecer sin fotos, lo primero que hay que mirar es si esa función se sigue ejecutando.**
 
 > Si alguna vez se cambia la contraseña de la base: evitar `? @ : / #`, o codificarlos dentro de la cadena. Un `?` sin codificar la parte en dos.
 
----
+**Netlify**: repositorio `MUSSUP/reyna_de_real_estate`, **público** — el plan gratuito no construye repositorios privados, y eso tuvo el despliegue trabado un mes. Variables de entorno cargadas en el panel de Netlify (nivel 2).
 
-## Lo que quedó abierto de la revisión
-
-Ninguno bloquea el Hito 2, pero conviene cerrarlos antes de entregar. El informe completo está en `docs/work_log.md`.
-
-| #     | Qué                                                                                                   | Por qué importa                                                            |
-| ----- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| I-4   | La ficha ignora `coverPath`: propiedad con portada y sin galería queda con la columna izquierda vacía | La card sí tiene respaldo; la ficha no                                     |
-| I-5   | Las miniaturas bajan la variante de 1600 px para pintarla a 112                                       | Invisible con la semilla; con fotos reales son más de 1 MB extra por ficha |
-| I-7   | No hay pruebas de autenticación ni una que proteja RNF-10                                             | El NFR nombra la autenticación como camino crítico                         |
-| menor | **No hay menú móvil**: desde una ficha en el celular no se llega al catálogo                          | Se ve en la primera visita desde un teléfono                               |
-| menor | Falta `robots.txt` y `sitemap.xml`, y no son tarea de nadie en el plan                                | Sin dueño, no se hacen                                                     |
+**El muestrario de componentes** vive en `/sistema`, sin indexar.
 
 ---
 
-## Decisiones que condicionan todo
+## Acciones que bloquean la entrega y no son código
 
-1. **El sitio público es estático** (D-04): las visitas no tocan la base. Publicar dispara un rebuild.
-2. **Netlify gratuito, no el VPS de Musapp** (D-02): para que Musapp no quede como infraestructura permanente de su clienta.
-3. **Cuentas a nombre de la marca** (D-03): `reynaderealestate@gmail.com`, no cuentas de Musapp.
-4. **Imagen principal + galería + enlace a Drive** para el video (D-07, ampliado por D-11).
-5. **Los leads se avisan por mail** (D-08), como preveía el acuerdo.
-6. **`owners` nunca se expone** (D-09).
-7. **Los scripts van como archivo propio, nunca incrustados en la página**: la política de seguridad prohíbe los scripts inline (UJ-02).
-8. **Ningún efecto decorativo puede esconder contenido** (D-14). Si la animación falla, se ve el contenido sin animar, nunca al revés.
-9. **El panel tiene un solo middleware de sesión** (D-13). Todo endpoint nuevo del panel debe usar `requerirSesion`.
-10. **Astro 7, no Astro 5** (D-12): la rama 5 tenía XSS en el framework. `sharp` fijado a ≥0.35.3 por `overrides` — no bajarlo.
+| #    | Acción                                                                                                                                   | Quién            |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| A-10 | **Que Laura ponga su propia contraseña del panel** (`npm run db:crear-admin`). Hoy nadie la tiene                                        | Musapp + clienta |
+| A-11 | **Quitar el bloqueo de indexación**: borrar `frontend/public/robots.txt` **y** la cabecera `X-Robots-Tag` de `netlify.toml`. Son las dos | Musapp           |
+| A-07 | **Confirmar el alcance final por escrito.** El borrador vive fuera del repositorio                                                       | Musapp           |
+| A-09 | **Definir el nombre de marca**: el logo dice "Laura Cabral" y el pie dice "Reyna de Real Estate". Conviven en la misma página            | Clienta          |
+| A-08 | **Transferir el dominio y el repositorio** a la clienta después de entregar                                                              | Musapp           |
+| A-03 | **Video del hero** y **retrato de Laura**. Ambos se cargan desde el panel, sin código (D-10). La sección se ve bien sin foto             | Clienta          |
+| A-04 | Fotos reales de las propiedades                                                                                                          | Clienta          |
 
----
-
-## Bloqueos y pendientes
-
-| #        | Pendiente                                                                                                         | Impacto                                                              |
-| -------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| ~~A-01~~ | ✅ Resuelto: dominio en **Don Web, cuenta de Musapp**. Acceso total al DNS                                        | —                                                                    |
-| A-08     | **Transferir el dominio a la clienta** después de entregar. Hoy está a nombre de Musapp                           | Pendiente, no bloquea                                                |
-| ~~A-02~~ | ✅ Resuelto: Supabase creado con `reynaderealestate@gmail.com`, base y bucket funcionando                         | —                                                                    |
-| A-03     | Falta el video del hero. La carpeta de Drive de la clienta está vacía                                             | Bloquea UJ-01. Hay un `.mp4` en los assets locales que podría servir |
-| ~~A-05~~ | ✅ Resuelto: las consultas van a `reynaderealestate@gmail.com`                                                    | —                                                                    |
-| A-09     | **Qué nombre manda**: el logo dice "Laura Cabral", el pie dice "Reyna de Real Estate"                             | No bloquea, pero se ve en toda página                                |
-| A-07     | **Confirmar el alcance final por escrito con la clienta** antes de entregar. El borrador vive fuera del repositorio                      | Deja registro de qué incluye la entrega                              |
+**Decisiones abiertas**: la cuenta de Resend (sin ella no salen los avisos de consultas, y tampoco se puede hacer recuperación de contraseña, que necesita mandar un mail).
 
 ---
 
 ## Archivos clave
 
 - `design/design_summary.md` — leer al iniciar cada tarea
-- `implementation/task_tracker.md` — 28 tareas, 3 hitos
-- `docs/decision_log.md` — 11 decisiones; D-06 y D-11 definen el alcance
-- `planning/questions.md` — B5 explica el conflicto de alcance
+- `implementation/task_tracker.md` — 28 tareas, 3 hitos, bitácora
+- `docs/work_log.md` — el relato de cada journey y por qué se decidió lo que se decidió
+- `docs/decision_log.md` — las decisiones de arquitectura
 - `design/referencias/` — 6 capturas de la versión aprobada + PDF de correcciones
-
----
-
-## Contexto humano
-
-El acuerdo es de largo plazo y la prioridad es **llegar a algo presentable pronto**: el Hito 1 está diseñado para eso — al terminarlo hay un sitio real para mostrar, aunque el panel todavía no exista.
