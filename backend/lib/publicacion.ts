@@ -10,7 +10,18 @@
  */
 import { desc, gt, max, ne, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { articles, properties, propertyImages, publicaciones, siteSettings } from '../db/schema';
+import {
+  amenities,
+  articles,
+  developers,
+  owners,
+  properties,
+  propertyImages,
+  propertyTypes,
+  publicaciones,
+  siteSettings,
+  zones,
+} from '../db/schema';
 
 /**
  * Cuánto se agrupan los pedidos.
@@ -58,7 +69,7 @@ export async function ultimaPublicacion(db: Db): Promise<Date | null> {
  * cambios pendientes por algo que el visitante no vería.
  */
 export async function ultimoCambio(db: Db): Promise<Date | null> {
-  const [props, arts, ajustes, imgs] = await Promise.all([
+  const [props, arts, ajustes, imgs, zns, tipos, devs, dnos, amens] = await Promise.all([
     db.select({ m: max(properties.updatedAt) }).from(properties),
     db.select({ m: max(articles.updatedAt) }).from(articles),
     db
@@ -66,9 +77,22 @@ export async function ultimoCambio(db: Db): Promise<Date | null> {
       .from(siteSettings)
       .where(ne(siteSettings.group, 'interno')),
     db.select({ m: max(propertyImages.createdAt) }).from(propertyImages),
+    // Los catálogos también alimentan páginas: el nombre de una zona está en
+    // los filtros del buscador, en las tarjetas y en cada ficha. Sin esto,
+    // corregir "Tulúm" por "Tulum" no encendía el aviso y el sitio seguía
+    // mostrando el nombre viejo.
+    db.select({ m: max(zones.updatedAt) }).from(zones),
+    db.select({ m: max(propertyTypes.updatedAt) }).from(propertyTypes),
+    db.select({ m: max(developers.updatedAt) }).from(developers),
+    // Los propietarios no salen al sitio, pero sí se muestran en el panel
+    // junto al resto. Se incluyen para no tener dos reglas distintas sobre
+    // qué cuenta como cambio: es un aviso de más, nunca uno de menos.
+    db.select({ m: max(owners.updatedAt) }).from(owners),
+    db.select({ m: max(amenities.updatedAt) }).from(amenities),
   ]);
 
-  const fechas = [props[0]?.m, arts[0]?.m, ajustes[0]?.m, imgs[0]?.m]
+  const fechas = [props, arts, ajustes, imgs, zns, tipos, devs, dnos, amens]
+    .map((r) => r[0]?.m)
     .filter((d): d is Date => d instanceof Date)
     .map((d) => d.getTime());
 

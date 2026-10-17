@@ -7,6 +7,7 @@ import {
   editarArticulo,
   obtenerArticuloDelPanel,
 } from '../../../../../../backend/lib/articulosPanel';
+import { borrarImagen } from '../../../../../../backend/lib/images';
 
 /** Un artículo: leer, editar y borrar. */
 export const prerender = false;
@@ -50,12 +51,16 @@ export const PATCH: APIRoute = async ({ request, params }) => {
         { status: 400, headers: sinCache },
       );
 
-    // El mensaje dice exactamente qué falta, no "error de validación".
+    // El mensaje dice exactamente qué falta, no "error de validación", y se
+    // cuelga del campo que lo resuelve.
     case 'falta-texto':
       return Response.json(
         { ok: false, error: r.mensaje, campos: { bodyEs: r.mensaje } },
         { status: 400, headers: sinCache },
       );
+
+    case 'falta-imagen':
+      return Response.json({ ok: false, error: r.mensaje }, { status: 400, headers: sinCache });
 
     case 'no-existe':
       return Response.json(NO_EXISTE, { status: 404, headers: sinCache });
@@ -66,7 +71,12 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   const sesion = await requerirSesion(request);
   if (esRespuesta(sesion)) return sesion;
 
-  const borrado = await borrarArticulo(getDb(), crearAlmacenamientoS3(), params.id!);
+  // El borrador de archivos se pasa por parámetro: `articulosPanel` no puede
+  // importar `images` sin arrastrar `sharp` a las páginas del panel (D-19).
+  const almacen = crearAlmacenamientoS3();
+  const borrado = await borrarArticulo(getDb(), params.id!, (ruta, ancho) =>
+    borrarImagen(almacen, ruta, ancho),
+  );
   if (!borrado) return Response.json(NO_EXISTE, { status: 404, headers: sinCache });
 
   return Response.json({ ok: true }, { headers: sinCache });

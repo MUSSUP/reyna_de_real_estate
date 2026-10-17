@@ -257,6 +257,83 @@
     });
   }
 
+  // --- Vista previa ---------------------------------------------------------
+  //
+  // El texto lo parte el servidor con el mismo lector que usan las páginas
+  // públicas (`/api/admin/preview`). Acá solo se dibuja un elemento por
+  // bloque, **con `textContent`**: lo que se escribe en el panel nunca se
+  // inserta como HTML, ni siquiera en una vista previa.
+
+  var botonPrevia = forma.querySelector('[data-ver-previa]');
+  var cajaPrevia = forma.querySelector('[data-previa]');
+  var cuerpoPrevia = forma.querySelector('[data-previa-cuerpo]');
+  var avisoPrevia = forma.querySelector('[data-aviso-previa]');
+
+  /** Qué elemento y qué clases le toca a cada tipo de bloque. */
+  var ESTILOS = {
+    titulo: ['h2', 'font-titulo text-2xl text-verde'],
+    pilar: ['h3', 'font-titulo text-xl text-verde'],
+    cita: [
+      'blockquote',
+      'border-l-2 border-dorado py-1 pl-5 font-titulo text-lg italic text-verde',
+    ],
+    parrafo: ['p', 'text-[17px] leading-relaxed text-texto'],
+  };
+
+  function dibujarPrevia(bloques) {
+    cuerpoPrevia.textContent = '';
+
+    if (!bloques.length) {
+      var vacio = document.createElement('p');
+      vacio.className = 'text-sm text-texto-suave';
+      vacio.textContent = 'Todavía no hay texto para mostrar.';
+      cuerpoPrevia.appendChild(vacio);
+      return;
+    }
+
+    for (var i = 0; i < bloques.length; i++) {
+      var estilo = ESTILOS[bloques[i].tipo] || ESTILOS.parrafo;
+      var el = document.createElement(estilo[0]);
+      el.className = estilo[1];
+      el.textContent = bloques[i].texto;
+      cuerpoPrevia.appendChild(el);
+    }
+  }
+
+  if (botonPrevia && cajaPrevia && cuerpoPrevia) {
+    botonPrevia.hidden = false;
+
+    botonPrevia.addEventListener('click', async function () {
+      var campo = forma.querySelector('[data-campo="bodyEs"]');
+      if (!campo) return;
+
+      if (avisoPrevia) avisoPrevia.textContent = '';
+      botonPrevia.disabled = true;
+
+      try {
+        var r = await pedir('/api/admin/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto: campo.value }),
+        });
+        if (!r) return;
+        if (!r.ok) {
+          if (avisoPrevia) avisoPrevia.textContent = r.error || 'No pudimos armar la vista previa';
+          return;
+        }
+        dibujarPrevia(r.data.bloques || []);
+        cajaPrevia.hidden = false;
+        if (cajaPrevia.scrollIntoView) {
+          cajaPrevia.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      } catch {
+        if (avisoPrevia) avisoPrevia.textContent = 'No pudimos conectar. Probá de nuevo.';
+      } finally {
+        botonPrevia.disabled = false;
+      }
+    });
+  }
+
   // --- Borrar ---------------------------------------------------------------
 
   var borrar = forma.querySelector('[data-borrar]');

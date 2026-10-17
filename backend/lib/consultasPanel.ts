@@ -35,6 +35,8 @@ export interface FiltrosConsultas {
   hasta?: string | undefined;
   pagina?: number | undefined;
   porPagina?: number | undefined;
+  /** Techo del `porPagina`. La exportación lo sube; la pantalla no. */
+  tope?: number | undefined;
 }
 
 function esEstado(v: string | undefined): v is EstadoConsulta {
@@ -78,8 +80,29 @@ const campos = {
   propiedadSlug: properties.slug,
 };
 
+/**
+ * Tope de filas por página en la pantalla.
+ *
+ * La bandeja no pagina. Mientras no lo haga, el tope existe para no dibujar
+ * mil filas de una, y la pantalla **dice** cuántas está mostrando de cuántas
+ * hay: antes decía "347 consultas en total" y dibujaba 200, contradiciéndose
+ * sola.
+ */
+export const TOPE_PANTALLA = 200;
+
+/**
+ * Tope de la exportación.
+ *
+ * Es otro número a propósito y es alto a propósito. Un CSV cortado en 200 sin
+ * avisar es peor que uno grande: la clienta exporta "todas" sus consultas,
+ * se lleva un archivo incompleto y no tiene forma de saberlo. Los contactos
+ * que se pierden de vista son el activo del negocio.
+ */
+export const TOPE_EXPORTACION = 10_000;
+
 export async function listarConsultas(db: Db, filtros: FiltrosConsultas = {}) {
-  const porPagina = Math.min(Math.max(filtros.porPagina ?? 50, 1), 200);
+  const tope = filtros.tope ?? TOPE_PANTALLA;
+  const porPagina = Math.min(Math.max(filtros.porPagina ?? 50, 1), tope);
   const pagina = Math.max(filtros.pagina ?? 1, 1);
   const donde = condiciones(filtros);
 
@@ -173,7 +196,14 @@ const COLUMNAS = [
 ] as const;
 
 export async function exportarCsv(db: Db, filtros: FiltrosConsultas = {}): Promise<string> {
-  const { items } = await listarConsultas(db, { ...filtros, porPagina: 200 });
+  // Se exporta todo lo que entra en el tope de exportación, no las 200 de la
+  // pantalla: son dos cosas distintas y antes compartían el número.
+  const { items } = await listarConsultas(db, {
+    ...filtros,
+    pagina: 1,
+    porPagina: TOPE_EXPORTACION,
+    tope: TOPE_EXPORTACION,
+  });
 
   const filas = items.map((c) =>
     [

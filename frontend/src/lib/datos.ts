@@ -330,20 +330,30 @@ export async function obtenerInformeDestacado() {
   return filas[0] ?? null;
 }
 
+/**
+ * Todos los informes publicados, no solo el de la portada.
+ *
+ * Existía solo `obtenerInformeDestacado`, y con eso la página de informe se
+ * generaba **una sola vez**: la del que además estuviera marcado como
+ * destacado. Un segundo informe publicado no tenía página, y el panel decía
+ * que estaba publicado igual.
+ */
+export async function obtenerInformes() {
+  return db
+    .select()
+    .from(articles)
+    .where(and(eq(articles.type, 'informe'), eq(articles.status, 'publicado')))
+    .orderBy(desc(articles.isPinned), desc(articles.publishedAt));
+}
+
 export async function obtenerNoticias(limite?: number) {
   const consulta = db
     .select()
     .from(articles)
     .where(and(eq(articles.type, 'noticia'), eq(articles.status, 'publicado')))
-    .orderBy(desc(articles.publishedAt));
+    // El destacado primero. Sin esto la casilla "Destacar" del panel no hacía
+    // nada en una noticia: se marcaba, se desmarcaba la anterior, y el sitio
+    // seguía mostrando lo mismo ordenado por fecha.
+    .orderBy(desc(articles.isPinned), desc(articles.publishedAt));
   return limite ? consulta.limit(limite) : consulta;
-}
-
-export async function obtenerArticulo(slug: string) {
-  const filas = await db
-    .select()
-    .from(articles)
-    .where(and(eq(articles.slug, slug), eq(articles.status, 'publicado')))
-    .limit(1);
-  return filas[0] ?? null;
 }

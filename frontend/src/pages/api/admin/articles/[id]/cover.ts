@@ -5,7 +5,7 @@ import { crearAlmacenamientoS3 } from '../../../../../../../backend/lib/storage'
 import {
   borrarPortadaArticulo,
   guardarPortadaArticulo,
-} from '../../../../../../../backend/lib/articulosPanel';
+} from '../../../../../../../backend/lib/imagenesArticulo';
 
 /** Imagen de un artículo. */
 export const prerender = false;

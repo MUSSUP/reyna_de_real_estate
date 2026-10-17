@@ -14,27 +14,35 @@ export const INTERESES = ['invertir', 'rentar', 'consulta'] as const;
 export type Interes = (typeof INTERESES)[number];
 
 export const esquemaConsulta = z.object({
-  name: z.string().trim().min(2, 'Escribí tu nombre').max(100, 'El nombre es demasiado largo'),
-  email: z.email('Revisá el email: parece que falta algo').max(200),
+  name: z
+    .string({ error: 'Escribí tu nombre' })
+    .trim()
+    .min(2, 'Escribí tu nombre')
+    .max(100, 'El nombre es demasiado largo'),
+  email: z.email('Revisá el email: parece que falta algo').max(200, 'El email es demasiado largo'),
   phone: z
-    .string()
+    .string({ error: 'Revisá el teléfono' })
     .trim()
     .min(6, 'El teléfono es muy corto')
     .max(25, 'El teléfono es demasiado largo')
     .optional()
     .or(z.literal('')),
-  interest: z.enum(INTERESES).default('consulta'),
-  message: z.string().trim().max(2000, 'El mensaje no puede pasar de 2000 caracteres').optional(),
+  interest: z.enum(INTERESES, { error: 'Elegí una de las opciones' }).default('consulta'),
+  message: z
+    .string({ error: 'No pudimos leer el mensaje' })
+    .trim()
+    .max(2000, 'El mensaje no puede pasar de 2000 caracteres')
+    .optional(),
   /** La propiedad desde la que consultó. El servidor la resuelve a un id. */
-  propertySlug: z.string().trim().max(200).optional(),
-  sourcePath: z.string().trim().max(300).optional(),
+  propertySlug: z.string().trim().max(200, 'Dirección demasiado larga').optional(),
+  sourcePath: z.string().trim().max(300, 'Dirección demasiado larga').optional(),
   /**
    * Trampa para robots. Está oculta por CSS: una persona no la ve y la deja
    * vacía; los programas que completan todo lo que encuentran la llenan.
    * Si viene con algo, la consulta se descarta **sin avisar** — decirle al
    * robot que lo detectamos solo le enseña a evitarlo la próxima.
    */
-  website: z.string().max(200).optional(),
+  website: z.string().max(200, 'Valor demasiado largo').optional(),
 });
 
 export type Consulta = z.infer<typeof esquemaConsulta>;
@@ -71,7 +79,7 @@ const enteroOpcional = (max: number, mensaje: string) =>
   z.preprocess(
     vacioEsNulo,
     z.coerce
-      .number()
+      .number({ error: mensaje })
       .int(mensaje)
       .min(0, mensaje)
       .max(max, mensaje)
@@ -101,8 +109,16 @@ export const esquemaDrive = z
 
 /** El objeto sin la regla cruzada del precio. La edición parcial parte de acá. */
 const objetoPropiedad = z.object({
-  titleEs: z.string().trim().min(3, 'El título necesita al menos 3 caracteres').max(200),
-  descriptionEs: z.string().trim().max(5000).optional(),
+  titleEs: z
+    .string({ error: 'Escribí el título de la propiedad' })
+    .trim()
+    .min(3, 'El título necesita al menos 3 caracteres')
+    .max(200, 'El título no puede pasar de 200 caracteres'),
+  descriptionEs: z
+    .string({ error: 'No pudimos leer la descripción' })
+    .trim()
+    .max(5000, 'La descripción no puede pasar de 5000 caracteres')
+    .optional(),
 
   propertyTypeId: z.coerce
     .number({ error: 'Elegí una tipología' })
@@ -134,15 +150,17 @@ const objetoPropiedad = z.object({
       .transform((v) => v ?? null),
   ),
 
-  operation: z.enum(OPERACIONES),
-  constructionStatus: z.enum(ESTADOS_OBRA),
-  ownership: z.enum(CARTERAS).default('propia'),
+  operation: z.enum(OPERACIONES, { error: 'Elegí si es venta o renta' }),
+  constructionStatus: z.enum(ESTADOS_OBRA, { error: 'Elegí el estado de la obra' }),
+  ownership: z
+    .enum(CARTERAS, { error: 'Elegí si es cartera propia o compartida' })
+    .default('propia'),
 
   yearBuilt: enteroOpcional(2200, 'Revisá el año'),
   priceUsd: z.preprocess(
     vacioEsNulo,
     z.coerce
-      .number()
+      .number({ error: 'El precio tiene que ser un número' })
       .min(0, 'El precio no puede ser negativo')
       .optional()
       .transform((v) => v ?? null),
@@ -151,10 +169,24 @@ const objetoPropiedad = z.object({
 
   areaCoveredM2: enteroOpcional(1_000_000, 'Revisá los metros'),
   areaTotalM2: enteroOpcional(1_000_000, 'Revisá los metros'),
-  bedrooms: z.coerce.number().int().min(0).max(50).default(0),
-  bathrooms: z.coerce.number().int().min(0).max(50).default(0),
+  bedrooms: z.coerce
+    .number({ error: 'Los dormitorios tienen que ser un número' })
+    .int('Los dormitorios tienen que ser un número entero')
+    .min(0, 'Los dormitorios no pueden ser un número negativo')
+    .max(50, 'Revisá los dormitorios: no pueden pasar de 50')
+    .default(0),
+  bathrooms: z.coerce
+    .number({ error: 'Los baños tienen que ser un número' })
+    .int('Los baños tienen que ser un número entero')
+    .min(0, 'Los baños no pueden ser un número negativo')
+    .max(50, 'Revisá los baños: no pueden pasar de 50')
+    .default(0),
 
-  amenityIds: z.array(z.coerce.number().int().positive()).default([]),
+  amenityIds: z
+    .array(z.coerce.number().int().positive('Hay una amenidad que no reconocemos'), {
+      error: 'No pudimos leer las amenidades',
+    })
+    .default([]),
   driveUrl: esquemaDrive,
 });
 
@@ -187,9 +219,9 @@ export const ESTADOS_ARTICULO = ['borrador', 'publicado'] as const;
  * línea.
  */
 const objetoArticulo = z.object({
-  type: z.enum(TIPOS_ARTICULO, { message: 'Elegí si es una noticia o un informe' }),
+  type: z.enum(TIPOS_ARTICULO, { error: 'Elegí si es una noticia o un informe' }),
   titleEs: z
-    .string()
+    .string({ error: 'Escribí el título' })
     .trim()
     .min(3, 'El título necesita al menos 3 caracteres')
     .max(200, 'El título no puede pasar de 200 caracteres'),
@@ -219,7 +251,7 @@ const objetoArticulo = z.object({
       .optional()
       .transform((v) => v ?? null),
   ),
-  status: z.enum(ESTADOS_ARTICULO, { message: 'Estado inválido' }).optional(),
+  status: z.enum(ESTADOS_ARTICULO, { error: 'Estado inválido' }).optional(),
   isPinned: z.coerce.boolean().optional(),
 });
 

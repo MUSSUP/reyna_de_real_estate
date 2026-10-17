@@ -23,8 +23,6 @@
 import { and, count, desc, eq, type SQL } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { articles } from '../db/schema';
-import type { Almacenamiento } from './storage';
-import { borrarImagen, procesarYGuardar } from './images';
 import { generarSlug, slugUnico } from './slug';
 import {
   erroresPorCampo,
@@ -37,12 +35,14 @@ export const ETIQUETA_TIPO = { noticia: 'Noticia', informe: 'Informe' } as const
 export const ETIQUETA_ESTADO_ARTICULO = { borrador: 'Borrador', publicado: 'Publicada' } as const;
 
 export const SIN_TEXTO = 'Escribí el texto antes de publicar';
+export const SIN_IMAGEN = 'Subí la imagen antes de publicar';
 
 export type ResultadoArticulo =
   | { tipo: 'ok'; id: string; slug: string }
   | { tipo: 'datos'; campos: Record<string, string> }
   | { tipo: 'no-existe' }
-  | { tipo: 'falta-texto'; mensaje: string };
+  | { tipo: 'falta-texto'; mensaje: string }
+  | { tipo: 'falta-imagen'; mensaje: string };
 
 type Columnas = Partial<typeof articles.$inferInsert>;
 
@@ -113,6 +113,7 @@ export async function editarArticulo(
         slug: articles.slug,
         type: articles.type,
         bodyEs: articles.bodyEs,
+        coverPath: articles.coverPath,
         publishedAt: articles.publishedAt,
       })
       .from(articles)
@@ -131,6 +132,17 @@ export async function editarArticulo(
   const textoFinal = d.bodyEs !== undefined ? d.bodyEs : actual.bodyEs;
   if (d.status === 'publicado' && (!textoFinal || textoFinal.trim() === '')) {
     return { tipo: 'falta-texto', mensaje: SIN_TEXTO };
+  }
+
+  // Publicar sin imagen también se rechaza. Es un criterio de aceptación
+  // escrito de UJ-10, igual que en propiedades.
+  //
+  // Vale decir que `CardNoticia.astro` tiene un respaldo de marca para la
+  // tarjeta sin foto, puesto a propósito: queda como red, no como permiso.
+  // Si alguna vez se decide que una noticia corta pueda ir sin imagen, el
+  // lugar para cambiarlo es acá y la tarjeta ya sabe qué hacer.
+  if (d.status === 'publicado' && !actual.coverPath) {
+    return { tipo: 'falta-imagen', mensaje: SIN_IMAGEN };
   }
 
   const columnas: Columnas = aColumnas(d);
@@ -213,15 +225,21 @@ export async function obtenerArticuloDelPanel(db: Db, id: string) {
 /**
  * Borra el artículo y su imagen.
  *
- * El archivo se borra **después** de la fila: si se hiciera al revés y la
- * fila no se pudiera borrar, el artículo quedaría apuntando a una imagen que
- * ya no existe. Que el borrado del archivo falle es tolerable —queda un
- * archivo huérfano— y no se cancela la operación por eso.
+ * El archivo se borra **después** de la fila: si se hiciera al revés y la fila
+ * no se pudiera borrar, el artículo quedaría apuntando a una imagen que ya no
+ * existe. Que el borrado del archivo falle es tolerable —queda un archivo
+ * huérfano— y no se cancela la operación por eso.
+ *
+ * El borrador de archivos entra **por parámetro** y no se importa: importarlo
+ * arrastraría `sharp` a este módulo, y este módulo lo usan dos páginas del
+ * panel. Es exactamente la forma de la falla que ya rompió un despliegue
+ * (D-19). Quien tiene que borrar un archivo es un endpoint, y ahí vive
+ * `imagenesArticulo.ts`.
  */
 export async function borrarArticulo(
   db: Db,
-  almacen: Almacenamiento,
   id: string,
+  borrarArchivo?: (ruta: string, ancho: number) => Promise<void>,
 ): Promise<boolean> {
   const borrados = await db
     .delete(articles)
@@ -231,87 +249,8 @@ export async function borrarArticulo(
   const a = borrados[0];
   if (!a) return false;
 
-  if (a.coverPath) {
-    await borrarImagen(almacen, a.coverPath, a.coverWidth ?? 1600).catch(() => {});
+  if (a.coverPath && borrarArchivo) {
+    await borrarArchivo(a.coverPath, a.coverWidth ?? 1600).catch(() => {});
   }
   return true;
-}
-
-export type ResultadoImagenArticulo =
-  { tipo: 'ok'; rutaBase?: string } | { tipo: 'no-existe' } | { tipo: 'rechazada'; motivo: string };
-
-export interface ArchivoEntrante {
-  nombre: string;
-  buffer: Buffer;
-  tamanoDeclarado?: number | undefined;
-}
-
-export async function guardarPortadaArticulo(
-  db: Db,
-  almacen: Almacenamiento,
-  id: string,
-  archivo: ArchivoEntrante,
-): Promise<ResultadoImagenArticulo> {
-  const actual = (
-    await db
-      .select({
-        slug: articles.slug,
-        coverPath: articles.coverPath,
-        coverWidth: articles.coverWidth,
-      })
-      .from(articles)
-      .where(eq(articles.id, id))
-      .limit(1)
-  )[0];
-  if (!actual) return { tipo: 'no-existe' };
-
-  const r = await procesarYGuardar(almacen, archivo.buffer, {
-    carpeta: `articulos/${actual.slug}`,
-    nombreOriginal: archivo.nombre,
-    ...(archivo.tamanoDeclarado !== undefined ? { tamanoDeclarado: archivo.tamanoDeclarado } : {}),
-  });
-  if (!r.ok) return { tipo: 'rechazada', motivo: r.motivo };
-
-  await db
-    .update(articles)
-    .set({
-      coverPath: r.imagen.rutaBase,
-      coverWidth: r.imagen.width,
-      coverHeight: r.imagen.height,
-      updatedAt: new Date(),
-    })
-    .where(eq(articles.id, id));
-
-  // La anterior se borra recién ahora: si algo falla antes, el artículo se
-  // queda con la imagen vieja en vez de quedarse sin ninguna.
-  if (actual.coverPath) {
-    await borrarImagen(almacen, actual.coverPath, actual.coverWidth ?? 1600).catch(() => {});
-  }
-
-  return { tipo: 'ok', rutaBase: r.imagen.rutaBase };
-}
-
-export async function borrarPortadaArticulo(
-  db: Db,
-  almacen: Almacenamiento,
-  id: string,
-): Promise<ResultadoImagenArticulo> {
-  const actual = (
-    await db
-      .select({ coverPath: articles.coverPath, coverWidth: articles.coverWidth })
-      .from(articles)
-      .where(eq(articles.id, id))
-      .limit(1)
-  )[0];
-  if (!actual) return { tipo: 'no-existe' };
-  if (!actual.coverPath) return { tipo: 'ok' };
-
-  await db
-    .update(articles)
-    .set({ coverPath: null, coverWidth: null, coverHeight: null, updatedAt: new Date() })
-    .where(eq(articles.id, id));
-
-  await borrarImagen(almacen, actual.coverPath, actual.coverWidth ?? 1600).catch(() => {});
-
-  return { tipo: 'ok' };
 }

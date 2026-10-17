@@ -52,6 +52,16 @@ const COLOR_ESTADO = {
   borrador: 'bg-[#f2ece9] text-[#837873]',
 } as const;
 
+/**
+ * Dónde vive cada artículo en el sitio.
+ *
+ * Un informe **no** está en `/noticias`: tiene su propia ruta por diseño
+ * (`/insights/[slug]`). El enlace "Ver ↗" del listado apuntaba a noticias para
+ * los dos, así que para un informe llevaba al 404 de la marca.
+ */
+const rutaPublica = (tipo: 'noticia' | 'informe', slug: string) =>
+  tipo === 'informe' ? `/insights/${slug}` : `/noticias/${slug}`;
+
 const selector =
   'min-w-[150px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm';
 ---
@@ -216,7 +226,7 @@ const selector =
 
               {a.estado === 'publicado' && (
                 <a
-                  href={`/noticias/${a.slug}`}
+                  href={rutaPublica(a.tipo, a.slug)}
                   target="_blank"
                   rel="noopener"
                   class="shrink-0 text-xs text-texto-suave underline-offset-4 hover:text-verde hover:underline"

@@ -6,6 +6,7 @@ import {
   listarConsultas,
   ESTADOS_CONSULTA,
   ETIQUETA_ESTADO,
+  TOPE_PANTALLA,
   ETIQUETA_INTERES,
   type EstadoConsulta,
 } from '../../../../backend/lib/consultasPanel';
@@ -32,7 +33,7 @@ const [listado, conteo] = await Promise.all([
     estado: estado || undefined,
     desde: desde || undefined,
     hasta: hasta || undefined,
-    porPagina: 200,
+    porPagina: TOPE_PANTALLA,
   }),
   contarPorEstado(db),
 ]);
@@ -59,6 +60,15 @@ const urlExport = `/api/admin/leads/export${queryExport.size ? `?${queryExport}`
     <p class="text-texto-suave">
       {
         `${listado.total} ${listado.total === 1 ? 'consulta' : 'consultas'}${hayFiltros ? ' con estos criterios' : ' en total'}`
+      }
+      {
+        /* Mientras la bandeja no pagine, se dice cuántas se están viendo. La
+           pantalla decía "347 consultas en total" y dibujaba 200. */
+        listado.items.length < listado.total && (
+          <span class="mt-1 block text-sm">
+            {`Se ven las ${listado.items.length} más recientes. La exportación se lleva todas.`}
+          </span>
+        )
       }
     </p>
 

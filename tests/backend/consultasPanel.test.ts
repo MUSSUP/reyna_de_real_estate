@@ -13,6 +13,7 @@ import {
   editarConsulta,
   exportarCsv,
   listarConsultas,
+  TOPE_PANTALLA,
 } from '../../backend/lib/consultasPanel';
 import { leads } from '../../backend/db/schema';
 import type { Db } from '../../backend/db/client';
@@ -190,5 +191,56 @@ describe('el CSV', () => {
 
     const csv = await exportarCsv(db);
     expect(csv).toContain('Cliente difícil');
+  });
+});
+
+describe('cuando hay más consultas de las que caben en la pantalla', () => {
+  /** Las 3 de la siembra más 205: pasa el tope de pantalla, no el de exportación. */
+  const AGREGADAS = 205;
+  const TOTAL = AGREGADAS + 3;
+
+  async function muchas() {
+    const filas = [];
+    for (let i = 0; i < AGREGADAS; i++) {
+      filas.push({
+        name: `Persona ${i}`,
+        email: `persona${i}@ejemplo.test`,
+        interest: 'consulta' as const,
+        message: `Consulta número ${i}`,
+        createdAt: new Date(Date.now() - i * 60_000),
+      });
+    }
+    await db.insert(leads).values(filas);
+  }
+
+  it('la pantalla dice el total real, no el que dibuja', async () => {
+    await muchas();
+    const l = await listarConsultas(db, { porPagina: TOPE_PANTALLA });
+
+    // Antes decía "208 consultas en total" y dibujaba 200: la pantalla se
+    // contradecía sola. Ahora los dos números quedan disponibles para que la
+    // página los muestre juntos.
+    expect(l.total).toBe(TOTAL);
+    expect(l.items).toHaveLength(TOPE_PANTALLA);
+  });
+
+  it('el CSV se lleva todas, no las de la pantalla', async () => {
+    await muchas();
+    const csv = await exportarCsv(db, {});
+
+    // Una línea por consulta más la cabecera. Un CSV cortado en 200 sin avisar
+    // es peor que uno grande: se exporta "todo" y falta, sin forma de saberlo.
+    expect(csv.trim().split('\r\n')).toHaveLength(TOTAL + 1);
+    expect(csv).toContain('Persona 204');
+    expect(csv).toContain('Ana Pérez');
+  });
+
+  it('el CSV sigue respetando los filtros aunque exporte de más', async () => {
+    await muchas();
+    const csv = await exportarCsv(db, { estado: 'contactado' });
+    // Solo Bruno está contactado: cabecera más una fila.
+    expect(csv.trim().split('\r\n')).toHaveLength(2);
+    expect(csv).toContain('Bruno Díaz');
+    expect(csv).not.toContain('Persona 0');
   });
 });

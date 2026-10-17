@@ -95,6 +95,15 @@ export const zones = pgTable(
     /** Alimenta el badge de país que pidió la clienta. */
     countryCode: char('country_code', { length: 2 }).notNull().default('MX'),
     sortOrder: integer('sort_order').notNull().default(0),
+    /**
+     * Cuándo se tocó por última vez.
+     *
+     * Existe para que `ultimoCambio` lo vea. Sin esto, corregir "Tulúm" por
+     * "Tulum" en el panel no encendía el aviso de "cambios sin publicar", así
+     * que nadie tenía motivo para regenerar el sitio — y el sitio seguía
+     * diciendo "Tulúm" en los filtros, las tarjetas y las fichas.
+     */
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('zones_slug_uq').on(t.slug)],
 );
@@ -108,6 +117,7 @@ export const propertyTypes = pgTable(
     nameEs: text('name_es').notNull(),
     nameEn: text('name_en'),
     sortOrder: integer('sort_order').notNull().default(0),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('property_types_slug_uq').on(t.slug)],
 );
@@ -120,6 +130,7 @@ export const developers = pgTable(
     website: text('website'),
     /** Interno. No se expone en el sitio público. */
     notes: text('notes'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('developers_name_uq').on(t.name)],
 );
@@ -134,6 +145,7 @@ export const owners = pgTable('owners', {
   phone: text('phone'),
   email: text('email'),
   notes: text('notes'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const amenities = pgTable(
@@ -144,6 +156,7 @@ export const amenities = pgTable(
     nameEs: text('name_es').notNull(),
     nameEn: text('name_en'),
     icon: text('icon').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('amenities_slug_uq').on(t.slug)],
 );

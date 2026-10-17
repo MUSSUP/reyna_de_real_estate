@@ -14,15 +14,19 @@ if (!articulo) return Astro.redirect('/admin/articulos?noexiste=1');
 
 const params = Astro.url.searchParams;
 const recienCreado = params.has('creado');
+
+// Un informe no vive en `/noticias`: tiene su propia ruta por diseño.
+const rutaPublica =
+  articulo.type === 'informe' ? `/insights/${articulo.slug}` : `/noticias/${articulo.slug}`;
 ---
 
 <Panel titulo={articulo.titleEs} usuario={sesion?.name} activo="/admin/articulos">
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <p class="text-texto-suave">{`Dirección en el sitio: /noticias/${articulo.slug}`}</p>
+    <p class="text-texto-suave">{`Dirección en el sitio: ${rutaPublica}`}</p>
     {
       articulo.status === 'publicado' && (
         <a
-          href={`/noticias/${articulo.slug}`}
+          href={rutaPublica}
           target="_blank"
           rel="noopener"
           class="text-sm font-semibold text-verde underline-offset-4 hover:underline"

@@ -22,16 +22,40 @@ const ETIQUETA_INTERES = {
   consulta: 'Consulta general',
 } as const;
 
+/**
+ * Los textos llevan singular y plural escritos.
+ *
+ * Eran fijos, así que con un solo elemento el tablero decía "1 consultas
+ * nuevas" y "1 propiedades publicadas" — y es lo primero que se ve al entrar.
+ * El resto del panel ya resolvía el singular; acá faltaba.
+ */
 const contadores = [
-  { n: resumen.consultasNuevas, texto: 'consultas nuevas', href: '/admin/leads', destacar: true },
-  { n: resumen.propiedadesPublicadas, texto: 'propiedades publicadas', href: '/admin/propiedades' },
+  {
+    n: resumen.consultasNuevas,
+    uno: 'consulta nueva',
+    varias: 'consultas nuevas',
+    href: '/admin/leads',
+    destacar: true,
+  },
+  {
+    n: resumen.propiedadesPublicadas,
+    uno: 'propiedad publicada',
+    varias: 'propiedades publicadas',
+    href: '/admin/propiedades',
+  },
   {
     n: resumen.propiedadesBorrador,
-    texto: 'en borrador',
+    uno: 'en borrador',
+    varias: 'en borrador',
     href: '/admin/propiedades?estado=borrador',
   },
-  { n: resumen.articulosPublicados, texto: 'artículos publicados', href: '/admin/articulos' },
-];
+  {
+    n: resumen.articulosPublicados,
+    uno: 'artículo publicado',
+    varias: 'artículos publicados',
+    href: '/admin/articulos',
+  },
+].map((c) => ({ ...c, texto: c.n === 1 ? c.uno : c.varias }));
 
 const primerNombre = sesion?.name?.split(' ')[0] ?? '';
 ---

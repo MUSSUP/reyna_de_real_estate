@@ -1920,3 +1920,98 @@ _Pruebas_: 29 casos nuevos — zona con y sin barrio, slug único, país y códi
 Las siete journeys del panel están construidas. La clienta puede, sin que nadie toque código: cargar y publicar propiedades con su galería, elegir y ordenar las destacadas, escribir noticias e informes, revisar y exportar las consultas, editar los textos del sitio, administrar las cinco listas, y publicar los cambios.
 
 **Lo que no se puede todavía es ver ninguna de las cuatro pantallas nuevas funcionando**, porque no hay con qué entrar al panel. Están construidas y probadas; falta mirarlas.
+
+---
+
+## Revisión del Hito 2 — 1 crítico, 9 importantes, 13 menores
+
+Revisión independiente, con contexto limpio, de las siete journeys del panel. Corrió `npm test`, `lint`, `check` y `build`, revisó los 17 archivos de endpoints uno por uno, buscó en la salida construida, y **comprobó seis afirmaciones de este registro contra el código**.
+
+**Lo que confirmó**: D-13 sin un solo agujero —los 17 endpoints empiezan por `requerirSesion`, y los dos que no son de sesión corresponden—; RNF-10 verificado en `dist/` buscando los seis datos de propietarios de la siembra, cero coincidencias; el cuerpo editable nunca insertado como HTML; las cinco claves de tipo dirección pasando por `valorUrl`; el CSV sin inyección de fórmulas; el login sin filtrar nada y con los tiempos igualados —lo midió: 1030–1130 ms contra 1124–1241 ms—; y que UJ-09 y UJ-12 **sí funcionan sin JavaScript**.
+
+Y encontró un dato que conviene tener escrito: la verificación de origen contra CSRF viene de `checkOrigin: true` de Astro, **que solo se instala si el proyecto tiene un middleware**. `middleware.ts` existe, así que está activa. **Borrar ese archivo apagaría el anti-CSRF en silencio.**
+
+### El crítico: un informe publicado no tenía página
+
+`insights/[slug].astro` generaba **una sola** página: la del informe que además estuviera marcado como destacado. Lo confirmé en la salida construida — `dist/insights/` tenía un único directorio.
+
+Lo que le pasaba a Laura: escribe un informe, aprieta "Guardar y publicar", el panel le dice que quedó publicado, y le ofrece un "Ver ↗" que apunta a `/noticias/<slug>` — una dirección que para un informe nunca se generó. El 404 de la marca. Y si en vez de eso marcaba "Destacar", el informe aparecía, pero **borrando de la portada el informe Reyna Insights**, que es la pieza de autoridad del acuerdo.
+
+Dos errores, uno encima del otro: la página se generaba solo para el destacado, y el enlace del panel usaba la ruta de noticias para los dos tipos. Arreglados los dos. Ahora se genera la página de **todos** los informes publicados, y la ruta la decide el tipo. La ayuda del campo avisa además que cambiar el tipo cambia la dirección, porque es verdad y no era obvio.
+
+> **Queda una decisión de diseño, y es de la clienta, no mía**: los wireframes no tienen listado de informes. El destacado aparece en la portada; un segundo informe publicado tiene su dirección y nadie la enlaza. No inventé un listado que el diseño no pide.
+
+### Los criterios de UJ-10 que había declarado completos sin cumplir
+
+Esto es lo que más me importa de la revisión. Leí los criterios de aceptación **después** de declarar la journey terminada. Cuatro no se cumplían:
+
+1. **"Publicar sin portada se rechaza con mensaje claro"** — no estaba implementado. Ahora sí, con el mismo criterio que en propiedades. Vale decir que `CardNoticia.astro` tiene un respaldo de marca para la tarjeta sin foto, puesto a propósito: **queda como red, no como permiso.** Si alguna vez se decide que una noticia corta pueda ir sin imagen, el lugar para cambiarlo es una línea de `articulosPanel.ts`.
+2. **"Marcar como destacado en la home"** — la casilla desmarcaba la anterior y **no hacía nada más**: `is_pinned` solo se leía para informes. La portada armaba su bloque de noticias por fecha e ignoraba la marca. Laura habría marcado una noticia esperando que suba, habría desmarcado otra sin saberlo, y el sitio no habría cambiado. Ahora el orden pone el destacado primero.
+3. **"Editor Markdown con vista previa"** — no había vista previa. Ahora hay, y con una decisión detrás: **el texto lo parte el servidor**, con el mismo lector que usan las páginas públicas (`/api/admin/preview`). Armarla en el navegador habría dejado el panel y el sitio con dos interpretaciones del mismo texto, y el día que no coincidan la vista previa estaría mintiendo — que es exactamente lo que una vista previa no puede hacer. El navegador solo dibuja un elemento por bloque, con `textContent`.
+4. **"El Markdown se renderiza saneado"** — este sí estaba, y bien.
+
+### XSS en los datos estructurados
+
+`JSON.stringify` **no escapa `</script>`**. Los tres bloques de JSON-LD del sitio salen con `set:html`, porque tienen que salir crudos o el buscador no los lee. Un título con `</script><img src=x onerror=...>` cerraba el bloque y ejecutaba lo que siguiera, en la página pública.
+
+Hasta UJ-10 los títulos los ponía la siembra. **Desde que la clienta los escribe, el campo es entrada externa** — el mismo razonamiento que apliqué a las direcciones en UJ-12 y que acá no apliqué. `jsonLdSeguro` escapa `<`, `>` y `&` como secuencias Unicode: JSON las entiende igual, así que lo que leen Google y las redes es idéntico, y ya no hay forma de escribir `</script>` en la salida. Verificado con el título hostil.
+
+### El CSV se cortaba en 200 sin avisar
+
+`exportarCsv` reutilizaba el tope de la pantalla. Laura exportaba "todas" sus consultas y se llevaba un archivo incompleto **sin forma de saberlo**. Los contactos que se pierden de vista son el activo del negocio.
+
+Ahora son dos topes distintos y con nombre: 200 en pantalla, 10.000 en la exportación. Y la pantalla deja de contradecirse sola: decía "347 consultas en total" y dibujaba 200; ahora dice cuántas está mostrando.
+
+### Los catálogos no encendían el aviso de cambios sin publicar
+
+`ultimoCambio` mira la fecha más nueva de cada tabla, y **las cinco tablas de catálogo no tenían fecha**. Laura corregía "Tulúm" por "Tulum" en Zonas, guardaba, el panel se quedaba callado, y el sitio seguía mostrando el nombre viejo en los filtros, las tarjetas y las fichas — hasta que por casualidad tocara una propiedad y publicara por otra razón. Es justo el escenario de autonomía que UJ-08b vino a resolver.
+
+Migración `0005_catalogos_con_fecha`: `updated_at` en las cinco. **Es aditiva** —`ADD COLUMN ... DEFAULT now()`— y no toca ningún dato.
+
+> **Lo que no resuelve**: un **borrado** no deja fecha, así que el aviso global no lo ve. En la práctica importa poco —se borra lo que no usa ninguna propiedad— pero el nombre sigue en los filtros del buscador hasta la próxima publicación. La pantalla lo dice después de borrar. Está escrito en el código.
+
+### Los mensajes de Zod en inglés: eran 23, no 7
+
+La revisión encontró siete. En vez de traducirlos de a uno, escribí una prueba que le da datos malos a **todos** los esquemas y exige que nada de lo que vuelve parezca inglés. Encontró **23 casos**.
+
+Lo que faltaba no eran los topes: eran los **campos obligatorios ausentes** y los **enums**, que Zod reporta en inglés si no se les da mensaje. "Invalid option: expected one of "venta"|"renta"" es lo que habría leído Laura.
+
+La prueba tiene su propia red: dos casos que verifican que todavía reconoce un mensaje sin traducir, para que no se vuelva ciega y pase sin probar nada.
+
+### Pruebas de autenticación y de privacidad — el hallazgo I-7 del Hito 1, cerrado
+
+Venía abierto desde agosto y el documento de requisitos nombra la autenticación primera entre los caminos críticos. **No había una sola prueba.**
+
+27 casos de autenticación: el hash de bcrypt con su coste, dos hashes distintos para la misma contraseña, el token que va y vuelve, el token tocado a mano, **el token firmado con otro secreto**, el vencido, el incompleto, la sesión de ocho horas, `HttpOnly` y `SameSite=Strict`, `Secure` solo en producción, la cookie que no se confunde con una parecida, un JWT con puntos que no se corta al leerlo, el 401 idéntico con y sin cookie, el límite que frena al sexto intento, el acceso correcto que borra el historial, las IP que no se contaminan entre sí, los ámbitos que cuentan por separado (D-18), y la IP que nunca se guarda en claro.
+
+Y 5 casos de privacidad por **dos caminos distintos**: uno sobre el código fuente —ningún archivo del sitio público puede ni nombrar la tabla `owners`—, y uno sobre la base, cargando una propiedad con propietario y mirando qué devuelve la consulta pública.
+
+La primera versión de esa prueba **acusó a `lib/datos.ts`**, que es el archivo que hace lo correcto: advierte en prosa sobre esto, dos veces. Ahora saca los comentarios antes de buscar, y tiene un caso que verifica que sigue viendo una referencia de verdad.
+
+### Y una prueba para D-19, que ya rompió un despliegue una vez
+
+`articulosPanel.ts` importaba el módulo de imágenes, que importa `sharp`, y a `articulosPanel` lo usaban **dos páginas** del panel. Es la forma exacta de la falla que tuvo el despliegue trabado. Hoy no rompía nada por casualidad, y la asimetría con propiedades —donde esto ya estaba separado— era gratuita.
+
+Separado en `imagenesArticulo.ts`. El borrado de un artículo recibe el borrador de archivos **por parámetro**, para no volver a importarlo.
+
+Y ahora hay una prueba que **sigue la cadena de importaciones de cada página** y falla si alguna llega a `sharp`. Con su red: un caso que verifica que sí lo detecta donde está de verdad.
+
+### Menores corregidos
+
+- **"1 consultas nuevas"** en el tablero: los textos eran fijos. Es lo primero que se ve al entrar, y es la misma clase de error que había corregido tres pantallas antes.
+- **Las miniaturas del panel**: ya estaba, cerrado en UJ-09.
+- **El `<noscript>` del formulario de artículos**, que Catálogos sí tenía y éste no. La memoria del proyecto afirmaba que desde UJ-09 _todo_ el panel funciona sin JavaScript, y eso vale para dos de las cuatro pantallas nuevas. **La memoria afirmaba más de lo que el código hacía**, y eso se corrige en los dos lados.
+
+### Lo que queda anotado y no corregido
+
+- **No hay paginación en el panel.** Con el tope en 200 y la pantalla diciendo cuántas muestra, el daño está contenido. Paginar es trabajo de verdad y no entra en esta entrega.
+- **Con la base vacía, Configuración acepta cambios y no guarda nada** (las claves las crea la siembra). Lo va a encontrar IT-11.
+- **El grupo "Otros" de Configuración se puede editar y no se guarda.** Hoy está vacío porque la siembra trae exactamente las 19 del catálogo. Latente.
+- **`ne(siteSettings.group, 'interno')` no excluye nada**: ninguna clave usa ese grupo, y `contacto.lead_email` —que no sale al sitio— está en `contacto`. El comentario describe un filtro que no filtra.
+- **`z.coerce.boolean()` convierte `'false'` en `true`.** Hoy no afecta porque esos formularios van por JavaScript. Si alguna vez se les agrega un camino sin JavaScript, va a fallar de la forma más confusa posible.
+- **`Secure` en la cookie depende de `NODE_ENV` en tiempo de ejecución**, y no se puede verificar sin mirar el `Set-Cookie` del sitio desplegado. Para IT-10.
+- **`slugLibre` tiene un `else` silencioso** que caería en la tabla equivocada si alguna vez se lo llamara para desarrollistas o propietarios. Nunca se lo llama.
+
+`astro check`: 0 errores · ESLint: 0 · **300 pruebas en verde** (eran 220)
+
+> ⚠️ **La migración 0005 tiene que correrse contra la base antes del próximo despliegue.** El esquema ya tiene la columna y la base todavía no: lo comprobé corriendo `astro build`, que falla con `column "updated_at" does not exist`. Por eso este trabajo **no se empujó** hasta que la migración esté aplicada.

@@ -8,9 +8,10 @@ import SeparadorCorona from '../../components/public/SeparadorCorona.astro';
 import CuerpoArticulo from '../../components/public/CuerpoArticulo.astro';
 import Corona from '../../components/public/Corona.astro';
 import Boton from '../../components/public/Boton.astro';
-import { obtenerConfiguracion, obtenerInformeDestacado, valor } from '../../lib/datos';
+import { obtenerConfiguracion, obtenerInformes, valor } from '../../lib/datos';
 import { enlaceWhatsApp } from '../../lib/whatsapp';
 import { bloquesDeTexto, fechaISO, fechaLegible, minutosDeLectura } from '../../lib/articulos';
+import { jsonLdSeguro } from '../../lib/jsonLd';
 
 /**
  * El informe Reyna Insights.
@@ -26,10 +27,13 @@ import { bloquesDeTexto, fechaISO, fechaLegible, minutosDeLectura } from '../../
  * interpolado, que Astro escapa solo. Ver `lib/articulos.ts`.
  */
 export async function getStaticPaths() {
-  const informe = await obtenerInformeDestacado();
-  // Sin informe cargado no se genera ninguna página, en vez de una vacía.
-  if (!informe) return [];
-  return [{ params: { slug: informe.slug }, props: { informe } }];
+  // **Todos** los publicados, no solo el destacado. Antes se generaba la
+  // página del informe que además estuviera marcado como destacado, así que
+  // un segundo informe publicado no tenía dónde vivir: el panel decía que
+  // estaba publicado y el enlace llevaba al 404 de la marca.
+  const informes = await obtenerInformes();
+  // Sin informes cargados no se genera ninguna página, en vez de una vacía.
+  return informes.map((informe) => ({ params: { slug: informe.slug }, props: { informe } }));
 }
 
 const { informe } = Astro.props;
@@ -125,5 +129,5 @@ const datosEstructurados = {
   <PieDePagina config={config} />
   <BotonWhatsApp config={config} />
 
-  <script type="application/ld+json" is:inline set:html={JSON.stringify(datosEstructurados)} />
+  <script type="application/ld+json" is:inline set:html={jsonLdSeguro(datosEstructurados)} />
 </Base>

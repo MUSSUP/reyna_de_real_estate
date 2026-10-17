@@ -21,6 +21,13 @@ interface Props {
 const { articulo } = Astro.props;
 
 const esAlta = !articulo;
+
+// Un informe no vive en `/noticias`: tiene su propia ruta por diseño
+// (`/insights/[slug]`, wireframes). El prefijo lo decide el tipo, así que
+// cambiar el tipo **sí** cambia la dirección — lo dice la ayuda del campo.
+const rutaPublica = articulo
+  ? `${articulo.type === 'informe' ? '/insights' : '/noticias'}/${articulo.slug}`
+  : '';
 const portada = articulo
   ? prepararMiniatura(articulo.coverPath, articulo.coverWidth, articulo.coverAltEs ?? '')
   : null;
@@ -30,6 +37,24 @@ const TIPOS = [
   { valor: 'informe', etiqueta: 'Informe' },
 ];
 ---
+
+{
+  /*
+  Esta pantalla necesita JavaScript, igual que el formulario de una propiedad
+  y la galería. No se hizo el camino sin JavaScript porque acá no hay motivo:
+  en destacadas existe porque arrastrar no dispara nada en pantallas táctiles,
+  y los botones comunes sí funcionan. Lo que no se puede es dejar a alguien
+  apretando un botón muerto.
+*/
+}
+<noscript>
+  <p
+    class="mt-6 rounded-[var(--radius-campo)] border border-[#f0dfb9] bg-[#fdf6e7] px-4 py-3 text-sm text-[#7a5f22]"
+  >
+    Para escribir y publicar hace falta tener JavaScript activado. El texto se ve igual, pero los
+    botones no van a responder.
+  </p>
+</noscript>
 
 <form
   data-forma-articulo
@@ -46,7 +71,7 @@ const TIPOS = [
         valor={articulo?.titleEs}
         obligatorio={true}
         ayuda={articulo
-          ? `Dirección en el sitio: /noticias/${articulo.slug} — no cambia aunque corrijas el título`
+          ? `Dirección en el sitio: ${rutaPublica} — no cambia aunque corrijas el título`
           : 'De acá sale la dirección en el sitio, y después no cambia'}
       />
 
@@ -56,7 +81,7 @@ const TIPOS = [
         etiqueta="Tipo"
         valor={articulo?.type ?? 'noticia'}
         opciones={TIPOS}
-        ayuda="Los informes se muestran como Reyna Insights"
+        ayuda="Los informes se muestran como Reyna Insights. Ojo: cambiar el tipo cambia la dirección en el sitio."
       />
     </div>
 
@@ -81,6 +106,38 @@ const TIPOS = [
       clase="mt-5"
       ayuda="Una línea en blanco separa párrafos. Para un subtítulo, empezá la línea con ##. Para una cita, con >."
     />
+
+    {
+      /*
+      La vista previa la arma el servidor con el mismo lector que usan las
+      páginas públicas. Si se armara acá, el panel y el sitio tendrían dos
+      interpretaciones del mismo texto y la vista previa podría mentir.
+      Nace oculta: sin JavaScript no hay con qué pedirla.
+    */
+    }
+    <div class="mt-3 flex items-center gap-3">
+      <button
+        type="button"
+        data-ver-previa
+        hidden
+        class="rounded-full border border-verde px-5 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white"
+      >
+        Ver cómo queda
+      </button>
+      <span data-aviso-previa role="status" class="text-xs text-texto-suave"></span>
+    </div>
+
+    <section
+      data-previa
+      hidden
+      aria-label="Vista previa del texto"
+      class="mt-4 rounded-[var(--radius-card)] border border-black/10 bg-crema p-5"
+    >
+      <p class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave">
+        Así se va a ver en el sitio
+      </p>
+      <div data-previa-cuerpo class="mt-4 flex flex-col gap-5"></div>
+    </section>
   </section>
 
   {/* --- La imagen, que se guarda sola ------------------------------------ */}

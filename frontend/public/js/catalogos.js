@@ -208,7 +208,10 @@
         return;
       }
 
-      window.location.reload();
+      // Un borrado no enciende el aviso global de "cambios sin publicar": ese
+      // aviso se calcula con la fecha más nueva de cada tabla, y una fila
+      // borrada no deja fecha. Así que se avisa acá, al volver.
+      window.location.href = window.location.pathname + '?lista=' + catalogo + '&borrado=1';
     } catch {
       trabajando = false;
       botonBorrar.disabled = false;

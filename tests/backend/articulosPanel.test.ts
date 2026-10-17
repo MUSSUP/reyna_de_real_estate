@@ -12,13 +12,13 @@ import sharp from 'sharp';
 import { crearBaseEfimera } from '../base-efimera';
 import {
   borrarArticulo,
-  borrarPortadaArticulo,
   crearArticulo,
   editarArticulo,
-  guardarPortadaArticulo,
   listarArticulos,
   obtenerArticuloDelPanel,
 } from '../../backend/lib/articulosPanel';
+import { borrarPortadaArticulo, guardarPortadaArticulo } from '../../backend/lib/imagenesArticulo';
+import { borrarImagen } from '../../backend/lib/images';
 import { articles } from '../../backend/db/schema';
 import type { Almacenamiento } from '../../backend/lib/storage';
 import type { Db } from '../../backend/db/client';
@@ -60,6 +60,22 @@ const base = () => ({
 const crear = async (extra: Record<string, unknown> = {}) => {
   const r = await crearArticulo(db, { ...base(), ...extra });
   if (r.tipo !== 'ok') throw new Error(`no se creó: ${JSON.stringify(r)}`);
+  return r;
+};
+
+/**
+ * Un artículo listo para publicar: creado **y con imagen**.
+ *
+ * Publicar exige imagen, igual que en propiedades, así que las pruebas que
+ * publican tienen que pasar por acá. Las que prueban el rechazo usan `crear`.
+ */
+const crearConImagen = async (extra: Record<string, unknown> = {}) => {
+  const r = await crear(extra);
+  const g = await guardarPortadaArticulo(db, almacen, r.id, {
+    nombre: 'tapa.jpg',
+    buffer: await jpeg(800, 600),
+  });
+  if (g.tipo !== 'ok') throw new Error(`no se guardó la imagen: ${JSON.stringify(g)}`);
   return r;
 };
 
@@ -131,7 +147,7 @@ describe('publicar', () => {
   });
 
   it('se puede publicar y escribir el texto en el mismo guardado', async () => {
-    const r = await crear({ bodyEs: '' });
+    const r = await crearConImagen({ bodyEs: '' });
     const e = await editarArticulo(db, r.id, {
       status: 'publicado',
       bodyEs: 'Ahora sí hay texto.',
@@ -139,8 +155,42 @@ describe('publicar', () => {
     expect(e.tipo).toBe('ok');
   });
 
-  it('la fecha se sella una vez y no se vuelve a tocar', async () => {
+  it('no se puede publicar sin imagen, y lo dice', async () => {
     const r = await crear();
+    const e = await editarArticulo(db, r.id, { status: 'publicado' });
+    expect(e.tipo).toBe('falta-imagen');
+    if (e.tipo !== 'falta-imagen') return;
+    expect(e.mensaje).toContain('imagen');
+
+    // Y quedó en borrador, igual que cuando falta el texto.
+    expect((await obtenerArticuloDelPanel(db, r.id))!.status).toBe('borrador');
+  });
+
+  it('con imagen y texto, publica', async () => {
+    const r = await crearConImagen();
+    expect((await editarArticulo(db, r.id, { status: 'publicado' })).tipo).toBe('ok');
+    expect((await obtenerArticuloDelPanel(db, r.id))!.status).toBe('publicado');
+  });
+
+  it('con los dos faltando, nombra el texto primero', async () => {
+    // No es arbitrario: sin texto no hay artículo, y con imagen y sin texto
+    // queda una tarjeta linda que lleva a una página en blanco.
+    const r = await crear({ bodyEs: '' });
+    expect((await editarArticulo(db, r.id, { status: 'publicado' })).tipo).toBe('falta-texto');
+  });
+
+  it('quitar la imagen de uno publicado y volver a guardar lo rechaza', async () => {
+    const r = await crearConImagen();
+    await editarArticulo(db, r.id, { status: 'publicado' });
+    await borrarPortadaArticulo(db, almacen, r.id);
+
+    // Queda publicado —no se despublica solo— pero no se puede republicar sin
+    // volver a subirla. Es el mismo criterio que en propiedades.
+    expect((await editarArticulo(db, r.id, { status: 'publicado' })).tipo).toBe('falta-imagen');
+  });
+
+  it('la fecha se sella una vez y no se vuelve a tocar', async () => {
+    const r = await crearConImagen();
     await editarArticulo(db, r.id, { status: 'publicado' });
     const primera = (await obtenerArticuloDelPanel(db, r.id))!.publishedAt;
 
@@ -214,7 +264,7 @@ describe('un solo destacado por tipo', () => {
 
 describe('el listado', () => {
   it('filtra por tipo y por estado', async () => {
-    const n = await crear();
+    const n = await crearConImagen();
     await crear({ type: 'informe', titleEs: 'Un informe de mercado' });
     await editarArticulo(db, n.id, { status: 'publicado' });
 
@@ -319,18 +369,22 @@ describe('borrar', () => {
     });
     expect(guardados.size).toBeGreaterThan(0);
 
-    expect(await borrarArticulo(db, almacen, r.id)).toBe(true);
+    expect(
+      await borrarArticulo(db, r.id, (ruta, ancho) => borrarImagen(almacen, ruta, ancho)),
+    ).toBe(true);
     expect(await obtenerArticuloDelPanel(db, r.id)).toBeNull();
     expect(guardados.size).toBe(0);
   });
 
   it('un artículo sin imagen se borra igual', async () => {
     const r = await crear();
-    expect(await borrarArticulo(db, almacen, r.id)).toBe(true);
+    expect(
+      await borrarArticulo(db, r.id, (ruta, ancho) => borrarImagen(almacen, ruta, ancho)),
+    ).toBe(true);
   });
 
   it('borrar algo que no existe devuelve falso, no explota', async () => {
-    expect(await borrarArticulo(db, almacen, '11111111-1111-1111-1111-111111111111')).toBe(false);
+    expect(await borrarArticulo(db, '11111111-1111-1111-1111-111111111111')).toBe(false);
   });
 });
 

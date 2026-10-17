@@ -166,7 +166,7 @@ export const CAMPOS: Record<NombreCatalogo, CampoCatalogo[]> = {
 
 const textoObligatorio = (etiqueta: string, max = 120) =>
   z
-    .string()
+    .string({ error: `${etiqueta} no puede quedar vacío` })
     .trim()
     .min(2, `${etiqueta} necesita al menos 2 caracteres`)
     .max(max, `${etiqueta} no puede pasar de ${max} caracteres`);
@@ -177,7 +177,7 @@ const textoOpcional = (etiqueta: string, max = 500) =>
   z.preprocess(
     vacioEsNulo,
     z
-      .string()
+      .string({ error: `No pudimos leer ${etiqueta.toLowerCase()}` })
       .trim()
       .max(max, `${etiqueta} no puede pasar de ${max} caracteres`)
       .optional()
@@ -511,6 +511,7 @@ export async function editarItem(
           country: d.pais,
           countryCode: d.codigoPais,
           sortOrder: d.orden,
+          updatedAt: new Date(),
         })
         .where(eq(zones.id, id))
         .returning({ id: zones.id });
@@ -520,7 +521,7 @@ export async function editarItem(
       const d = analizado.data as z.infer<typeof esquemaTipologia>;
       const r = await db
         .update(propertyTypes)
-        .set({ nameEs: d.nombre, sortOrder: d.orden })
+        .set({ nameEs: d.nombre, sortOrder: d.orden, updatedAt: new Date() })
         .where(eq(propertyTypes.id, id))
         .returning({ id: propertyTypes.id });
       return r.length ? { tipo: 'ok', id } : { tipo: 'no-existe' };
@@ -532,7 +533,7 @@ export async function editarItem(
       }
       const r = await db
         .update(developers)
-        .set({ name: d.nombre, website: d.sitio, notes: d.notas })
+        .set({ name: d.nombre, website: d.sitio, notes: d.notas, updatedAt: new Date() })
         .where(eq(developers.id, id))
         .returning({ id: developers.id });
       return r.length ? { tipo: 'ok', id } : { tipo: 'no-existe' };
@@ -541,7 +542,13 @@ export async function editarItem(
       const d = analizado.data as z.infer<typeof esquemaPropietario>;
       const r = await db
         .update(owners)
-        .set({ name: d.nombre, phone: d.telefono, email: d.email, notes: d.notas })
+        .set({
+          name: d.nombre,
+          phone: d.telefono,
+          email: d.email,
+          notes: d.notas,
+          updatedAt: new Date(),
+        })
         .where(eq(owners.id, id))
         .returning({ id: owners.id });
       return r.length ? { tipo: 'ok', id } : { tipo: 'no-existe' };
@@ -550,7 +557,7 @@ export async function editarItem(
       const d = analizado.data as z.infer<typeof esquemaAmenidad>;
       const r = await db
         .update(amenities)
-        .set({ nameEs: d.nombre })
+        .set({ nameEs: d.nombre, updatedAt: new Date() })
         .where(eq(amenities.id, id))
         .returning({ id: amenities.id });
       return r.length ? { tipo: 'ok', id } : { tipo: 'no-existe' };
@@ -560,6 +567,12 @@ export async function editarItem(
 
 /**
  * Borra, pero solo si no está en uso.
+ *
+ * ⚠️ **Un borrado no enciende el aviso de "cambios sin publicar".** El aviso
+ * se calcula con la fecha más nueva de cada tabla, y una fila borrada no deja
+ * fecha. En la práctica importa poco —se borra lo que no usa ninguna
+ * propiedad— pero el nombre sigue apareciendo en los filtros del buscador
+ * hasta la próxima publicación. La pantalla lo dice después de borrar.
  *
  * La base impide borrar una zona o una tipología en uso, con un error de
  * restricción que nadie entiende. Para desarrollistas y propietarios **no** lo

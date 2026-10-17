@@ -1,4 +1,5 @@
 ---
+import { jsonLdSeguro } from '../../lib/jsonLd';
 import Base from '../../layouts/Base.astro';
 import BarraSuperior from '../../components/public/BarraSuperior.astro';
 import PieDePagina from '../../components/public/PieDePagina.astro';
@@ -298,5 +299,5 @@ const datosEstructurados = {
 
   <script is:inline defer src="/js/galeria.js"></script>
   <script is:inline defer src="/js/formulario.js"></script>
-  <script type="application/ld+json" is:inline set:html={JSON.stringify(datosEstructurados)} />
+  <script type="application/ld+json" is:inline set:html={jsonLdSeguro(datosEstructurados)} />
 </Base>

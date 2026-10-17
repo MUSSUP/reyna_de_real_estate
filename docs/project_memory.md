@@ -1,13 +1,13 @@
 # Memoria del Proyecto — Reyna de Real Estate
 
-Actualizado: 2026-10-17
+Actualizado: 2026-10-17 (segunda vuelta)
 
 ---
 
 ## Estado
 
-**En ejecución. 21 de 28 terminadas, 2 parciales, 6 sin empezar.**
-**🎯 El sitio público está entero y en vivo. El panel está casi completo.**
+**En ejecución. 23 de 28 terminadas, 2 parciales, 4 sin empezar.**
+**🎯 El sitio público está entero y en vivo. El Hito 2 (panel) está cerrado y revisado.**
 
 **En vivo**: <https://reyna-de-real-estate.netlify.app> · Panel: `/admin`
 
@@ -29,11 +29,12 @@ Actualizado: 2026-10-17
 ✅ UJ-11 · Revisar las consultas
 ✅ UJ-12 · Editar los textos del sitio
 ✅ UJ-13 · Publicar cambios (webhook de rebuild)
-⬜ UJ-10 · Publicar noticias e informes ← **próximo**
-⬜ UJ-08b · Catálogos (zonas, tipologías, desarrollistas, amenidades)
+✅ UJ-10 · Publicar noticias e informes — con vista previa
+✅ UJ-08b · Catálogos — las cinco listas
+✅ **Revisión del Hito 2**: 1 crítico, 9 importantes, 13 menores. Todos los importantes cerrados
 
 **Hito 3 — calidad y entrega**
-⬜ IT-09 · Auditoría de rendimiento y accesibilidad
+⬜ IT-09 · Auditoría de rendimiento y accesibilidad ← **próximo**
 ⬜ IT-10 · Auditoría de seguridad final (obligatoria — verificar que `owners` no se filtre)
 ⬜ IT-11 · Verificación con y sin datos (obligatoria)
 ⬜ IT-12 · Despliegue y entrega, DNS en Don Web
@@ -42,8 +43,12 @@ Actualizado: 2026-10-17
 
 ## ⚠️ Lo primero al retomar
 
-**No se puede entrar al panel: la contraseña de la administradora se perdió.**
-Bloquea la prueba visual de UJ-09, UJ-11 y UJ-12 — están construidas y probadas, pero nadie las vio funcionando en un navegador. Se arregla con `npm run db:crear-admin`, que es además la acción A-10 de la entrega.
+**1. La migración 0005 no está aplicada en la base.** El esquema tiene `updated_at` en las cinco tablas de catálogo y la base todavía no. `astro build` falla con `column "updated_at" does not exist`, así que **el trabajo del 17/10 está comprometido pero sin empujar**. Se arregla con `npm run db:migrate`. Es aditiva y no toca ningún dato.
+
+**2. No se puede entrar al panel: la contraseña de la administradora se perdió.**
+Las cuatro pantallas construidas el 17/10 —destacadas, configuración, artículos y catálogos— **nunca se vieron funcionando en un navegador**. Están construidas y probadas, con los portones de sesión verificados con peticiones reales, pero nadie las miró. Se arregla con `npm run db:crear-admin`, que es además la acción A-10 de la entrega.
+
+> La revisión del Hito 2 lo marcó como hallazgo propio, y tenía razón: tres de los problemas que encontró se habrían visto en el primer minuto de uso real.
 
 **Firmar una sesión a mano con el `JWT_SECRET` queda bloqueado por la política de credenciales, y está bien que quede bloqueado.** No insistir por ahí: la contraseña la pone la persona.
 
@@ -65,10 +70,13 @@ Reemplaza una versión a medio construir en Bubble cuyo diseño está aprobado.
 ## Patrones que hay que respetar
 
 - **El sitio público es estático** (D-04). Las visitas no tocan la base. Publicar dispara un rebuild. Única excepción: `POST /api/leads`.
-- **Los formularios funcionan sin JavaScript** (D-16). Nació para el sitio público y desde UJ-09 también rige el panel: cada botón es un `submit` con nombre, el servidor aplica y responde 303 a una página real. El JavaScript es la mejora, nunca el requisito — **arrastrar no dispara nada en pantallas táctiles, y la clienta entra desde el celular.**
-- **La lógica va en `backend/lib/`, con base y servicios por parámetro** (D-17). `npm test` corre vitest sobre PGlite con las migraciones reales: **162 casos**.
-- **Un solo middleware de sesión** (D-13). Todo endpoint del panel usa `requerirSesion`.
-- **Lo que necesita el navegador no comparte archivo con lo que solo corre en el servidor** (D-19). Dos archivos sin dependencias existen por eso: `anchosImagen.ts` y `urlSegura.ts`. Importar aritmética desde el módulo de imágenes arrastraba `sharp` a todas las páginas y rompió un despliegue.
+- **Los formularios públicos funcionan sin JavaScript** (D-16). En el panel rige **donde la técnica de interacción falla sin él**: destacadas y configuración son formularios de verdad, porque arrastrar no dispara nada en pantallas táctiles y la clienta entra desde el celular. Artículos y catálogos **necesitan JavaScript y lo dicen con un `<noscript>`**. No es lo mismo que "todo el panel anda sin JavaScript": eso lo afirmaba esta memoria y era más de lo que el código hacía.
+- **La lógica va en `backend/lib/`, con base y servicios por parámetro** (D-17). `npm test` corre vitest sobre PGlite con las migraciones reales: **300 casos**, incluidas las de autenticación, privacidad de `owners`, D-19 y una que exige que ningún mensaje de error salga en inglés.
+- **Un solo middleware de sesión** (D-13). Todo endpoint del panel usa `requerirSesion`: verificado archivo por archivo en la revisión del Hito 2, los 17.
+- **Lo que necesita el navegador no comparte archivo con lo que solo corre en el servidor** (D-19). Dos archivos sin dependencias existen por eso: `anchosImagen.ts` y `urlSegura.ts`, y el procesamiento de imágenes vive separado (`imagenesPropiedad.ts`, `imagenesArticulo.ts`). Importar aritmética desde el módulo de imágenes arrastraba `sharp` a todas las páginas y rompió un despliegue. **Hay una prueba que sigue la cadena de importaciones de cada página y falla si alguna llega a `sharp`.**
+- **Una dirección que escribe alguien y termina en un `href` es código**, y lo mismo vale para un título que termina dentro de un `<script type="application/ld+json">`: `JSON.stringify` no escapa `</script>`. Se usa `jsonLdSeguro`.
+- **El anti-CSRF viene de `checkOrigin: true` de Astro, que solo se instala si el proyecto tiene un middleware.** Borrar `frontend/src/middleware.ts` lo apagaría en silencio.
+- **Hay que leer los criterios de aceptación de `implementation/user_journeys.md` antes de declarar una journey terminada**, no después. En UJ-10 declaré cuatro criterios cumplidos sin haberlos leído, y la revisión los encontró.
 - **Ningún efecto decorativo esconde contenido** (D-14). Si la animación falla se ve el contenido sin animar, nunca al revés.
 - **Solo se escriben las filas que de verdad cambian.** Tocar `updated_at` al guardar sin cambios haría que el panel diga "tenés cambios sin publicar" por haber abierto la pantalla.
 - **Una dirección que escribe alguien y termina en un `href` es código.** Se valida en positivo (solo `http`/`https`) al guardar **y** al dibujar (`valorUrl`). Escapar no protege de `javascript:`.

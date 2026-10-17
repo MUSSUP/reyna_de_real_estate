@@ -30,6 +30,8 @@ const sesion = Astro.locals.sesion;
 const pedido = Astro.url.searchParams.get('lista') ?? '';
 const abierto: NombreCatalogo = esCatalogo(pedido) ? pedido : 'zonas';
 
+const seBorro = Astro.url.searchParams.has('borrado');
+
 const items = await listarCatalogo(getDb(), abierto);
 const meta = META[abierto];
 const campos = CAMPOS[abierto];
@@ -53,6 +55,18 @@ const control =
     puede es dejar a alguien apretando un botón que no hace nada.
   */
   }
+  {
+    seBorro && (
+      <p
+        role="status"
+        class="mt-5 rounded-[var(--radius-campo)] bg-[#e4ede9] px-4 py-3 text-sm text-verde"
+      >
+        Borrado. Acordate de apretar <strong>Publicar cambios</strong> para que desaparezca de los
+        filtros del sitio.
+      </p>
+    )
+  }
+
   <noscript>
     <p
       class="mt-5 rounded-[var(--radius-campo)] border border-[#f0dfb9] bg-[#fdf6e7] px-4 py-3 text-sm text-[#7a5f22]"
