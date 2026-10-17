@@ -1713,3 +1713,49 @@ _Pruebas_: 16 casos nuevos — filtros, fechas ilegibles, estado inventado, inmu
 El punto de partida pasó a ser un velo oscuro al 45% con desenfoque: imperceptible sobre el hero, que ya es oscuro, y suficiente para que el blanco se lea sobre el crema. **Es D-14 aplicado acá: si el efecto falla, se tiene que seguir leyendo.**
 
 `astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 108 pruebas en verde
+
+---
+
+## El encabezado nunca estuvo roto — corrección de un diagnóstico mío
+
+Volví sobre el velo oscuro de la entrada anterior porque la clienta lo quería transparente al inicio y opaco solo al bajar. Al medirlo de verdad —`getComputedStyle` sobre la barra, arriba y después de scrollear— la animación **funcionaba**: `rgba(0, 0, 0, 0)` en el tope, `rgb(30, 79, 76)` abajo.
+
+Había diagnosticado que el efecto no avanzaba a partir de una captura donde la barra se veía transparente sobre una sección clara. Esa captura venía de una herramienta de pantallazo de página completa, que **fotografía los elementos fijos en su estado inicial** y los repite a lo largo de la imagen. El problema estaba en la herramienta de medición, no en la página.
+
+El encabezado quedó así:
+
+```css
+.barra-sobre-hero { background-color: var(--color-verde); }
+@supports (animation-timeline: scroll()) {
+  .barra-sobre-hero {
+    background-color: transparent;
+    animation: pintar-barra linear both;
+    animation-timeline: scroll();
+    animation-range: 0 120px;
+  }
+}
+```
+
+El verde es el punto de partida y el transparente solo se aplica **donde la animación existe**. Sigue siendo D-14, leído en el sentido correcto: si el navegador no sabe animar, se queda con el fondo sólido y las letras blancas se leen. El que no soporta el efecto no se queda sin barra; se queda sin la gracia.
+
+---
+
+## Mantener despierta la base — infraestructura (IT-08)
+
+**El sitio se rompía solo, sin que nadie lo tocara.** El plan gratuito de Supabase pausa el proyecto tras unos días sin actividad. Cuando eso pasa el sitio público sigue en pie —es estático, por D-04— pero **las fotos desaparecen**: se sirven desde el almacenamiento de Supabase en el momento en que alguien mira la página.
+
+Pasó **dos veces en seis semanas** durante el desarrollo. Entregarlo así significa que a Laura le iba a pasar la primera semana que no entrara al panel, y se iba a enterar por un tercero.
+
+Las dos salidas eran pagar el plan (unos 25 dólares al mes que hereda la clienta) o mantener el proyecto despierto. Se eligió lo segundo.
+
+`netlify/functions/mantener-despierta.mjs` corre **cada tres días a las 6 UTC** y hace una consulta trivial, `select 1`. No lee ni escribe nada del sitio. Tres decisiones chicas:
+
+- **Tres días, no siete.** El límite ronda la semana; el margen deja que una ejecución falle sin que el proyecto se pause.
+- **Devuelve 200 aunque la base no responda.** Si devolviera error, Netlify marcaría la ejecución como fallida y mandaría un aviso por algo que se reintenta solo en tres días.
+- **Conexión de vida corta** (`max: 1`, `idle_timeout: 5`): se abre, pregunta y cierra. No tiene sentido sostener un pool para una consulta cada tres días.
+
+**Lo que no resuelve**: el límite de inactividad es de Supabase y puede cambiar. Si el proyecto se vuelve a pausar, la causa a revisar primero es si la función sigue ejecutándose.
+
+**Errores de revisión que había introducido y no vi.** Al correr la puerta de calidad aparecieron 11 errores de ESLint: tres de la función nueva, que necesitaba declarar sus globales, y **ocho míos en `frontend/public/js/propiedad.js`**, de la tanda de las solapas. Los había dejado pasar porque miré solo la última línea de la salida del comando en vez de la salida.
+
+`astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 108 pruebas en verde

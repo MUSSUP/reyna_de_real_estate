@@ -40,7 +40,7 @@
       var url = new URL(window.location.href);
       url.searchParams.set('seccion', nombre);
       window.history.replaceState(null, '', url);
-    } catch (e) {
+    } catch {
       // Si el navegador no deja tocar el historial, la pestaña funciona
       // igual: solo se pierde al recargar.
     }
@@ -89,7 +89,7 @@
     var pedida = null;
     try {
       pedida = new URL(window.location.href).searchParams.get('seccion');
-    } catch (e) {
+    } catch {
       pedida = null;
     }
     var existe = pestanas.some(function (t) {

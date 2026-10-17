@@ -1,6 +1,6 @@
 # Seguimiento — Reyna de Real Estate
 
-Actualizado: 2026-08-22 · Estado: **en ejecución — Hito 1**
+Actualizado: 2026-10-17 · Estado: **en ejecución — Hito 2**
 Alcance: **v3.0 — híbrido ampliado, español** (decisiones B5 y D-11)
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
@@ -116,6 +116,8 @@ Bloquean la entrega pero no son código.
 | 2026-08-20 | Planificación completa v2.0                                                                                                                                                                                                           |
 | 2026-08-21 | Dominio resuelto: Don Web, con acceso de Musapp. Riesgo R-04 cerrado                                                                                                                                                                  |
 | 2026-08-21 | Decisión D-11: se suman galería y noticias/informes. Bilingüe sigue afuera. Plan a v3.0 — 28 tareas                                                                                                                                   |
+| 2026-10-17 | **Supabase se mantiene despierta sola.** Función programada en Netlify que consulta la base cada tres días. El plan gratuito pausaba el proyecto tras una semana sin actividad y las fotos del sitio desaparecían solas: pasó dos veces durante el desarrollo |
+| 2026-10-17 | Corregidos errores de revisión de código que había introducido en `propiedad.js` y no vi, porque solo miré la última línea de la salida                                                                                                                      |
 | 2026-08-22 | **UJ-06 completada. Hito 1 cerrado.** Formulario de consulta que funciona sin JavaScript (D-16). El límite por IP se separó por ámbito (D-18). Se sumó vitest: 21 pruebas contra un Postgres real                                     |
 | 2026-08-23 | **Revisión del Hito 1**: 0 críticos, 8 importantes, 13 menores. Se cerraron 4 — el error silencioso sin JS, la galería con teclado, el ancho/alto de portada y el enlace roto a `/noticias`                                           |
 | 2026-08-23 | **UJ-15 completada** (adelantada del Hito 3). `/noticias` existía en el menú desde UJ-01 y la página no. El cuerpo editable nunca se inserta como HTML                                                                                |

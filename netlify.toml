@@ -4,6 +4,11 @@
   command = "npm run build"
   publish = "dist"
 
+# Funciones propias, aparte de las que genera Astro. Por ahora solo la que
+# mantiene despierto el proyecto de Supabase.
+[functions]
+  directory = "netlify/functions"
+
 [build.environment]
   # Netlify no usa la versión de Node del equipo de desarrollo.
   NODE_VERSION = "22"

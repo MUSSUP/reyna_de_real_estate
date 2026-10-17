@@ -11,13 +11,19 @@ export default [
   {
     // Archivos de configuración, funciones del servidor y scripts de marca:
     // todos corren en Node.
-    files: ['*.config.{js,mjs}', 'backend/**/*.ts', 'design/marca/*.mjs'],
+    files: [
+      '*.config.{js,mjs}',
+      'backend/**/*.ts',
+      'design/marca/*.mjs',
+      'netlify/functions/*.mjs',
+    ],
     languageOptions: {
       globals: {
         process: 'readonly',
         console: 'readonly',
         Buffer: 'readonly',
         URL: 'readonly',
+        Response: 'readonly',
       },
     },
   },
@@ -34,6 +40,8 @@ export default [
         Event: 'readonly',
         FormData: 'readonly',
         fetch: 'readonly',
+        URL: 'readonly',
+        sessionStorage: 'readonly',
       },
     },
   },
