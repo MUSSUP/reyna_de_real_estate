@@ -175,3 +175,54 @@ export const esquemaPropiedadParcial = objetoPropiedad.partial().extend({
   status: z.enum(ESTADOS_PUBLICACION).optional(),
   isFeatured: z.coerce.boolean().optional(),
 });
+
+// --- Artículos del panel -----------------------------------------------------
+
+export const TIPOS_ARTICULO = ['noticia', 'informe'] as const;
+export const ESTADOS_ARTICULO = ['borrador', 'publicado'] as const;
+
+/**
+ * Los topes son generosos a propósito: no están para disciplinar a nadie, sino
+ * para frenar el pegado accidental de un documento entero en un campo de una
+ * línea.
+ */
+const objetoArticulo = z.object({
+  type: z.enum(TIPOS_ARTICULO, { message: 'Elegí si es una noticia o un informe' }),
+  titleEs: z
+    .string()
+    .trim()
+    .min(3, 'El título necesita al menos 3 caracteres')
+    .max(200, 'El título no puede pasar de 200 caracteres'),
+  excerptEs: z.preprocess(
+    vacioEsNulo,
+    z
+      .string()
+      .trim()
+      .max(400, 'El copete no puede pasar de 400 caracteres')
+      .optional()
+      .transform((v) => v ?? null),
+  ),
+  bodyEs: z.preprocess(
+    vacioEsNulo,
+    z
+      .string()
+      .max(50_000, 'El texto no puede pasar de 50.000 caracteres')
+      .optional()
+      .transform((v) => v ?? null),
+  ),
+  coverAltEs: z.preprocess(
+    vacioEsNulo,
+    z
+      .string()
+      .trim()
+      .max(200, 'La descripción de la imagen no puede pasar de 200 caracteres')
+      .optional()
+      .transform((v) => v ?? null),
+  ),
+  status: z.enum(ESTADOS_ARTICULO, { message: 'Estado inválido' }).optional(),
+  isPinned: z.coerce.boolean().optional(),
+});
+
+export const esquemaArticulo = objetoArticulo;
+export const esquemaArticuloParcial = objetoArticulo.partial();
+export type DatosArticulo = z.infer<typeof esquemaArticulo>;

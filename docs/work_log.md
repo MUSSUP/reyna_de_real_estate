@@ -1725,7 +1725,9 @@ Había diagnosticado que el efecto no avanzaba a partir de una captura donde la 
 El encabezado quedó así:
 
 ```css
-.barra-sobre-hero { background-color: var(--color-verde); }
+.barra-sobre-hero {
+  background-color: var(--color-verde);
+}
 @supports (animation-timeline: scroll()) {
   .barra-sobre-hero {
     background-color: transparent;
@@ -1836,3 +1838,39 @@ Y se valida **dos veces**. Al guardar, en el panel. Y otra vez al dibujar, con `
 _Pruebas_: 30 casos nuevos — siete variantes de dirección peligrosa (con mayúsculas, con espacios, `data:`, `vbscript:`, `file:`), las tres claves que van a atributos, correos, teléfonos como los escribe cualquiera, título con salto de línea, pegado enorme, todo-o-nada, errores juntos, clave fuera del catálogo, clave que no existe, valor que no es texto, cuerpo que no es un objeto, y `updated_at` que no se toca. **162 en verde.**
 
 `astro check`: 0 errores · ESLint: 0 · `astro build`: completo
+
+---
+
+## UJ-10 · Publicar noticias e informes — ✅ Completada
+
+La página pública `/noticias` existe desde agosto (UJ-15, adelantada del Hito 3), y hasta hoy **la clienta no tenía por dónde cargar una**. Las que están en el sitio las cargué yo con la siembra. Era el último hueco real de autonomía.
+
+Tres pantallas: el listado con filtros por tipo y estado, el alta y la edición. Noticias e informes comparten tabla porque comparten estructura (D-11), y el informe Reyna Insights de la portada es un artículo con `type='informe'` e `is_pinned`.
+
+**Un solo formulario, sin solapas.** Una noticia tiene cinco campos; partirla en pestañas como la propiedad solo agrega clics.
+
+**Cuatro reglas del lado del servidor**
+
+1. **La dirección pública no se recalcula.** El slug sale del título la primera vez y se queda, aunque después se corrija el título. Cambiarlo rompe todo enlace que alguien haya compartido. Es la misma regla que en propiedades.
+2. **Publicar exige texto.** Una noticia publicada vacía deja una tarjeta en el sitio que lleva a una página en blanco. Se mira el texto que _va a quedar_, no el que había: así se puede escribir y publicar en el mismo guardado.
+3. **Un solo destacado por tipo**, garantizado por un índice parcial de la base y no por el código. Eso obliga a **desmarcar el anterior antes** de marcar el nuevo, o la base rechaza la escritura. Hay un caso que no es evidente y tiene su prueba: un artículo destacado que **cambia de tipo** se lleva su marca, y chocaría con el destacado del tipo al que llega.
+4. **Borrar un artículo borra su imagen.** Si no, el archivo queda ocupando el almacenamiento para siempre sin nada que lo nombre. Se borra **después** de la fila: al revés, si la fila no se pudiera borrar, el artículo quedaría apuntando a una imagen que ya no existe.
+
+**La fecha de publicación se sella una vez.** Si cambiara en cada edición, corregir una coma reordenaría las noticias del sitio.
+
+**La imagen se guarda sola, en el momento, y por su propio endpoint.** Si viajara con el formulario, un error de validación en el título haría perder una subida de varios megas — y eso no se puede repetir en silencio. Reemplazar borra la anterior **recién después** de que la nueva quedó guardada: si algo falla antes, el artículo se queda con la imagen vieja en vez de quedarse sin ninguna. Mismo criterio que la portada de una propiedad.
+
+Al borrar, el diálogo **nombra lo que se va a borrar**: "¿estás seguro?" no dice de qué.
+
+**Verificado**
+
+✅ Las tres pantallas sin sesión redirigen al ingreso conservando la vuelta
+✅ Los cuatro endpoints sin sesión devuelven 401
+✅ El sitio público sigue respondiendo
+⏳ Falta la prueba visual, por lo mismo que UJ-09 y UJ-12: no hay con qué entrar al panel
+
+_Pruebas_: 28 casos nuevos — nace en borrador, dirección desde el título, dos títulos iguales, título corto, tipo inventado, copete vacío que se guarda nulo, publicar sin texto, publicar con solo espacios, escribir y publicar de una, fecha sellada, dirección que no cambia, destacado que desplaza al anterior, noticia e informe destacados conviviendo, el cambio de tipo que chocaría, filtros, filtro inventado, orden por última edición, imagen con dimensiones, archivo que no es imagen, reemplazo que borra la anterior, quitar la imagen, quitar cuando no hay, artículo inexistente, borrado que se lleva la imagen. **190 en verde.**
+
+`astro check`: 0 errores · ESLint: 0 · `astro build`: completo
+
+> **Nota del entorno**: el servidor de desarrollo se cayó dos veces durante la verificación porque el adaptador de Netlify intenta alcanzar `api.netlify.com` al arrancar y la red del entorno no siempre lo resuelve. No es del proyecto: no toca el código ni el despliegue. Si pasa, volver a arrancarlo.

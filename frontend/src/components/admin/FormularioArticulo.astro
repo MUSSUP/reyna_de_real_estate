@@ -1,0 +1,224 @@
+---
+import CampoPanel from './CampoPanel.astro';
+import { prepararMiniatura } from '../../lib/datos';
+import type { Article } from '../../../../backend/db/schema';
+
+/**
+ * Escribir una noticia o un informe.
+ *
+ * Un solo formulario, sin solapas: una noticia tiene cinco campos y partirla
+ * en pestañas solo agrega clics.
+ *
+ * **La imagen se maneja aparte del resto.** Es un archivo, viaja por su propio
+ * endpoint y se guarda sola, en el momento. Si viajara con el formulario, un
+ * error de validación en el título haría perder la foto recién subida — y una
+ * subida de varios megas no se puede repetir en silencio.
+ */
+interface Props {
+  /** Sin artículo es un alta. */
+  articulo?: Article | undefined;
+}
+const { articulo } = Astro.props;
+
+const esAlta = !articulo;
+const portada = articulo
+  ? prepararMiniatura(articulo.coverPath, articulo.coverWidth, articulo.coverAltEs ?? '')
+  : null;
+
+const TIPOS = [
+  { valor: 'noticia', etiqueta: 'Noticia' },
+  { valor: 'informe', etiqueta: 'Informe' },
+];
+---
+
+<form
+  data-forma-articulo
+  data-id={articulo?.id}
+  data-estado={articulo?.status ?? 'borrador'}
+  class="mt-6 flex flex-col gap-6"
+>
+  <section class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+    <div class="grid gap-5 md:grid-cols-[1fr_200px]">
+      <CampoPanel
+        id="a-titulo"
+        nombre="titleEs"
+        etiqueta="Título"
+        valor={articulo?.titleEs}
+        obligatorio={true}
+        ayuda={articulo
+          ? `Dirección en el sitio: /noticias/${articulo.slug} — no cambia aunque corrijas el título`
+          : 'De acá sale la dirección en el sitio, y después no cambia'}
+      />
+
+      <CampoPanel
+        id="a-tipo"
+        nombre="type"
+        etiqueta="Tipo"
+        valor={articulo?.type ?? 'noticia'}
+        opciones={TIPOS}
+        ayuda="Los informes se muestran como Reyna Insights"
+      />
+    </div>
+
+    <CampoPanel
+      id="a-copete"
+      nombre="excerptEs"
+      etiqueta="Copete"
+      valor={articulo?.excerptEs}
+      multilinea={true}
+      filas={2}
+      clase="mt-5"
+      ayuda="El resumen que se ve en la tarjeta del listado. Si lo dejás vacío, la tarjeta muestra solo el título."
+    />
+
+    <CampoPanel
+      id="a-cuerpo"
+      nombre="bodyEs"
+      etiqueta="Texto"
+      valor={articulo?.bodyEs}
+      multilinea={true}
+      filas={18}
+      clase="mt-5"
+      ayuda="Una línea en blanco separa párrafos. Para un subtítulo, empezá la línea con ##. Para una cita, con >."
+    />
+  </section>
+
+  {/* --- La imagen, que se guarda sola ------------------------------------ */}
+  {
+    !esAlta && (
+      <section class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+        <h3 class="font-titulo text-base text-verde">Imagen</h3>
+        <p class="mt-1 text-xs text-texto-suave">
+          Se usa en la tarjeta del listado y al compartir en redes. Se guarda sola, en el momento:
+          no hace falta apretar Guardar.
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-start gap-4">
+          <div
+            data-vista-portada
+            class="flex h-[120px] w-40 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-campo)] border border-dashed border-black/15 bg-white"
+          >
+            {portada ? (
+              <img src={portada.src} alt="" class="h-full w-full object-cover" />
+            ) : (
+              <span class="px-3 text-center text-xs text-texto-suave">Sin imagen</span>
+            )}
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="inline-flex min-h-[40px] w-fit cursor-pointer items-center rounded-full border border-verde px-5 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white">
+              {portada ? 'Cambiar imagen' : 'Subir imagen'}
+              <input type="file" accept="image/*" data-archivo-portada class="sr-only" />
+            </label>
+
+            {portada && (
+              <button
+                type="button"
+                data-quitar-portada
+                class="w-fit text-xs text-texto-suave underline-offset-4 hover:text-red-700 hover:underline"
+              >
+                Quitar la imagen
+              </button>
+            )}
+
+            <p class="text-xs text-texto-suave">JPG, PNG o WebP. Hasta 10 MB.</p>
+            <p data-aviso-portada role="status" class="hidden text-xs" />
+          </div>
+        </div>
+
+        <div class="mt-5 max-w-xl">
+          <CampoPanel
+            id="a-alt"
+            nombre="coverAltEs"
+            etiqueta="Descripción de la imagen"
+            valor={articulo?.coverAltEs}
+            ayuda="Para quien no la puede ver. Se guarda con el resto del artículo."
+          />
+        </div>
+      </section>
+    )
+  }
+
+  {/* --- Publicación ------------------------------------------------------ */}
+  {
+    !esAlta && (
+      <section class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+        <h3 class="font-titulo text-base text-verde">Publicación</h3>
+
+        <label class="mt-4 flex items-start gap-3">
+          <input
+            type="checkbox"
+            name="isPinned"
+            data-campo="isPinned"
+            checked={Boolean(articulo?.isPinned)}
+            class="mt-0.5 h-4 w-4 shrink-0 accent-[#1e4f4c]"
+          />
+          <span class="text-sm">
+            <span class="font-semibold text-texto">Destacar</span>
+            <span class="mt-0.5 block text-xs text-texto-suave">
+              El destacado se muestra arriba de todo. Hay uno por tipo: si marcás este, se desmarca
+              el que estaba.
+            </span>
+          </span>
+        </label>
+
+        <p data-error-de="isPinned" class="mt-2 hidden text-xs text-red-700" />
+      </section>
+    )
+  }
+
+  <p
+    data-error-general
+    role="alert"
+    class="hidden rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+  >
+  </p>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <button
+      type="submit"
+      data-guardar
+      class="rounded-full border border-verde px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      {esAlta ? 'Crear borrador' : 'Guardar'}
+    </button>
+
+    {
+      !esAlta && (
+        <button
+          type="button"
+          data-publicar
+          class="rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {articulo?.status === 'publicado' ? 'Guardar y republicar' : 'Guardar y publicar'}
+        </button>
+      )
+    }
+
+    {
+      !esAlta && articulo?.status === 'publicado' && (
+        <button
+          type="button"
+          data-despublicar
+          class="text-xs text-texto-suave underline-offset-4 hover:text-texto hover:underline"
+        >
+          Pasar a borrador
+        </button>
+      )
+    }
+
+    <span data-aviso role="status" class="text-sm text-verde"></span>
+
+    {
+      !esAlta && (
+        <button
+          type="button"
+          data-borrar
+          class="ml-auto text-xs text-texto-suave underline-offset-4 hover:text-red-700 hover:underline"
+        >
+          Borrar el artículo
+        </button>
+      )
+    }
+  </div>
+</form>

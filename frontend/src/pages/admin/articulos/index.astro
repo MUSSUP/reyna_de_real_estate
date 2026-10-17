@@ -1,0 +1,233 @@
+---
+import Panel from '../../../layouts/Panel.astro';
+import { getDb } from '../../../../../backend/db/client';
+import {
+  ETIQUETA_ESTADO_ARTICULO,
+  ETIQUETA_TIPO,
+  listarArticulos,
+} from '../../../../../backend/lib/articulosPanel';
+import { prepararMiniatura } from '../../../lib/datos';
+import { fechaLegible } from '../../../lib/articulos';
+
+/**
+ * Noticias e informes, vistos desde adentro.
+ *
+ * Los filtros viajan en la dirección, igual que en el resto del panel: un
+ * recorte se puede compartir, guardar y volver con el botón atrás.
+ */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const params = Astro.url.searchParams;
+const tipo = params.get('tipo') ?? '';
+const estado = params.get('estado') ?? '';
+const borrado = params.has('borrado');
+const noexiste = params.has('noexiste');
+
+const listado = await listarArticulos(getDb(), {
+  tipo: tipo || undefined,
+  estado: estado || undefined,
+  porPagina: 100,
+});
+
+const hayFiltros = Boolean(tipo || estado);
+const cuantos = listado.total;
+const resumen = `${cuantos} ${cuantos === 1 ? 'artículo' : 'artículos'}${
+  hayFiltros ? ' con estos criterios' : ' en total'
+}`;
+
+const OPC_TIPO = [
+  { valor: '', etiqueta: 'Todos' },
+  { valor: 'noticia', etiqueta: 'Noticias' },
+  { valor: 'informe', etiqueta: 'Informes' },
+];
+const OPC_ESTADO = [
+  { valor: '', etiqueta: 'Todos' },
+  { valor: 'publicado', etiqueta: 'Publicados' },
+  { valor: 'borrador', etiqueta: 'Borradores' },
+];
+
+const COLOR_ESTADO = {
+  publicado: 'bg-[#e4ede9] text-[#1e4f4c]',
+  borrador: 'bg-[#f2ece9] text-[#837873]',
+} as const;
+
+const selector =
+  'min-w-[150px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm';
+---
+
+<Panel titulo="Artículos" usuario={sesion?.name}>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <p class="text-texto-suave">{resumen}</p>
+
+    <a
+      href="/admin/articulos/nuevo"
+      class="rounded-full bg-rosa px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover"
+    >
+      Escribir una noticia
+    </a>
+  </div>
+
+  {
+    borrado && (
+      <p
+        role="status"
+        class="mt-4 rounded-[var(--radius-campo)] bg-[#e4ede9] px-4 py-3 text-sm text-[#1e4f4c]"
+      >
+        El artículo se borró.
+      </p>
+    )
+  }
+  {
+    noexiste && (
+      <p
+        role="alert"
+        class="mt-4 rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+      >
+        Ese artículo no existe. Puede que ya lo hayas borrado.
+      </p>
+    )
+  }
+
+  {/* Un formulario de verdad: sin JavaScript filtra igual. */}
+  <form method="GET" class="mt-5 flex flex-wrap items-end gap-3">
+    <div class="flex flex-col gap-1.5">
+      <label
+        for="f-tipo"
+        class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+      >
+        Tipo
+      </label>
+      <select id="f-tipo" name="tipo" class={selector}>
+        {
+          OPC_TIPO.map((o) => (
+            <option value={o.valor} selected={tipo === o.valor}>
+              {o.etiqueta}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label
+        for="f-estado"
+        class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave"
+      >
+        Estado
+      </label>
+      <select id="f-estado" name="estado" class={selector}>
+        {
+          OPC_ESTADO.map((o) => (
+            <option value={o.valor} selected={estado === o.valor}>
+              {o.etiqueta}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <button
+      type="submit"
+      class="min-h-[40px] rounded-full border border-verde px-5 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white"
+    >
+      Filtrar
+    </button>
+
+    {
+      hayFiltros && (
+        <a
+          href="/admin/articulos"
+          class="min-h-[40px] self-center text-xs text-texto-suave underline-offset-4 hover:text-texto hover:underline"
+        >
+          Quitar filtros
+        </a>
+      )
+    }
+  </form>
+
+  {
+    cuantos === 0 ? (
+      <div class="mt-6 rounded-[var(--radius-card)] border border-dashed border-black/15 bg-white px-6 py-12 text-center">
+        <p class="font-titulo text-lg text-verde">
+          {hayFiltros ? 'No hay artículos con esos criterios' : 'Todavía no hay ningún artículo'}
+        </p>
+        <p class="mx-auto mt-2 max-w-[52ch] text-sm text-texto-suave">
+          {hayFiltros
+            ? 'Probá quitando los filtros.'
+            : 'Las noticias se ven en el sitio en /noticias, y los informes como Reyna Insights.'}
+        </p>
+        {!hayFiltros && (
+          <a
+            href="/admin/articulos/nuevo"
+            class="mt-6 inline-block rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:bg-rosa-hover"
+          >
+            Escribir la primera
+          </a>
+        )}
+      </div>
+    ) : (
+      <ul class="mt-6 flex flex-col gap-2">
+        {listado.items.map((a) => {
+          const mini = prepararMiniatura(a.coverPath, a.coverWidth, '');
+          return (
+            <li class="flex items-center gap-3 rounded-[var(--radius-campo)] border border-black/10 bg-white p-3">
+              {mini ? (
+                <img
+                  src={mini.src}
+                  alt=""
+                  width="80"
+                  height="56"
+                  loading="lazy"
+                  class="h-14 w-20 shrink-0 rounded object-cover"
+                />
+              ) : (
+                <span class="h-14 w-20 shrink-0 rounded bg-[#f2ece9]" />
+              )}
+
+              <span class="min-w-0 flex-1">
+                <a
+                  href={`/admin/articulos/${a.id}`}
+                  class="block truncate font-semibold text-texto hover:text-verde"
+                >
+                  {a.titulo}
+                </a>
+                <span class="mt-0.5 block truncate text-xs text-texto-suave">
+                  {ETIQUETA_TIPO[a.tipo]}
+                  {a.publicado ? ` · ${fechaLegible(a.publicado)}` : ''}
+                  {a.copete ? ` · ${a.copete}` : ''}
+                </span>
+              </span>
+
+              {a.destacado && (
+                <span class="shrink-0 rounded-full bg-[#fdeaf1] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#9e2a5c]">
+                  Destacado
+                </span>
+              )}
+
+              <span
+                class:list={[
+                  'shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em]',
+                  COLOR_ESTADO[a.estado],
+                ]}
+              >
+                {ETIQUETA_ESTADO_ARTICULO[a.estado]}
+              </span>
+
+              {a.estado === 'publicado' && (
+                <a
+                  href={`/noticias/${a.slug}`}
+                  target="_blank"
+                  rel="noopener"
+                  class="shrink-0 text-xs text-texto-suave underline-offset-4 hover:text-verde hover:underline"
+                >
+                  Ver ↗
+                </a>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+</Panel>

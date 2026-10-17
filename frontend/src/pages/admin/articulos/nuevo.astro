@@ -1,0 +1,26 @@
+---
+import Panel from '../../../layouts/Panel.astro';
+import FormularioArticulo from '../../../components/admin/FormularioArticulo.astro';
+
+/**
+ * Escribir una noticia o un informe.
+ *
+ * Nace en borrador siempre. La imagen y la publicación aparecen recién
+ * después de crearlo: las dos necesitan que el artículo exista —una para
+ * tener dónde guardar el archivo, la otra porque publicar algo que todavía no
+ * se guardó no quiere decir nada.
+ */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+---
+
+<Panel titulo="Nueva noticia" usuario={sesion?.name} activo="/admin/articulos">
+  <p class="text-texto-suave">
+    Se guarda como borrador. Después vas a poder subirle la imagen y publicarla.
+  </p>
+
+  <FormularioArticulo />
+
+  <script is:inline defer src="/js/articulo.js"></script>
+</Panel>

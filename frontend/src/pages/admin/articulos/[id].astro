@@ -1,0 +1,50 @@
+---
+import Panel from '../../../layouts/Panel.astro';
+import FormularioArticulo from '../../../components/admin/FormularioArticulo.astro';
+import { getDb } from '../../../../../backend/db/client';
+import { obtenerArticuloDelPanel } from '../../../../../backend/lib/articulosPanel';
+
+/** Editar una noticia o un informe. */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const articulo = await obtenerArticuloDelPanel(getDb(), Astro.params.id!);
+
+if (!articulo) return Astro.redirect('/admin/articulos?noexiste=1');
+
+const params = Astro.url.searchParams;
+const recienCreado = params.has('creado');
+---
+
+<Panel titulo={articulo.titleEs} usuario={sesion?.name} activo="/admin/articulos">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-texto-suave">{`Dirección en el sitio: /noticias/${articulo.slug}`}</p>
+    {
+      articulo.status === 'publicado' && (
+        <a
+          href={`/noticias/${articulo.slug}`}
+          target="_blank"
+          rel="noopener"
+          class="text-sm font-semibold text-verde underline-offset-4 hover:underline"
+        >
+          Ver en el sitio ↗
+        </a>
+      )
+    }
+  </div>
+
+  {
+    recienCreado && (
+      <p
+        role="status"
+        class="mt-4 rounded-[var(--radius-campo)] bg-[#e4ede9] px-4 py-3 text-sm text-[#1e4f4c]"
+      >
+        Borrador creado. Ahora podés subirle la imagen y publicarlo.
+      </p>
+    )
+  }
+
+  <FormularioArticulo articulo={articulo} />
+
+  <script is:inline defer src="/js/articulo.js"></script>
+</Panel>
