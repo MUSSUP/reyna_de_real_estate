@@ -13,9 +13,9 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | ---------------------------- | ------ | -------------------------------------------------- |
 | Infraestructura              | 8      | 🟢 6/8 (+2 parciales)                              |
 | Hito 1 · Visitante           | 6      | ✅ 6/6                                             |
-| Hito 2 · Administración      | 7      | 🟢 4/7                                             |
+| Hito 2 · Administración      | 7      | 🟢 5/7                                             |
 | Hito 3 · Contenido y entrega | 7      | 🟢 3/7                                             |
-| **Total**                    | **28** | **19/28** terminadas · 2 parciales · 8 sin empezar |
+| **Total**                    | **28** | **20/28** terminadas · 2 parciales · 7 sin empezar |
 
 ---
 
@@ -58,7 +58,7 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | ----- | ---------------------------- | ------ | ------------------------------------------------------------ |
 | UJ-07 | Entrar al panel              | ✅     |                                                              |
 | UJ-08 | Publicar una propiedad       | ✅     | Formulario, portada y galería. Faltan los catálogos (UJ-08b) |
-| UJ-09 | Elegir y ordenar destacadas  | ⬜     |                                                              |
+| UJ-09 | Elegir y ordenar destacadas  | ✅     | Se arrastra, y sin JavaScript también anda                   |
 | UJ-10 | Publicar noticias e informes | ⬜     | **Nuevo (D-11)**                                             |
 | UJ-11 | Revisar contactos            | ✅     |                                                              |
 | UJ-12 | Editar textos del sitio      | ⬜     |                                                              |
@@ -116,6 +116,7 @@ Bloquean la entrega pero no son código.
 | 2026-08-20 | Planificación completa v2.0                                                                                                                                                                                                           |
 | 2026-08-21 | Dominio resuelto: Don Web, con acceso de Musapp. Riesgo R-04 cerrado                                                                                                                                                                  |
 | 2026-08-21 | Decisión D-11: se suman galería y noticias/informes. Bilingüe sigue afuera. Plan a v3.0 — 28 tareas                                                                                                                                   |
+| 2026-10-17 | **UJ-09 completada.** Dos listas que se arrastran, y botones de verdad para que ande desde el celular. El orden del carrusel no existía: `featured_order` quedaba nulo y la portada se armaba distinta en cada construcción       |
 | 2026-10-17 | **Supabase se mantiene despierta sola.** Función programada en Netlify que consulta la base cada tres días. El plan gratuito pausaba el proyecto tras una semana sin actividad y las fotos del sitio desaparecían solas: pasó dos veces durante el desarrollo |
 | 2026-10-17 | Corregidos errores de revisión de código que había introducido en `propiedad.js` y no vi, porque solo miré la última línea de la salida                                                                                                                      |
 | 2026-08-22 | **UJ-06 completada. Hito 1 cerrado.** Formulario de consulta que funciona sin JavaScript (D-16). El límite por IP se separó por ámbito (D-18). Se sumó vitest: 21 pruebas contra un Postgres real                                     |

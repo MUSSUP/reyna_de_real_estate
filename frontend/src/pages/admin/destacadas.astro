@@ -1,15 +1,230 @@
 ---
 import Panel from '../../layouts/Panel.astro';
-import EnConstruccion from '../../components/admin/EnConstruccion.astro';
+import FilaDestacada from '../../components/admin/FilaDestacada.astro';
+import { getDb } from '../../../../backend/db/client';
+import { DESTACADAS_SUGERIDAS, listarDestacables } from '../../../../backend/lib/destacadas';
 
+/**
+ * Elegir qué propiedades se ven en la portada y en qué orden.
+ *
+ * **El punto de partida es un formulario de verdad.** Subir, bajar, agregar y
+ * quitar son botones `submit` con nombre: sin JavaScript la pantalla funciona
+ * entera, de a un movimiento por vez, y cada uno se guarda al instante.
+ * `destacadas.js` la convierte en dos listas que se arrastran y se guardan de
+ * una sola vez.
+ *
+ * Importa porque **arrastrar no funciona en pantallas táctiles**, y la clienta
+ * entra desde el celular. Si lo único que hubiera fuera arrastrar, desde el
+ * teléfono esta pantalla no serviría para nada.
+ */
 export const prerender = false;
+
 const sesion = Astro.locals.sesion;
+
+// El motivo de un rechazo viaja en la dirección: sin JavaScript la página que
+// se dibuja después del guardado es otra, y no hay dónde más dejarlo.
+const error = Astro.url.searchParams.get('error');
+
+const { destacadas, disponibles, invisibles } = await listarDestacables(getDb());
+
+const ordenInicial = destacadas.map((d) => d.id).join(',');
+const cuantas = destacadas.length;
+const resumen =
+  cuantas === 0
+    ? 'La portada no tiene ninguna propiedad destacada'
+    : `${cuantas} ${cuantas === 1 ? 'propiedad' : 'propiedades'} en la portada`;
 ---
 
 <Panel titulo="Destacadas" usuario={sesion?.name}>
-  <EnConstruccion
-    para="Acá vas a elegir qué propiedades se muestran en la portada y en qué orden, arrastrándolas."
-    mientrasTanto="Mientras tanto, cada propiedad tiene una casilla de destacada en su pestaña de Publicación."
-    enlace={{ href: '/admin/propiedades', texto: 'Ir a Propiedades' }}
-  />
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p data-resumen class="text-texto-suave">{resumen}</p>
+      <p class="mt-1 max-w-[62ch] text-sm text-texto-suave">
+        El orden de esta lista es el orden del carrusel de la portada. Los cambios se ven en el
+        sitio después de publicar.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span data-aviso class="hidden text-sm text-verde" role="status"></span>
+      {
+        /*
+        Sin JavaScript este botón no hace falta: cada movimiento ya se guarda
+        solo. Por eso nace oculto y lo muestra `destacadas.js`, que es el que
+        junta varios movimientos en un guardado.
+      */
+      }
+      <button
+        type="submit"
+        form="forma-destacadas"
+        data-guardar
+        hidden
+        class="rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Guardar orden
+      </button>
+    </div>
+  </div>
+
+  {
+    error && (
+      <p
+        role="alert"
+        class="mt-4 rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+      >
+        {error === 'ilegible' ? 'No pudimos leer la lista. Probá de nuevo.' : error}
+      </p>
+    )
+  }
+
+  <p
+    data-error
+    role="alert"
+    class="mt-4 hidden rounded-[var(--radius-campo)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+  >
+  </p>
+
+  <p
+    data-aviso-largo
+    class:list={[
+      'mt-4 rounded-[var(--radius-campo)] border border-[#f0dfb9] bg-[#fdf6e7] px-4 py-3 text-sm text-[#7a5f22]',
+      { hidden: cuantas <= DESTACADAS_SUGERIDAS },
+    ]}
+    data-sugeridas={DESTACADAS_SUGERIDAS}
+  >
+    Son <span data-cuantas>{cuantas}</span> en el carrusel. Más de {DESTACADAS_SUGERIDAS} y las últimas
+    casi nadie las llega a ver — no está mal, pero conviene saberlo.
+  </p>
+
+  <form
+    id="forma-destacadas"
+    method="POST"
+    action="/api/admin/featured"
+    data-forma
+    class="mt-6 grid gap-6 lg:grid-cols-[1.15fr_1fr]"
+  >
+    {/* El orden viaja acá. Es lo único que el servidor lee para guardar. */}
+    <input type="hidden" name="orden" value={ordenInicial} data-orden />
+
+    <section
+      class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5"
+      aria-labelledby="t-portada"
+    >
+      <h2 id="t-portada" class="font-titulo text-base text-verde">En la portada</h2>
+      <p class="mt-1 text-xs text-texto-suave">
+        De arriba hacia abajo, en el orden en que aparecen en el carrusel.
+      </p>
+
+      <ol data-lista="portada" class="mt-4 flex flex-col gap-2">
+        {
+          destacadas.map((p, i) => (
+            <FilaDestacada
+              p={p}
+              posicion={i + 1}
+              primera={i === 0}
+              ultima={i === destacadas.length - 1}
+            />
+          ))
+        }
+      </ol>
+
+      <p
+        data-vacio="portada"
+        class:list={[
+          'mt-4 rounded-[var(--radius-campo)] border border-dashed border-black/15 px-4 py-8 text-center text-sm text-texto-suave',
+          { hidden: cuantas > 0 },
+        ]}
+      >
+        Todavía no elegiste ninguna. Agregá propiedades desde la columna de al lado.
+      </p>
+    </section>
+
+    <section
+      class="rounded-[var(--radius-card)] border border-black/10 bg-white p-5"
+      aria-labelledby="t-disponibles"
+    >
+      <h2 id="t-disponibles" class="font-titulo text-base text-verde">Publicadas</h2>
+      <p class="mt-1 text-xs text-texto-suave">
+        Con imagen principal cargada, listas para entrar al carrusel.
+      </p>
+
+      <ul data-lista="disponibles" class="mt-4 flex flex-col gap-2">
+        {disponibles.map((p) => <FilaDestacada p={p} />)}
+      </ul>
+
+      <p
+        data-vacio="disponibles"
+        class:list={[
+          'mt-4 rounded-[var(--radius-campo)] border border-dashed border-black/15 px-4 py-8 text-center text-sm text-texto-suave',
+          { hidden: disponibles.length > 0 },
+        ]}
+      >
+        No queda ninguna publicada fuera de la portada.
+      </p>
+
+      {
+        invisibles.length > 0 && (
+          <div class="mt-6 border-t border-black/10 pt-5">
+            <h3 class="text-sm font-semibold text-[#8a6a28]">Destacadas que no se ven</h3>
+            <p class="mt-1 text-xs text-texto-suave">
+              Están marcadas, pero el carrusel no las muestra. Se nombran para que no haya que
+              adivinar por qué la portada tiene menos de las que elegiste. Se quitan de la lista al
+              guardar.
+            </p>
+            <ul class="mt-3 flex flex-col gap-2">
+              {invisibles.map((p) => (
+                <li class="rounded-[var(--radius-campo)] border border-[#f0dfb9] bg-[#fdf6e7] p-3 text-xs">
+                  <a
+                    href={`/admin/propiedades/${p.id}`}
+                    class="font-semibold text-[#7a5f22] hover:underline"
+                  >
+                    {p.titulo}
+                  </a>
+                  <span class="mt-0.5 block text-[#7a5f22]">
+                    {p.estado !== 'publicado' ? 'No está publicada.' : 'No tiene imagen principal.'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </section>
+  </form>
+
+  {
+    /*
+    Global porque los elementos los dibuja `FilaDestacada`, y el estilo con
+    alcance de esta página no los alcanzaría. Los selectores arrancan en las
+    listas de acá, así que no se escapan a ninguna otra pantalla.
+  */
+  }
+  <style is:global>
+    [data-lista='disponibles'] [data-botones-portada],
+    [data-lista='portada'] [data-agregar] {
+      display: none;
+    }
+    [data-lista='disponibles'] [data-posicion] {
+      display: none;
+    }
+    /*
+      Una lista vacía mide cero de alto, así que no se puede soltar nada
+      adentro: quedarse sin destacadas era quedarse sin forma de arrastrar la
+      primera. El alto mínimo solo hace falta cuando hay arrastre, por eso
+      cuelga de la marca que pone `destacadas.js`.
+    */
+    [data-con-js] [data-lista] {
+      min-height: 4.5rem;
+    }
+    [data-fila][data-arrastrando] {
+      opacity: 0.4;
+    }
+    [data-lista][data-encima] {
+      outline: 2px dashed var(--color-verde);
+      outline-offset: 4px;
+      border-radius: var(--radius-campo);
+    }
+  </style>
+
+  <script is:inline defer src="/js/destacadas.js"></script>
 </Panel>

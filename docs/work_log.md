@@ -1759,3 +1759,43 @@ Las dos salidas eran pagar el plan (unos 25 dólares al mes que hereda la client
 **Errores de revisión que había introducido y no vi.** Al correr la puerta de calidad aparecieron 11 errores de ESLint: tres de la función nueva, que necesitaba declarar sus globales, y **ocho míos en `frontend/public/js/propiedad.js`**, de la tanda de las solapas. Los había dejado pasar porque miré solo la última línea de la salida del comando en vez de la salida.
 
 `astro check`: 0 errores · ESLint: 0 · Prettier: limpio · 108 pruebas en verde
+
+---
+
+## UJ-09 · Elegir y ordenar las destacadas — ✅ Completada
+
+La portada muestra un carrusel. Hasta ahora las destacadas se marcaban con una casilla en el formulario de cada propiedad, y **el orden no existía**: `featured_order` quedaba nulo, la consulta ordenaba por esa columna, y el carrusel armaba las tarjetas en el orden que le devolvía Postgres. Que es decir: un orden distinto en cada construcción, sin que nadie lo pidiera.
+
+**La pantalla son dos listas.** A la izquierda las que están en la portada, en su orden, de arriba hacia abajo. A la derecha las publicadas que podrían entrar. Se arrastra entre columnas y dentro de la columna.
+
+**Arrastrar no puede ser el único mecanismo.** La API de arrastre del navegador no dispara nada en pantallas táctiles, y la clienta entra desde el celular más seguido que desde la computadora. Si lo único que hubiera fuera arrastrar, desde el teléfono esta pantalla no serviría para nada.
+
+Así que el punto de partida es un **formulario de verdad**: subir, bajar, agregar y quitar son botones `submit` con nombre, el servidor aplica el movimiento y devuelve la página. `destacadas.js` encima convierte eso en dos listas que se arrastran y se guardan de una sola vez. **Es D-16 aplicado al panel**, que hasta ahora solo regía los formularios públicos.
+
+Las dos columnas comparten la misma fila (`FilaDestacada.astro`), y qué botones se ven lo decide el CSS según la lista que la contiene. No es ahorro de líneas: mover una propiedad de una columna a la otra tiene que ser mover un nodo. Con marcados distintos habría que reconstruir la fila entera en JavaScript, y ese es justo el código donde después aparecen las diferencias entre lo que se ve y lo que se guarda.
+
+**Tres reglas del lado del servidor**
+
+1. **Una destacada sin imagen principal es un hueco gris en lo primero que se ve del sitio.** Se rechaza antes de guardar, nombrando cuál. Igual que publicar sin portada.
+2. **Si una no sirve, no se guarda ninguna.** Media portada guardada es peor que un rechazo.
+3. **Solo se escriben las filas que de verdad cambian.** Guardar sin mover nada no toca `updated_at`. Si lo tocara, el panel diría "tenés cambios sin publicar" por haber abierto la pantalla.
+
+**Dos cosas que arreglé de paso, porque son la misma falla**
+
+- La casilla "destacada" del formulario de la propiedad ahora **asigna una posición al final**. Antes dejaba la propiedad marcada y sin orden, que es el origen del problema.
+- La consulta del carrusel tiene **segundo criterio de orden** (el título). Dos destacadas con la misma posición —o ninguna— salían en un orden distinto en cada construcción.
+
+**Lo que decidí no hacer**: poner un tope de destacadas. Lo había escrito y lo saqué. Nadie lo pidió, un carrusel largo no está roto, y además armaba una trampa: marcar la casilla en nueve formularios y después no poder guardar el orden de las nueve. Quedó como **aviso** a partir de ocho, que informa sin bloquear.
+
+**Un hallazgo de la revisión del Hito 1, cerrado acá**: las miniaturas del panel pedían la variante de 1600 px para mostrarlas a 56 u 80. `prepararMiniatura` pide la más chica. Se aplicó también al listado de propiedades y a la galería del formulario, que es donde más se notaba: una propiedad con quince fotos bajaba quince archivos grandes para mostrar quince recuadros de 80 píxeles.
+
+**Verificado**
+
+✅ `/admin/destacadas` sin sesión redirige al ingreso conservando la vuelta
+✅ `PUT /api/admin/featured` sin sesión devuelve 401
+✅ El envío de formulario desde otro origen devuelve 403 (verificación de origen de Astro)
+⏳ **Falta la prueba visual en el navegador.** Necesita entrar al panel, y la contraseña de la administradora no la tengo — firmar una sesión a mano queda bloqueado, y está bien que quede bloqueado.
+
+_Pruebas_: 24 casos nuevos — orden que se guarda, orden que se limpia, rechazo sin foto y sin publicar, todo-o-nada, repetidas, identificador inválido, propiedad borrada, `updated_at` que no se toca, las tres columnas de la pantalla, la casilla del formulario, y los cuatro movimientos del camino sin JavaScript. **132 en verde.**
+
+`astro check`: 0 errores · ESLint: 0 · `astro build`: completo

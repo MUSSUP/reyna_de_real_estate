@@ -4,7 +4,18 @@ import astro from 'eslint-plugin-astro';
 import a11y from 'eslint-plugin-jsx-a11y';
 
 export default [
-  { ignores: ['dist/**', '.netlify/**', 'node_modules/**', '.astro/**'] },
+  // Los patrones llevan `**/` adelante a propósito: sin eso solo se ignoraban
+  // los directorios de la raíz, y `frontend/.astro/` —que lo genera Astro, no
+  // lo escribe nadie— entraba a la revisión con sus propios errores.
+  {
+    ignores: [
+      '**/dist/**',
+      '**/.netlify/**',
+      '**/node_modules/**',
+      '**/.astro/**',
+      '**/.vercel/**',
+    ],
+  },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...astro.configs.recommended,

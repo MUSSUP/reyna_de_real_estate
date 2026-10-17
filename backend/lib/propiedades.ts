@@ -8,6 +8,7 @@
 import { and, count, desc, eq, ilike, or, type SQL } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { properties, propertyAmenities, propertyImages, propertyTypes, zones } from '../db/schema';
+import { proximaPosicion } from './destacadas';
 import { generarSlug, slugUnico } from './slug';
 import {
   esquemaPropiedad,
@@ -96,7 +97,12 @@ export async function editarPropiedad(
 ): Promise<ResultadoPropiedad> {
   const actual = (
     await db
-      .select({ id: properties.id, slug: properties.slug, coverPath: properties.coverPath })
+      .select({
+        id: properties.id,
+        slug: properties.slug,
+        coverPath: properties.coverPath,
+        isFeatured: properties.isFeatured,
+      })
       .from(properties)
       .where(eq(properties.id, id))
       .limit(1)
@@ -120,7 +126,15 @@ export async function editarPropiedad(
     // La fecha de publicación se sella la primera vez y no se vuelve a tocar.
     if (d.status === 'publicado') columnas.publishedAt = new Date();
   }
-  if (d.isFeatured !== undefined) columnas.isFeatured = d.isFeatured;
+  if (d.isFeatured !== undefined) {
+    columnas.isFeatured = d.isFeatured;
+    // La casilla de este formulario no dice *dónde* va en el carrusel. Sin
+    // asignarle una posición, la propiedad entraba en un lugar indeterminado
+    // y el orden de la portada cambiaba de una carga a otra. Se va al final;
+    // moverla es trabajo de la pantalla de destacadas.
+    if (d.isFeatured && !actual.isFeatured) columnas.featuredOrder = await proximaPosicion(db);
+    if (!d.isFeatured) columnas.featuredOrder = null;
+  }
   columnas.updatedAt = new Date();
 
   // El slug **no** se recalcula aunque cambie el título: es la dirección

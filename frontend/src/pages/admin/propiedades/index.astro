@@ -3,7 +3,7 @@ import Panel from '../../../layouts/Panel.astro';
 import { getDb } from '../../../../../backend/db/client';
 import { listarPropiedades } from '../../../../../backend/lib/propiedades';
 import { obtenerCatalogos } from '../../../lib/panel';
-import { prepararImagen } from '../../../lib/datos';
+import { prepararMiniatura } from '../../../lib/datos';
 
 /**
  * El catálogo visto desde adentro.
@@ -228,7 +228,7 @@ const FILTROS = [
           </thead>
           <tbody>
             {listado.items.map((p) => {
-              const portada = prepararImagen(p.coverPath, p.coverWidth, p.coverHeight, '');
+              const portada = prepararMiniatura(p.coverPath, p.coverWidth, '');
               return (
                 <tr class="border-b border-black/5 last:border-0">
                   <td class="px-4 py-3">

@@ -93,6 +93,25 @@ export function prepararImagen(
   };
 }
 
+/**
+ * La variante más chica que exista, para miniaturas.
+ *
+ * `prepararImagen` apunta a la más grande, que es lo correcto cuando la imagen
+ * ocupa la pantalla. En una miniatura de 56 píxeles eso hace bajar un archivo
+ * de 1600 px: unas cuarenta veces más de lo que se va a ver. En una lista de
+ * cien propiedades, la diferencia es el panel abriendo rápido o no abriendo.
+ */
+export function prepararMiniatura(
+  rutaBase: string | null | undefined,
+  width: number | null | undefined,
+  alt: string,
+): { src: string; alt: string } | null {
+  if (!rutaBase) return null;
+  const anchos = anchosPara(width ?? ANCHOS[0]);
+  const menor = anchos[0] ?? ANCHOS[0];
+  return { src: obtenerAlmacen().urlPublica(`${rutaBase}-${menor}.webp`), alt };
+}
+
 // --- Propiedades ------------------------------------------------------------
 
 export interface PropiedadLista {
@@ -197,7 +216,9 @@ export async function obtenerDestacadas(): Promise<PropiedadLista[]> {
     .innerJoin(zones, eq(properties.zoneId, zones.id))
     .innerJoin(propertyTypes, eq(properties.propertyTypeId, propertyTypes.id))
     .where(and(eq(properties.status, 'publicado'), eq(properties.isFeatured, true)))
-    .orderBy(asc(properties.featuredOrder));
+    // El segundo criterio importa: dos destacadas sin posición asignada
+    // —o con la misma— saldrían en un orden distinto en cada construcción.
+    .orderBy(asc(properties.featuredOrder), asc(properties.titleEs));
   return filas.map(aPropiedad);
 }
 

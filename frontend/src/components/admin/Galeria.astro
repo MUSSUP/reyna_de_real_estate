@@ -1,5 +1,5 @@
 ---
-import { prepararImagen } from '../../lib/datos';
+import { prepararMiniatura } from '../../lib/datos';
 import { MAXIMO_IMAGENES_GALERIA } from '../../../../backend/lib/imageValidation';
 import type { propertyImages } from '../../../../backend/db/schema';
 
@@ -23,12 +23,16 @@ interface Props {
   imagenes: (typeof propertyImages.$inferSelect)[];
 }
 
-const { propiedadId, coverPath, coverWidth, coverHeight, coverAlt, imagenes } = Astro.props;
+// `coverHeight` sigue en las props porque quien usa este componente lo tiene
+// a mano, pero acá no se usa: la miniatura no reserva alto propio.
+const { propiedadId, coverPath, coverWidth, coverAlt, imagenes } = Astro.props;
 
-const portada = prepararImagen(coverPath, coverWidth, coverHeight, coverAlt ?? '');
+// Las dos vistas de acá miden 160 y 80 píxeles de ancho: la variante chica
+// alcanza, y evita bajar un archivo de 1600 px por cada foto de la galería.
+const portada = prepararMiniatura(coverPath, coverWidth, coverAlt ?? '');
 const conVista = imagenes.map((i) => ({
   ...i,
-  vista: prepararImagen(i.storagePath, i.width, i.height, i.altEs ?? ''),
+  vista: prepararMiniatura(i.storagePath, i.width, i.altEs ?? ''),
 }));
 ---
 
