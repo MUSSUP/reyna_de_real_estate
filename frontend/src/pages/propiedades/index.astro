@@ -63,7 +63,7 @@ const ordenadas = [...propiedades].sort((a, b) => {
       <Buscador zonas={zonas} tipologias={tipologias} />
 
       <!-- Aviso de filtro por operación, cuando se llega desde el hero -->
-      <p id="aviso-operacion" class="mt-4 hidden text-center text-sm text-texto-suave"></p>
+      <p id="aviso-operacion" hidden class="mt-4 text-center text-sm text-texto-suave"></p>
 
       <div id="grilla" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {
@@ -101,7 +101,7 @@ const ordenadas = [...propiedades].sort((a, b) => {
       </div>
 
       <!-- Se muestra solo cuando ningún resultado pasa los filtros -->
-      <div id="sin-resultados" class="hidden py-16 text-center">
+      <div id="sin-resultados" hidden class="py-16 text-center">
         <Corona tamano={44} clase="mx-auto text-rosa" />
         <p class="mt-6 font-titulo text-2xl text-verde">
           No encontramos propiedades con esos criterios

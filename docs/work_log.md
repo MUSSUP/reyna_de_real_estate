@@ -2092,3 +2092,69 @@ Es una decisión de la clienta, no mía. **Queda anotado con el número exacto p
 - Peso real de la portada con fotos de verdad, no con las de demostración.
 
 `astro check`: 0 errores · ESLint: 0 · `astro build`: completo
+
+---
+
+## IT-11 · Verificación con y sin datos — 🟡 Primera mitad
+
+**La mitad "sin datos" no se puede hacer todavía**, y conviene decir por qué antes que nada: la única base que hay es la **Supabase de producción**, con los datos de Laura. No hay Docker ni Postgres local en el equipo. Vaciar la base para mirar los estados vacíos no está sobre la mesa, así que esa mitad queda esperando una decisión (más abajo).
+
+Lo que sí se hizo: la pasada **con datos** sobre las siete páginas públicas, y los estados vacíos que **sí se pueden alcanzar sin tocar un dato** — filtrando.
+
+### El mensaje de "no encontramos nada" no podía aparecer nunca
+
+Es el hallazgo de esta tanda y es exactamente para lo que existe IT-11.
+
+Buscando _Terreno_ + _4 habitaciones o más_ —que no puede dar resultados, un lote no tiene dormitorios— la página quedaba **en blanco debajo de los filtros**: sin tarjetas, sin mensaje, sin explicación. Quien busca algo específico y no lo encuentra no veía ni siquiera que no había nada; veía una página rota.
+
+La causa es sutil y silenciosa. `filtros.js` muestra y esconde con el **atributo** (`vacio.hidden = false`), pero el marcado traía además la **clase** `hidden` de Tailwind. El navegador oculta `[hidden]` con una regla de su hoja por defecto, y **cualquier clase de utilidad le gana**. Así que el atributo se sacaba y el elemento seguía con `display: none`.
+
+Tres cosas rotas por lo mismo, todas calladas:
+
+1. El mensaje de "sin resultados" — el visible.
+2. El aviso "Mostrando propiedades en renta", que aparece al llegar desde los botones del hero.
+3. `grilla.hidden`, que no hacía nada porque la grilla tiene `display: grid`. Sin efecto visible, pero el mismo defecto.
+
+Arreglado en un solo lugar, en `global.css`:
+
+```css
+[hidden] {
+  display: none !important;
+}
+```
+
+**Es el único `!important` del proyecto** y está puesto para que no haya dos formas de ocultar algo. De paso, los dos elementos del catálogo pasaron de ocultarse con clase a ocultarse con atributo: un solo mecanismo.
+
+**Verificado después del arreglo**: con _Terreno_ + _4 o más_, el mensaje aparece (409 px de alto), el contador dice "0 propiedades coinciden con tu búsqueda", y ofrece dos salidas — "Ver todas" y "Escribinos". Con `?operacion=renta`, el aviso dice "Mostrando propiedades en renta" y quedan 2 tarjetas. Los filtros se recuperan de la dirección al cargar, así que una búsqueda se puede compartir.
+
+### El 404 hablaba de "la propiedad" aunque vinieras de una noticia
+
+Decía: _"Puede que el enlace haya cambiado o que la propiedad ya no esté publicada."_ Ese mismo 404 lo ve quien sigue un enlace viejo a una noticia o a un informe. Ahora dice "lo que buscabas", y suma una salida a Noticias, que antes no ofrecía.
+
+### Las siete páginas con datos
+
+Portada, catálogo, ficha, noticias, informe, gracias y 404. En todas:
+
+✅ Una sola `h1`, y dice lo que corresponde
+✅ Ninguna imagen sin `alt`
+✅ Ningún `undefined`, `NaN`, `[object Object]` ni `Invalid Date` filtrado al HTML
+✅ Ningún enlace vacío o a `#`
+✅ El 404 responde 404 de verdad, y las direcciones inventadas de propiedad, noticia e informe caen ahí
+✅ Peso del HTML entre 78 y 126 KB
+
+### Una cosa anotada y no tocada
+
+La portada carga **la misma foto dos veces**: una como fondo del hero y otra como fondo de la sección Insights, que la trae como valor por defecto. Está velada al 85%, así que se lee como textura y no como repetición, y no cuesta red porque es la misma dirección. Además esa foto es provisoria — el video y la imagen definitiva los debe la clienta (A-03). **Cuando llegue el material real conviene revisarlo**, no antes.
+
+### Lo que falta de IT-11, y la decisión que necesita
+
+Queda la mitad **sin datos**: portada sin destacadas, catálogo sin propiedades, noticias sin noticias, el informe sin cargar, el panel recién instalado. Hacen falta para la entrega — una clienta que entra al panel vacío el primer día ve exactamente eso.
+
+Dos caminos, los dos sin riesgo para los datos de Laura:
+
+- **Una base efímera local.** Agregar `@electric-sql/pglite-socket` como dependencia **solo de desarrollo**: levanta un Postgres de verdad en memoria con las migraciones reales —lo mismo que ya hacen las pruebas— y se le apunta el sitio. Suma una dependencia al proyecto.
+- **Un esquema aparte en la misma Supabase.** Crear un esquema vacío, correr las migraciones ahí, construir apuntando a ese esquema y borrarlo al terminar. No suma dependencias, pero es una operación de estructura sobre la base de producción de la clienta.
+
+Es una decisión de Mar, no mía.
+
+`astro check`: 0 errores · ESLint: 0 · 300 pruebas en verde · `astro build`: completo

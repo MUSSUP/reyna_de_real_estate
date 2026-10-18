@@ -77,6 +77,27 @@
     color: var(--color-verde);
   }
 
+  /*
+    `hidden` quiere decir oculto, y punto.
+
+    El navegador oculta `[hidden]` con una regla de su hoja por defecto, que
+    **cualquier clase de utilidad le gana**. Eso rompía tres cosas del
+    buscador, todas calladas: el script hace `elemento.hidden = false` para
+    mostrar algo, pero el elemento tenía además la clase `hidden` o una clase
+    de `display`, así que seguía sin verse.
+
+    La más visible: **el mensaje "No encontramos propiedades con esos
+    criterios" no podía aparecer nunca.** Con una búsqueda sin resultados, la
+    página quedaba en blanco debajo de los filtros, sin tarjetas y sin
+    explicación.
+
+    Con esto, el atributo manda. Es el único `!important` del proyecto y está
+    acá para que no haya dos formas de ocultar algo.
+  */
+  [hidden] {
+    display: none !important;
+  }
+
   /* El foco visible es requisito de accesibilidad (RNF-04). No se quita. */
   :focus-visible {
     outline: 3px solid var(--color-rosa);
