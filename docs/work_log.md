@@ -2349,3 +2349,25 @@ Las anoto porque me costaron tiempo y son del entorno, no del sitio.
 2. **`window.scrollTo` no mueve la página en el panel**; `scrollY` se queda en 0. Hay que usar la acción de scroll del navegador, que es un scroll de verdad.
 
 Es la tercera vez en este proyecto que una herramienta de medición informa algo que no pasa. La regla que vale: **cuando una medición dice que algo está roto, confirmar que la medición funciona antes de "arreglar" nada.**
+
+---
+
+## El video, resuelto: el Full HD de Pexels tal cual
+
+Mar bajó el clip en **Full HD** (otro clip, 1920×1080 a 30 fps, 11,1 s, **6,7 MB**, unos 4,9 Mbps). Es una codificación de 1080p de verdad, no un 4K recomprimido dos veces.
+
+Antes de instalarlo probé si convenía bajarlo un escalón, y el resultado fue contundente:
+
+|                          | Peso       |
+| ------------------------ | ---------- |
+| Original 1080p de Pexels | **6,7 MB** |
+| Recomprimido a 720p      | 10 MB      |
+| Recomprimido a 540p      | 6,6 MB     |
+
+**Recomprimirlo lo empeora.** A 720p sale más pesado que el original, y a 540p pesa lo mismo con un cuarto de la resolución. Es la contracara del mismo problema de ayer: los presets de `avconvert` codifican casi sin pérdida, así que como reductores de peso no sirven — solo el preset de streaming baja de verdad, y a 480×272.
+
+**Queda el archivo de Pexels tal cual.** Y eso **cierra la pregunta de instalar `ffmpeg`**: ya no hace falta. Haría un 1080p de 2–3 MB en vez de 6,7, pero no justifica instalar software en la máquina de Mar para ahorrar 4 MB en un archivo que se cachea.
+
+**Verificado en el navegador**: 1920×1080, reproduciendo, nítido.
+
+> **Lo que queda para tener en cuenta**: 6,7 MB es el peso del hero para cada visitante nuevo. Con los 100 GB mensuales del plan gratuito de Netlify, eso da alrededor de 15.000 visitas — de sobra para arrancar. Si alguna vez el sitio crece, el primer lugar donde mirar es este archivo.
