@@ -14,8 +14,8 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | Infraestructura              | 8      | 🟢 6/8 (+2 parciales)                              |
 | Hito 1 · Visitante           | 6      | ✅ 6/6                                             |
 | Hito 2 · Administración      | 7      | ✅ 7/7 · **cerrado**                               |
-| Hito 3 · Contenido y entrega | 7      | 🟢 3/7                                             |
-| **Total**                    | **28** | **23/28** terminadas · 2 parciales · 4 sin empezar |
+| Hito 3 · Contenido y entrega | 7      | 🟢 4/7                                             |
+| **Total**                    | **28** | **24/28** terminadas · 3 parciales · 2 sin empezar |
 
 ---
 
@@ -118,6 +118,7 @@ Bloquean la entrega pero no son código.
 | 2026-08-20 | Planificación completa v2.0                                                                                                                                                                                                                                           |
 | 2026-08-21 | Dominio resuelto: Don Web, con acceso de Musapp. Riesgo R-04 cerrado                                                                                                                                                                                                  |
 | 2026-08-21 | Decisión D-11: se suman galería y noticias/informes. Bilingüe sigue afuera. Plan a v3.0 — 28 tareas                                                                                                                                                                   |
+| 2026-10-17 | **IT-11 completada.** La mitad sin datos se hizo parcheando la capa de datos y revirtiendo: sin tocar la base ni sumar dependencias. El catálogo vacío hablaba de "esos criterios" sin que nadie hubiera filtrado nada                                                |
 | 2026-10-17 | **IT-11, primera mitad.** El mensaje "no encontramos propiedades" **no podía aparecer nunca**: el script ocultaba por atributo y el marcado por clase, y la clase gana. Con una búsqueda sin resultados la página quedaba en blanco                                   |
 | 2026-10-17 | **Menú del celular** (IT-09). Los enlaces del encabezado estaban ocultos por debajo de 640 px: desde la ficha de una propiedad en un teléfono no se llegaba al catálogo. Es un `<details>`, así que anda sin JavaScript                                               |
 | 2026-10-17 | **Revisión del Hito 2**: 1 crítico, 9 importantes, 13 menores. Todos los importantes cerrados. El crítico: un informe publicado no tenía página y el panel mandaba al 404. Y había declarado UJ-10 completa sin cumplir 4 de sus criterios escritos — los leí después |

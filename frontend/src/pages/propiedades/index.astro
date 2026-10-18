@@ -49,7 +49,14 @@ const ordenadas = [...propiedades].sort((a, b) => {
     <div class="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12">
       <header class="py-8 text-center">
         <h1 class="font-titulo text-3xl text-verde sm:text-4xl">Propiedades</h1>
-        <p class="mt-3 text-texto-suave">
+        {
+          /*
+          Con el catálogo vacío el contador sobra: diría "0 propiedades
+          disponibles" justo encima de "Todavía no hay propiedades
+          publicadas". Se esconde con el atributo, que es el que manda.
+        */
+        }
+        <p class="mt-3 text-texto-suave" hidden={ordenadas.length === 0}>
           <span id="contador-resultados" data-total={ordenadas.length}>{ordenadas.length}</span>{
             ' '
           }
@@ -60,7 +67,8 @@ const ordenadas = [...propiedades].sort((a, b) => {
         </p>
       </header>
 
-      <Buscador zonas={zonas} tipologias={tipologias} />
+      {/* Sin nada que filtrar, los filtros solo hacen ruido. */}
+      {ordenadas.length > 0 && <Buscador zonas={zonas} tipologias={tipologias} />}
 
       <!-- Aviso de filtro por operación, cuando se llega desde el hero -->
       <p id="aviso-operacion" hidden class="mt-4 text-center text-sm text-texto-suave"></p>
@@ -100,7 +108,41 @@ const ordenadas = [...propiedades].sort((a, b) => {
         }
       </div>
 
-      <!-- Se muestra solo cuando ningún resultado pasa los filtros -->
+      {
+        /*
+        Dos vacíos distintos, y conviene no confundirlos.
+
+        Si **no hay ninguna propiedad cargada**, hablar de "esos criterios" es
+        desconcertante: quien entra no filtró nada. Pasa el primer día, con el
+        sitio recién entregado y el catálogo todavía vacío.
+
+        Si **hay propiedades pero ninguna pasa el filtro**, ahí sí corresponde
+        invitar a ampliar la búsqueda. Ese lo muestra `filtros.js`.
+      */
+      }
+      {
+        ordenadas.length === 0 && (
+          <div class="py-16 text-center">
+            <Corona tamano={44} clase="mx-auto text-rosa" />
+            <p class="mt-6 font-titulo text-2xl text-verde">
+              Todavía no hay propiedades publicadas
+            </p>
+            <p class="mx-auto mt-3 max-w-[46ch] text-texto-suave">
+              Estamos cargando las primeras. Escribinos y te contamos qué tenemos disponible.
+            </p>
+            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Boton variante="primario" href="/#contacto">
+                Escribinos
+              </Boton>
+              <Boton variante="terciario" href="/">
+                Volver al inicio
+              </Boton>
+            </div>
+          </div>
+        )
+      }
+
+      <!-- Se muestra solo cuando hay propiedades y ninguna pasa los filtros -->
       <div id="sin-resultados" hidden class="py-16 text-center">
         <Corona tamano={44} clase="mx-auto text-rosa" />
         <p class="mt-6 font-titulo text-2xl text-verde">

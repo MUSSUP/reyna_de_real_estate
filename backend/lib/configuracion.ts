@@ -75,7 +75,11 @@ export const CATALOGO: ClaveConfig[] = [
   {
     key: 'nosotros.body',
     etiqueta: 'Tu presentación',
-    ayuda: 'Un párrafo por línea en blanco.',
+    // Este campo es la excepción a la regla de "vaciar no rompe nada": no
+    // tiene texto de respaldo, así que sin él la sección entera no se dibuja.
+    // Esconderla es lo correcto —una sección con el título y nada debajo se
+    // lee como algo roto— pero hay que decirlo donde se edita.
+    ayuda: 'Un párrafo por línea en blanco. Si lo dejás vacío, la sección no aparece en el sitio.',
     tipo: 'parrafo',
     grupo: 'nosotros',
   },

@@ -2146,15 +2146,49 @@ Portada, catálogo, ficha, noticias, informe, gracias y 404. En todas:
 
 La portada carga **la misma foto dos veces**: una como fondo del hero y otra como fondo de la sección Insights, que la trae como valor por defecto. Está velada al 85%, así que se lee como textura y no como repetición, y no cuesta red porque es la misma dirección. Además esa foto es provisoria — el video y la imagen definitiva los debe la clienta (A-03). **Cuando llegue el material real conviene revisarlo**, no antes.
 
-### Lo que falta de IT-11, y la decisión que necesita
+## IT-11 · Segunda mitad: el sitio con la base vacía
 
-Queda la mitad **sin datos**: portada sin destacadas, catálogo sin propiedades, noticias sin noticias, el informe sin cargar, el panel recién instalado. Hacen falta para la entrega — una clienta que entra al panel vacío el primer día ve exactamente eso.
+Había planteado dos caminos que necesitaban una decisión —sumar una dependencia o tocar la estructura de la base de producción— y los dos sobraban. **Hay un tercero que no necesita ninguno de los dos**: se parchea la capa de datos para que devuelva lo que devolvería una base recién migrada —sin una sola fila—, se construye el sitio, se mira cada página y se revierte.
 
-Dos caminos, los dos sin riesgo para los datos de Laura:
+Cero riesgo para los datos de Laura, cero dependencias nuevas, cero estructura tocada, y reversible con un `git checkout`. Lo que se verifica es exactamente lo que importa: **cómo se ve el sitio el primer día, antes de que la clienta cargue nada.**
 
-- **Una base efímera local.** Agregar `@electric-sql/pglite-socket` como dependencia **solo de desarrollo**: levanta un Postgres de verdad en memoria con las migraciones reales —lo mismo que ya hacen las pruebas— y se le apunta el sitio. Suma una dependencia al proyecto.
-- **Un esquema aparte en la misma Supabase.** Crear un esquema vacío, correr las migraciones ahí, construir apuntando a ese esquema y borrarlo al terminar. No suma dependencias, pero es una operación de estructura sobre la base de producción de la clienta.
+### Lo primero: no se rompe
 
-Es una decisión de Mar, no mía.
+`astro build` termina completo con la base vacía. No genera ninguna ficha, ninguna noticia ni ningún informe —no hay de dónde— y las cinco páginas fijas salen bien. Que el build no reviente con una base recién instalada no es poco: es lo que pasa la primera vez que alguien clona el proyecto.
+
+### La portada esconde lo que no tiene, y queda bien
+
+Con la base vacía la portada queda en **hero + buscador + contacto**. Las destacadas, Insights, Noticias y Conóceme **se esconden solas**: ninguna banda vacía, ningún título colgado de la nada, ninguna caja gris. Eso ya estaba bien resuelto y conviene dejarlo escrito, porque es la clase de cosa que alguien "arregla" después sin saber que era a propósito.
+
+### El catálogo decía algo desconcertante
+
+Con cero propiedades mostraba **"No encontramos propiedades con esos criterios"**. Pero quien entra el primer día no filtró nada: el mensaje le habla de criterios que nunca puso. Y arriba, un **"0 propiedades disponibles"** redundante, más los cuatro filtros completos para filtrar un catálogo que no tiene nada.
+
+Ahora son **dos vacíos distintos**:
+
+- **No hay nada cargado** → "Todavía no hay propiedades publicadas / Estamos cargando las primeras. Escribinos y te contamos qué tenemos disponible." Sin contador y sin filtros, que ahí solo hacen ruido.
+- **Hay propiedades y ninguna pasa el filtro** → el mensaje de siempre, invitando a ampliar la búsqueda. Lo sigue mostrando `filtros.js`.
+
+### Una promesa de la pantalla de Configuración que no era cierta
+
+La pantalla dice: _"si vaciás un campo, el sitio vuelve a mostrar el texto que venía de fábrica — no queda un hueco."_ Para casi todos los campos es verdad. Para **"Tu presentación"** no: `nosotros.body` no tiene respaldo, así que vaciarlo **hace desaparecer la sección Conóceme entera**.
+
+Esconder la sección es lo correcto —un título con nada debajo se lee como algo roto—, pero la promesa estaba de más. Ahora la pantalla dice que casi todos tienen respaldo y que los pocos que no lo tienen lo avisan debajo del campo, y ese campo lo avisa.
+
+### Lo que se ve, con la base vacía
+
+| Página   | Lo que ve quien entra                                                            |
+| -------- | -------------------------------------------------------------------------------- |
+| Portada  | Hero, buscador y formulario de contacto. Nada vacío a la vista                   |
+| Catálogo | "Todavía no hay propiedades publicadas", con salida a contacto e inicio          |
+| Noticias | "Pronto vas a encontrar acá las novedades del mercado", con salida a propiedades |
+| 404      | El texto corregido, con salida a propiedades, noticias e inicio                  |
+| Gracias  | Sin cambios: no depende de datos                                                 |
+
+**Verificado después de revertir**: con los datos reales vuelve todo igual — 8 fichas, 3 noticias, filtros visibles, contador en 8 y ningún estado vacío a la vista. El archivo parcheado quedó **byte a byte idéntico** al de antes.
+
+### Lo que queda anotado
+
+El buscador del hero sigue a la vista con el catálogo vacío. Apretar "Buscar" lleva a "Todavía no hay propiedades publicadas", que es una respuesta honesta; esconderlo desarmaría el hero, que es la pieza de diseño aprobada. Se deja.
 
 `astro check`: 0 errores · ESLint: 0 · 300 pruebas en verde · `astro build`: completo
