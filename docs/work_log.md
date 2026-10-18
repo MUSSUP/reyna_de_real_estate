@@ -2014,4 +2014,14 @@ Y ahora hay una prueba que **sigue la cadena de importaciones de cada página** 
 
 `astro check`: 0 errores · ESLint: 0 · **300 pruebas en verde** (eran 220)
 
-> ⚠️ **La migración 0005 tiene que correrse contra la base antes del próximo despliegue.** El esquema ya tiene la columna y la base todavía no: lo comprobé corriendo `astro build`, que falla con `column "updated_at" does not exist`. Por eso este trabajo **no se empujó** hasta que la migración esté aplicada.
+> **La migración 0005 se aplicó y el trabajo quedó desplegado.** Antes de correrla, `astro build` fallaba con `column "updated_at" does not exist`; después pasó completo. No se empujó nada hasta que la base estuvo al día, para no dejar a Netlify construyendo contra un esquema que no existía.
+
+**Verificado en el sitio en vivo**, después del despliegue:
+
+✅ Portada, `/noticias`, `/propiedades` y la página del informe responden 200
+✅ `/admin` redirige al ingreso
+✅ El JSON-LD del informe **sigue siendo JSON válido** y sale con `<` y `>` escapados
+✅ Cabeceras intactas: CSP, HSTS con `preload`, `X-Frame-Options: DENY`
+✅ `X-Robots-Tag: noindex` todavía puesto — es correcto hoy, y es la acción **A-11** antes de entregar
+
+**Lo que no se puede verificar desde afuera**: que Netlify haya registrado la función programada. Las funciones programadas no se pueden invocar por HTTP, así que hay que mirarlo en el panel de Netlify, en Functions.

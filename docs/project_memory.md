@@ -43,12 +43,12 @@ Actualizado: 2026-10-17 (segunda vuelta)
 
 ## ⚠️ Lo primero al retomar
 
-**1. La migración 0005 no está aplicada en la base.** El esquema tiene `updated_at` en las cinco tablas de catálogo y la base todavía no. `astro build` falla con `column "updated_at" does not exist`, así que **el trabajo del 17/10 está comprometido pero sin empujar**. Se arregla con `npm run db:migrate`. Es aditiva y no toca ningún dato.
-
-**2. No se puede entrar al panel: la contraseña de la administradora se perdió.**
+**No se puede entrar al panel: la contraseña de la administradora se perdió.**
 Las cuatro pantallas construidas el 17/10 —destacadas, configuración, artículos y catálogos— **nunca se vieron funcionando en un navegador**. Están construidas y probadas, con los portones de sesión verificados con peticiones reales, pero nadie las miró. Se arregla con `npm run db:crear-admin`, que es además la acción A-10 de la entrega.
 
 > La revisión del Hito 2 lo marcó como hallazgo propio, y tenía razón: tres de los problemas que encontró se habrían visto en el primer minuto de uso real.
+
+**Lo que ya no bloquea**: la migración 0005 está aplicada y todo el trabajo del 17/10 está desplegado y verificado en vivo.
 
 **Firmar una sesión a mano con el `JWT_SECRET` queda bloqueado por la política de credenciales, y está bien que quede bloqueado.** No insistir por ahí: la contraseña la pone la persona.
 
