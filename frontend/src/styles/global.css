@@ -64,6 +64,16 @@
   h3 {
     font-family: var(--font-titulo);
     line-height: 1.2;
+    /*
+      ⚠️ Esto es una regla DIRECTA sobre el título, y una regla directa le gana
+      a lo que herede del bloque que lo contiene. Un título dentro de una caja
+      oscura **no** se pone blanco solo porque la caja diga `text-white`: queda
+      verde sobre verde, o sea invisible.
+
+      Ya pasó una vez, en el bloque "Más material" de la ficha de una
+      propiedad. **Todo título dentro de un bloque de color tiene que declarar
+      su propio color.**
+    */
     color: var(--color-verde);
   }
 

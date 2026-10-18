@@ -2057,12 +2057,38 @@ El triángulo propio del `summary` se saca en los dos motores: `list-style` para
 
 **Los puntitos de la galería.** El árbol de accesibilidad los mostraba como enlaces sin nombre. Mirando el marcado, **tienen nombre**: "Ver foto 1 de 6", en un `span` para lectores de pantalla. El árbol no lo mostraba; el marcado está bien.
 
+### Un título invisible en la ficha de una propiedad
+
+El `h2` **"Más material"** era **verde sobre verde**. No se veía mal: directamente no estaba, y por eso no lo cazó nadie repasando las páginas.
+
+La causa es una de esas que no se ven leyendo el marcado. El bloque lo envuelve un `div` con `bg-verde text-white`, así que a primera vista el título debería heredar el blanco. Pero `global.css` tiene `h1, h2, h3 { color: var(--color-verde) }`, y **una regla directa sobre el elemento le gana a lo que herede del bloque que lo contiene**. El título se pintaba verde, encima de verde.
+
+Arreglado con `text-white` explícito, y la regla global ahora dice por qué importa: **todo título dentro de un bloque de color tiene que declarar su propio color.** Barrí las cinco páginas públicas midiendo el contraste real de cada `h1`, `h2` y `h3`: era el único.
+
+### Cuatro cosas que parecían defectos y no lo eran
+
+Lo anoto con el mismo detalle que los arreglos, porque el tiempo que se pierde es el mismo y la próxima vez conviene no volver a recorrerlo.
+
+**El desborde horizontal.** Las mediciones daban `scrollWidth` 502 contra `clientWidth` 375. Midiendo contra el ancho real, lo único que se extiende a lo ancho es el **carrusel de fotos**, que es a propósito. La emulación del panel informa un ancho y dibuja con otro.
+
+**Los puntitos de la galería.** El árbol de accesibilidad los mostraba como enlaces sin nombre. En el marcado **tienen nombre** —"Ver foto 1 de 6"— en un `span` para lectores de pantalla.
+
+**El título del hero.** Mi medición decía contraste 1.00: blanco sobre blanco. Pero el oscuro no viene de un ancestro sino de **una capa hermana**, un degradado de verde oscuro al 55–80% que cubre toda la sección. Aunque la imagen de fondo no cargue, esa capa sigue pintando y el texto blanco se sigue leyendo. **D-14 se cumple**, y mi script no sabía mirar capas hermanas.
+
+**El foco de teclado.** El chequeo decía que ningún elemento cambiaba al enfocarse. Es que `getComputedStyle` no refleja `:focus-visible` y enfocar por script no siempre lo dispara. Tabulando de verdad: **contorno rosa de 3 px**, y el elemento coincide con `:focus-visible`. Está en `global.css` desde IT-05.
+
+### Lo que encontré y NO toqué: el blanco sobre rosa
+
+Los botones de conversión son texto blanco sobre el rosa de la marca (`#FB5696`). El contraste es **3.0 : 1**, y la norma pide **4.5 : 1** para texto de ese tamaño. Falla el nivel AA.
+
+**No lo cambié**, y es deliberado: el rosa es la marca, y hay una instrucción explícita de dejar la paleta como está. Las salidas serían oscurecer el rosa solo para los botones con texto —que rompe la unidad de la marca— o agrandar bastante la tipografía de los botones, que cambia el diseño aprobado.
+
+Es una decisión de la clienta, no mía. **Queda anotado con el número exacto para que se decida con el dato a la vista**, no como un descuido.
+
 ### Lo que queda por revisar de IT-09
 
-- Contraste de color en los textos chicos sobre crema y sobre verde.
 - Tamaño de los destinos táctiles en el pie y en la sección de contacto: varios miden 20 px de alto. Son enlaces de texto en línea, que la norma exceptúa, pero son los que alguien toca para llamar o escribir.
 - Peso de la portada y orden de carga de las fuentes.
-- Foco visible al recorrer con el teclado.
-- Las mismas pasadas sobre la home, el catálogo y las noticias.
+- Peso real de la portada con fotos de verdad, no con las de demostración.
 
 `astro check`: 0 errores · ESLint: 0 · `astro build`: completo

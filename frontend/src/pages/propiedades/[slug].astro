@@ -194,7 +194,13 @@ const datosEstructurados = {
           <section class="mt-14">
             <div class="flex flex-col items-start gap-4 rounded-[var(--radius-card)] bg-verde p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
               <div>
-                <h2 class="font-titulo text-2xl">Más material</h2>
+                {/*
+                  `text-white` explícito y no heredado del bloque: en
+                  `global.css` hay una regla que pinta todos los `h2` de verde,
+                  y una regla directa le gana a la herencia. Sin esto el
+                  título quedaba **verde sobre verde**, o sea invisible.
+                */}
+                <h2 class="font-titulo text-2xl text-white">Más material</h2>
                 <p class="mt-1 text-white/75">
                   El video y las fotos completas de {propiedad.titulo}.
                 </p>
