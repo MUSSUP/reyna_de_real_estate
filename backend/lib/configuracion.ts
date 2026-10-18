@@ -163,9 +163,13 @@ export function revisarValor(clave: ClaveConfig, bruto: string): string | null {
     case 'url':
       if (v.length > LARGO_URL) return 'La dirección es demasiado larga';
       // Mensaje concreto: "inválido" no le dice a nadie qué arreglar.
-      return urlSegura(v)
-        ? null
-        : 'Tiene que empezar con http://, https:// o con una barra, como /video/hero.mp4';
+      if (urlSegura(v)) return null;
+      // Si el navegador le agregó el esquema a una ruta, se dice exactamente
+      // eso en vez de un mensaje genérico: es lo que acaba de pasar.
+      if (/^https?:\/\/[^./\s]+(\/|$)/i.test(v)) {
+        return `"${v}" apunta a un sitio que no existe. Si querés un archivo de este sitio, escribilo con una barra adelante y sin https, así: /video/hero.mp4`;
+      }
+      return 'Tiene que empezar con http://, https:// o con una barra, como /video/hero.mp4';
 
     case 'email':
       return CORREO.test(v) ? null : 'No parece un correo electrónico';

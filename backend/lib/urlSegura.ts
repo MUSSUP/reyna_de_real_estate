@@ -30,7 +30,24 @@ export function urlSegura(valor: string): boolean {
 
   try {
     const u = new URL(v);
-    return u.protocol === 'http:' || u.protocol === 'https:';
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+
+    /*
+      Un dominio sin punto no existe en internet.
+      
+      Pasó de verdad: el campo del video era `<input type="url">`, alguien
+      pegó `/video/hero.mp4`, y **el navegador le agregó `https://` adelante**
+      para que pasara su propia validación. Quedó guardado
+      `https://video/hero.mp4`, que es una dirección válida apuntando a un
+      sitio llamado "video" — y el video dejó de verse, sin que nada avisara.
+
+      El control es simple y no tiene falsos positivos acá: toda dirección
+      pública tiene al menos un punto. `localhost` se deja pasar porque se usa
+      al desarrollar.
+    */
+    const sinPunto = !u.hostname.includes('.');
+    const esLocal = u.hostname === 'localhost';
+    return !sinPunto || esLocal;
   } catch {
     return false;
   }

@@ -122,6 +122,18 @@ describe('direcciones peligrosas', () => {
     expect(r.tipo).toBe('datos');
   });
 
+  it('rechaza un dominio sin punto, que es lo que deja el navegador al "arreglar" una ruta', async () => {
+    // Pasó de verdad: el campo era `type="url"`, se pegó `/video/hero.mp4` y
+    // el navegador le puso `https://` adelante para que pasara su propia
+    // validación. Quedó apuntando a un sitio llamado "video" y el video dejó
+    // de verse, sin que nada avisara.
+    const r = await guardarConfiguracion(db, { 'hero.video_url': 'https://video/hero.mp4' });
+    expect(r.tipo).toBe('datos');
+    if (r.tipo !== 'datos') return;
+    // Y el mensaje dice qué escribir, no "inválido".
+    expect(r.errores['hero.video_url']).toContain('/video/hero.mp4');
+  });
+
   it('el control se puede usar solo, sin base', () => {
     // Es el mismo que usa el sitio al dibujar, como segunda red.
     expect(urlSegura('https://a.test')).toBe(true);
@@ -131,6 +143,9 @@ describe('direcciones peligrosas', () => {
     expect(urlSegura('//a.test/x')).toBe(false);
     expect(urlSegura('/video/hero.mp4')).toBe(true);
     expect(urlSegura('video/hero.mp4')).toBe(false);
+    expect(urlSegura('https://video/hero.mp4')).toBe(false);
+    // `localhost` no tiene punto y se usa al desarrollar.
+    expect(urlSegura('http://localhost:4321/v.mp4')).toBe(true);
   });
 });
 

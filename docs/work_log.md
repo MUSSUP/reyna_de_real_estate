@@ -2262,3 +2262,34 @@ Los campos de dirección ahora van como `text` con `inputmode="url"`, que conser
 | `type="url"`  | `/video/hero.mp4`      | ❌ "Ingresa una URL." |
 | `type="text"` | `/video/hero.mp4`      | ✅ pasa               |
 | `type="text"` | `https://a.test/v.mp4` | ✅ pasa               |
+
+---
+
+## El navegador "arregló" la ruta y rompió el video en silencio
+
+Mar pegó `/video/hero.mp4` y avisó que la publicación tardaba más de lo normal. **La publicación había funcionado**: el archivo estaba en vivo y la portada ya tenía su etiqueta `<video>`. El problema era otro, y se veía en el HTML construido:
+
+```html
+<video src="https://video/hero.mp4" ...></video>
+```
+
+El campo todavía era `<input type="url">` en el sitio desplegado, y **el navegador le agregó `https://` adelante** para que el valor pasara su propia validación. Quedó guardada una dirección perfectamente válida apuntando a un sitio llamado **"video"**, que no existe.
+
+Y mi validación la dejó pasar, porque es exactamente eso: una dirección https válida. **Se rompió en silencio**, que es lo peor que podía pasar: Mar veía "publicado" y no veía el video, sin nada que explicara por qué.
+
+Dos redes nuevas:
+
+- **`urlSegura` rechaza un dominio sin punto.** Toda dirección pública tiene al menos uno; `localhost` se deja pasar porque se usa al desarrollar. Es el control que habría atajado esto.
+- **El mensaje nombra el caso.** Si llega algo como `https://video/hero.mp4`, en vez de un "inválido" genérico dice: _"apunta a un sitio que no existe. Si querés un archivo de este sitio, escribilo con una barra adelante y sin https, así: /video/hero.mp4"_.
+
+### Lo que deja como aprendizaje
+
+Es el tercer eslabón de la misma cadena, y los tres se encadenaron porque cada arreglo descubrió el siguiente:
+
+1. El campo **rechazaba** la ruta del sitio, que es lo único que la seguridad permite reproducir → se arregló `urlSegura`.
+2. El **navegador** la rechazaba antes, con `type="url"` → se arregló el tipo de campo.
+3. El **navegador la reescribió** a una dirección válida pero sin sentido → se arregló la validación del valor.
+
+El patrón: **arreglar una validación del servidor no termina en el servidor.** Hay que seguir el valor hasta donde se usa, y preguntarse qué puede hacerle el navegador en el camino.
+
+_Pruebas_: 2 casos nuevos — el dominio sin punto se rechaza con un mensaje que dice qué escribir, y `localhost` se sigue aceptando. **303 en verde.**
