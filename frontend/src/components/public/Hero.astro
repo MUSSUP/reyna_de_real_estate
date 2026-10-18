@@ -64,6 +64,24 @@ const {
   >
   </div>
 
+  {
+    /*
+    Segundo velo, centrado y sin bordes duros.
+
+    El primero es parejo y sirve para toda la imagen. Pero el texto vive en el
+    medio, y ahí es donde el video tiene los muebles claros: el claim rosa
+    quedaba lavado justo sobre lo más brillante. Una caja negra detrás
+    resolvería el contraste y rompería el registro editorial, así que es un
+    degradado radial que oscurece el centro y se desvanece antes de llegar a
+    los bordes. No se ve; se nota en que el texto se lee.
+  */
+  }
+  <div
+    class="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_45%,rgba(15,30,29,0.6)_0%,rgba(15,30,29,0.35)_45%,transparent_75%)]"
+    aria-hidden="true"
+  >
+  </div>
+
   <div class="relative mx-auto max-w-[900px] px-6 py-24 text-center">
     <Corona tamano={44} clase="mx-auto text-rosa" />
 
@@ -72,13 +90,35 @@ const {
         El claim de marca queda debajo, más chico y en rosa. Los nombres de
         las props siguen describiendo el contenido, no el lugar donde cae. */
     }
+    {
+      /*
+      **Sin mayúsculas.** Playfair en cursiva y negrita tiene un contraste de
+      trazo que le da carácter al título, y en caja alta ese contraste se
+      pierde: las versales quedan parejas y la cursiva deja de leerse como
+      cursiva. Es el registro de la referencia que aprobó la clienta.
+
+      La sombra es sutil a propósito: no se ve como sombra, despega el texto
+      del video. Sobre un fondo que cambia cuadro a cuadro es lo único que
+      garantiza el borde de las letras.
+    */
+    }
     <h1
-      class="mt-6 font-titulo text-[27px] uppercase leading-[1.12] tracking-[0.01em] text-white sm:text-[38px] lg:text-[46px]"
+      class="mt-6 font-titulo text-[30px] font-bold italic leading-[1.12] tracking-[0.01em] text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] sm:text-[44px] lg:text-[54px]"
     >
       {pregunta}
     </h1>
 
-    <p class="mx-auto mt-5 max-w-[26ch] font-titulo text-lg text-rosa sm:text-xl lg:text-2xl">
+    {
+      /*
+      Engrosarlo no es solo estético. El rosa de la marca sobre el velo ronda
+      3,5 : 1. La norma pide 4,5 para texto normal pero 3 para texto grande, y
+      "grande" incluye **18,66 px en negrita**: con `semibold` entra en esa
+      categoría en todos los tamaños, además de destacar, que era el pedido.
+    */
+    }
+    <p
+      class="mx-auto mt-5 max-w-[26ch] font-titulo text-xl font-semibold text-rosa [text-shadow:0_2px_12px_rgba(0,0,0,0.65)] sm:text-2xl lg:text-[28px]"
+    >
       {titulo}
     </p>
 

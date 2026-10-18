@@ -2293,3 +2293,28 @@ Es el tercer eslabón de la misma cadena, y los tres se encadenaron porque cada 
 El patrón: **arreglar una validación del servidor no termina en el servidor.** Hay que seguir el valor hasta donde se usa, y preguntarse qué puede hacerle el navegador en el camino.
 
 _Pruebas_: 2 casos nuevos — el dominio sin punto se rechaza con un mensaje que dice qué escribir, y `localhost` se sigue aceptando. **303 en verde.**
+
+---
+
+## El hero: el título destaca y el claim se lee
+
+Pedido de Mar después de ver el video andando: el claim rosa **"Tu sueño. Nuestro propósito."** se perdía contra el fondo, y el título necesitaba más presencia. Mandó como referencia una captura de cómo se veía antes — una serif grande en cursiva y negrita.
+
+**El título ahora es Playfair en cursiva y negrita**, y la cursiva es **de verdad**: se cargó `latin-700-italic`. Dejar que el navegador la invente a partir de la 400 produce una falsificación que a 54 px se ve engrosada y sucia, justo al tamaño donde más se nota.
+
+**Se le sacaron las mayúsculas.** Playfair en cursiva tiene un contraste de trazo que le da carácter, y en caja alta ese contraste se pierde: las versales quedan parejas y la cursiva deja de leerse como cursiva. Es el registro de la referencia que mandó la clienta. Pasó de 46 px a 54 px.
+
+**Para el claim, no una caja negra.** Mar propuso un fondo oscuro detrás. Resolvería el contraste pero rompería el registro editorial, así que son dos cosas más discretas:
+
+- **Un segundo velo, radial y centrado.** El primero es parejo y cubre toda la imagen; el texto vive en el medio, que es donde el video tiene los muebles claros. Este oscurece el centro y se desvanece antes de los bordes: no se ve, se nota en que el texto se lee.
+- **Una sombra de texto suave** en el título y en el claim. Sobre un fondo que cambia cuadro a cuadro, es lo único que garantiza el borde de las letras.
+
+**Y el claim pasó a semibold**, que no es solo estético. El rosa de la marca sobre el velo ronda **3,5 : 1**. La norma pide 4,5 para texto normal y **3 para texto grande**, donde "grande" incluye 18,66 px en negrita. Con `semibold` entra en esa categoría **en todos los tamaños** — así que el pedido estético y el requisito de accesibilidad se resuelven con el mismo cambio. También creció: 20 → 28 px en pantalla grande.
+
+> Esto **no cierra** el asunto del blanco sobre rosa de los botones (3,0 : 1), que sigue esperando una decisión de la clienta. Son dos casos distintos: acá el rosa es el texto sobre un fondo oscuro; allá es el fondo con texto blanco encima.
+
+**Medido después del cambio**: título 54 px / peso 700 / cursiva · claim 28 px / peso 600 · el claim cuenta como texto grande. En pantalla angosta el título entra en una sola línea.
+
+### Un error de método que casi se cuela
+
+El primer intento de este cambio **no se guardó**: el script fallaba en una verificación posterior y el archivo se escribía recién al final, así que abortó sin escribir nada. Lo detecté midiendo en el navegador —el peso seguía en 400— y no leyendo el archivo. **Medir después de tocar, siempre**: si me hubiera fiado del "ok" del script, habría dado por hecho un cambio que nunca pasó.

@@ -8,6 +8,10 @@
 @import '@fontsource/playfair-display/latin-600.css';
 @import '@fontsource/playfair-display/latin-700.css';
 @import '@fontsource/playfair-display/latin-400-italic.css';
+/* La cursiva en negrita la usa el título del hero. Se carga de verdad y no se
+   deja que el navegador la invente: una serif de display falsificada a negrita
+   se ve engrosada y sucia justo al tamaño en que más se nota. */
+@import '@fontsource/playfair-display/latin-700-italic.css';
 @import '@fontsource/cinzel/latin-400.css';
 @import '@fontsource/cinzel/latin-600.css';
 @import '@fontsource/cinzel/latin-700.css';
