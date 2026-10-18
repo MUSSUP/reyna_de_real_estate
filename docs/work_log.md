@@ -2371,3 +2371,99 @@ Antes de instalarlo probé si convenía bajarlo un escalón, y el resultado fue 
 **Verificado en el navegador**: 1920×1080, reproduciendo, nítido.
 
 > **Lo que queda para tener en cuenta**: 6,7 MB es el peso del hero para cada visitante nuevo. Con los 100 GB mensuales del plan gratuito de Netlify, eso da alrededor de 15.000 visitas — de sobra para arrancar. Si alguna vez el sitio crece, el primer lugar donde mirar es este archivo.
+
+---
+
+## IT-10 · Auditoría de seguridad final — ✅ Completada
+
+Obligatoria antes de entregar. Se revisó secretos, autenticación, autorización, inyección, exposición de la API, subida de archivos, dependencias y endurecimiento del despliegue. **Buena parte se verificó contra el sitio en vivo**, no solo leyendo código.
+
+### Secretos — limpio
+
+El repositorio es **público** (D-20), así que esto es lo primero.
+
+- `.env` **nunca** estuvo versionado. Se revisó la historia completa, no el estado actual.
+- Se buscaron patrones de secreto en **todos los commits**: JWT, claves de Stripe y Resend, cadenas de conexión con contraseña, claves de AWS y bloques de clave privada. Lo único que aparece son **ejemplos apuntando a `localhost`** en `.env.example` y en la documentación del entorno local.
+- Ningún secreto cableado en el código.
+
+> Dos falsos positivos que vale anotar para la próxima: los hashes `sha512-…` de `package-lock.json` contienen secuencias que parecen JWT, y los ejemplos de documentación parecen cadenas de conexión reales. Conviene excluir los lockfiles y mirar si el host es `localhost` antes de alarmarse.
+
+### Autenticación y autorización — sin agujeros
+
+**Inventario completo de los 20 endpoints**, uno por uno:
+
+|                      |                                                          |
+| -------------------- | -------------------------------------------------------- |
+| Endpoints del panel  | **17, todos exigen sesión**                              |
+| Públicos a propósito | 3: ingreso, cierre de sesión y el formulario de consulta |
+
+El cierre de sesión es público a propósito: responde bien haya o no sesión, y solo devuelve una cookie que se borra.
+
+**Verificado en producción:**
+
+- El ingreso responde **exactamente lo mismo** —401 y "Email o contraseña incorrectos"— para un correo que no existe y para una contraseña equivocada. Se probó con las dos, sin pasar el límite de intentos.
+- Un endpoint del panel sin sesión devuelve 401 y un mensaje que no informa nada.
+- **La cookie sale con `HttpOnly; SameSite=Strict; Path=/; Max-Age=28800; Secure`.** Esto **cierra el hallazgo abierto** de la revisión del Hito 2, que quedó sin poder comprobarse por depender de `NODE_ENV` en tiempo de ejecución. Se verificó pidiendo el cierre de sesión, que no necesita credenciales y devuelve la cookie con los mismos atributos.
+
+**Límite de intentos**: 5 cada 15 minutos para el ingreso y 5 cada 10 para el formulario público, en ámbitos separados, guardados en la base y no en memoria — en un entorno sin servidor cada invocación puede ser una instancia nueva, y un contador en memoria no frenaría nada.
+
+### Inyección — cubierta, y demostrada
+
+- **SQL**: todo pasa por Drizzle. Hay **un solo `sql` crudo que interpola un valor escrito por una persona** (el control de desarrollista repetido). Se le escribió una prueba que le mete `Grupo'); drop table developers; --`: se guarda literal, la tabla sigue en pie y el control de repetidos lo reconoce. **Demostrado, no afirmado.**
+- **XSS**: el único `set:html` con contenido variable son los tres bloques de datos estructurados, y los tres pasan por `jsonLdSeguro`. El texto editable nunca se inserta como HTML.
+- **Fórmulas en CSV**: las celdas que empiezan con `= + - @` se prefijan con comilla simple.
+- **Direcciones**: validación en positivo al guardar y otra vez al dibujar, con rechazo de dominios sin punto.
+
+### Subida de archivos — sólida
+
+Detecta el tipo por **firma binaria** —JPEG, PNG y WebP—, no por la extensión ni por lo que declare el cliente. Mide el buffer **real**, rechaza si el tamaño declarado no coincide con el recibido, topa en 10 MB y en 15 imágenes por galería, y limpia el nombre antes de usarlo como ruta.
+
+### Datos de terceros — no se filtran
+
+`owners` guarda nombre, teléfono, correo y notas de personas que le confiaron una propiedad a Laura. Se buscaron **tres datos reales de la siembra en el sitio en vivo**: cero coincidencias. Además hay una prueba automática que recorre el código del sitio público y falla si algún archivo siquiera nombra la tabla.
+
+### Despliegue — endurecido
+
+CSP completa con `frame-ancestors 'none'` y `object-src 'none'`, HSTS con `preload`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`. El anti-CSRF de Astro está activo. El muestrario `/sistema` sale con `noindex, nofollow`.
+
+---
+
+## Hallazgos
+
+### H-1 · Dependencias con vulnerabilidades, solo en tiempo de construcción — **riesgo aceptado**
+
+`npm audit` reporta **26 vulnerabilidades (1 crítica, 24 altas)**, todas en `undici`, que entra por `astro → unifont`. `unifont` es lo que Astro usa para descargar metadatos de fuentes **al construir**; el proyecto usa fuentes propias (`@fontsource`) y no la API de fuentes remotas. **No viaja al sitio desplegado**: se revisó el paquete que se sube y las únicas menciones son metadatos de otros paquetes y el propio entorno de Netlify.
+
+Lo tomé en serio igual, porque un compromiso en tiempo de construcción puede inyectar código en lo que se despliega. **Probé el arreglo y lo deshice**:
+
+- `npm audit fix` baja de 26 a 13 (se va la crítica) y sube `undici` a 8.12.2.
+- Pero **rompe el árbol de dependencias**: desaparece `@netlify/blobs` y `astro build` falla.
+- Además `npm audit fix --omit=dev` **poda las dependencias de desarrollo**: se llevó puestos eslint y vitest, y hubo que reinstalar.
+
+Se revirtió al `package-lock.json` original y se confirmó que la construcción vuelve a funcionar.
+
+**Riesgo residual aceptado**: romper la construcción a días de entregar es peor que una vulnerabilidad de tiempo de construcción en un paquete que no se ejecuta en producción. **Qué hacer**: volver a correr `npm audit` cuando Astro actualice `unifont`. No usar `--omit=dev` con `audit fix`.
+
+### H-2 · Los endpoints del panel no tienen límite de frecuencia — **menor**
+
+Solo el ingreso y el formulario público lo tienen. Un endpoint del panel exige sesión válida, y quien tiene una sesión válida ya tiene acceso completo: el límite no agregaría defensa real. Se anota por completitud.
+
+### H-3 · El redirect de `/admin` sale con `no-cache` en vez de `no-store` — **menor**
+
+El middleware pone `no-store, no-cache, must-revalidate` en las páginas del panel, pero la **respuesta de redirección** a la pantalla de ingreso sale solo con `no-cache`. No transporta ningún dato: es un 302 vacío hacia el ingreso. Sin consecuencia práctica.
+
+### H-4 · No hay `sitemap.xml` — **no es de seguridad, es de entrega**
+
+Viene marcado desde la revisión del Hito 1. Va junto con la acción **A-11**: cuando se quite el bloqueo de indexación hay que agregar el sitemap, o el sitio sale a Google sin él.
+
+---
+
+## Lo que esta auditoría **no** cubre
+
+Dicho explícitamente, para que nadie suponga de más:
+
+- **No se probó el panel con una sesión real.** Todo lo del lado autenticado se verificó leyendo el código y comprobando que el portón rechaza. Lo que pasa **adentro** con una sesión válida está cubierto por las 303 pruebas, no por esta auditoría.
+- **No se hizo prueba de penetración.** No se intentó escalar privilegios, ni fuerza bruta sostenida, ni fuzzing de los endpoints.
+- **La seguridad de las cuentas de terceros** —Supabase, Netlify, el correo de la marca— queda del lado de quien las administra. Conviene activar segundo factor en las tres antes de transferirlas.
+
+`astro check`: 0 errores · ESLint: 0 · **304 pruebas en verde** · `astro build`: completo

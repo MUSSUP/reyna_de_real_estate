@@ -302,6 +302,23 @@ describe('la forma del catálogo', () => {
     expect(META.tipologias.nuevo).toBe('Nueva tipología');
   });
 
+  it('el control de nombre repetido va parametrizado, no concatenado', async () => {
+    // Es el único `sql` crudo del proyecto que interpola un valor que escribe
+    // una persona. Drizzle parametriza, pero conviene demostrarlo en vez de
+    // afirmarlo: un nombre con comillas tiene que guardarse tal cual y no
+    // alterar la consulta.
+    const hostil = `Grupo'); drop table developers; --`;
+    const r = await crearItem(db, 'desarrollistas', { nombre: hostil });
+    expect(r.tipo).toBe('ok');
+
+    // La tabla sigue existiendo y el nombre quedó literal.
+    const l = await listarCatalogo(db, 'desarrollistas');
+    expect(l.map((x) => x.nombre)).toContain(hostil);
+
+    // Y el control de repetidos lo reconoce como el mismo nombre.
+    expect((await crearItem(db, 'desarrollistas', { nombre: hostil })).tipo).toBe('repetido');
+  });
+
   it('un nombre de catálogo inventado no pasa el control', () => {
     expect(esCatalogo('zonas')).toBe(true);
     expect(esCatalogo('propiedades')).toBe(false);
