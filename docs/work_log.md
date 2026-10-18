@@ -2242,3 +2242,23 @@ El salto entre 9,5 MB y 721 KB es enorme porque los presets de tamaño codifican
 > **Lo que conviene hacer**: el archivo parece de Pexels, por el nombre. Pexels ofrece el mismo clip en **Full HD**, que pesa bastante menos que el 4K y es una codificación de 1080p de verdad, no un 4K recomprimido dos veces. Bajar esa versión da mejor calidad **y** menos peso que cualquier cosa que se pueda sacar recomprimiendo acá.
 
 `astro check`: 0 errores · ESLint: 0 · **302 pruebas en verde** · `astro build`: completo
+
+---
+
+## El navegador bloqueaba la ruta antes de que el servidor la viera
+
+Arreglé `urlSegura` para que aceptara `/video/hero.mp4`, se corrieron las pruebas, pasó todo — y al intentar pegarlo en el panel saltaba **"Ingresa una URL."**.
+
+El mensaje no era del sitio: era del navegador. El campo se dibujaba como `<input type="url">`, y la validación nativa exige un esquema. **El formulario ni siquiera se enviaba**, así que el servidor —que ya aceptaba la ruta— nunca se enteraba.
+
+Es un buen recordatorio: arreglar la validación del servidor no sirve de nada si el navegador rechaza el valor antes. **Las dos puertas tienen que estar de acuerdo.** Y no alcanzaba con correr las pruebas: las 302 prueban el servidor, y esto pasaba del lado del cliente.
+
+Los campos de dirección ahora van como `text` con `inputmode="url"`, que conserva el teclado de direcciones en el celular. **Quien valida de verdad es el servidor**, que es donde corresponde y donde ya estaba bien.
+
+**Verificado con el mismo marcado, antes y después:**
+
+| Campo         | Valor                  | Resultado             |
+| ------------- | ---------------------- | --------------------- |
+| `type="url"`  | `/video/hero.mp4`      | ❌ "Ingresa una URL." |
+| `type="text"` | `/video/hero.mp4`      | ✅ pasa               |
+| `type="text"` | `https://a.test/v.mp4` | ✅ pasa               |

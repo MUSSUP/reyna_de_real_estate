@@ -52,8 +52,23 @@ if (revisar) {
 const largoMaximo = (tipo: string) =>
   tipo === 'parrafo' ? LARGO_PARRAFO : tipo === 'url' ? LARGO_URL : LARGO_TEXTO;
 
+/**
+ * Qué tipo de campo HTML le toca a cada clave.
+ *
+ * **Las direcciones van como `text`, no como `url`.** Con `type="url"` el
+ * navegador exige un esquema y rechaza `/video/hero.mp4` **antes de enviar el
+ * formulario**: ni siquiera llega al servidor, que sí lo acepta. Y una ruta
+ * del propio sitio es justo lo único que se puede usar para el video del
+ * hero, porque la seguridad del sitio no deja reproducir medios de otro
+ * dominio.
+ *
+ * El teclado de direcciones en el celular se conserva con `inputmode`. Quien
+ * valida de verdad es el servidor (`urlSegura`), que es donde corresponde.
+ */
 const tipoHtml = (tipo: string) =>
-  tipo === 'email' ? 'email' : tipo === 'telefono' ? 'tel' : tipo === 'url' ? 'url' : 'text';
+  tipo === 'email' ? 'email' : tipo === 'telefono' ? 'tel' : 'text';
+
+const modoEntrada = (tipo: string) => (tipo === 'url' ? 'url' : undefined);
 
 const claseCampo =
   'w-full rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm';
@@ -159,6 +174,7 @@ const claseCampo =
                         id={id}
                         name={c.key}
                         type={tipoHtml(c.tipo)}
+                        inputmode={modoEntrada(c.tipo)}
                         value={c.valor}
                         maxlength={largoMaximo(c.tipo)}
                         aria-describedby={
