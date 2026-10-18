@@ -107,6 +107,21 @@ describe('direcciones peligrosas', () => {
     expect(r.tipo).toBe('datos');
   });
 
+  it('acepta una ruta del propio sitio, que es donde tiene que vivir un video', async () => {
+    // La política de seguridad del sitio solo deja cargar medios del propio
+    // dominio. Sin esto, el campo rechazaba lo único que funciona.
+    const r = await guardarConfiguracion(db, { 'hero.video_url': '/video/hero.mp4' });
+    expect(r.tipo).toBe('ok');
+    expect(await leer('hero.video_url')).toBe('/video/hero.mp4');
+  });
+
+  it('rechaza `//otro-sitio.com`, que parece una ruta y no lo es', async () => {
+    // Dos barras es una dirección externa con el esquema implícito: se vería
+    // como una ruta del sitio y cargaría de cualquier lado.
+    const r = await guardarConfiguracion(db, { 'redes.instagram': '//evil.example/x' });
+    expect(r.tipo).toBe('datos');
+  });
+
   it('el control se puede usar solo, sin base', () => {
     // Es el mismo que usa el sitio al dibujar, como segunda red.
     expect(urlSegura('https://a.test')).toBe(true);
@@ -114,6 +129,8 @@ describe('direcciones peligrosas', () => {
     expect(urlSegura('   ')).toBe(true);
     expect(urlSegura('javascript:alert(1)')).toBe(false);
     expect(urlSegura('//a.test/x')).toBe(false);
+    expect(urlSegura('/video/hero.mp4')).toBe(true);
+    expect(urlSegura('video/hero.mp4')).toBe(false);
   });
 });
 

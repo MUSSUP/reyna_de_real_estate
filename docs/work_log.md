@@ -2192,3 +2192,53 @@ Esconder la sección es lo correcto —un título con nada debajo se lee como al
 El buscador del hero sigue a la vista con el catálogo vacío. Apretar "Buscar" lleva a "Todavía no hay propiedades publicadas", que es una respuesta honesta; esconderlo desarmaría el hero, que es la pieza de diseño aprobada. Se deja.
 
 `astro check`: 0 errores · ESLint: 0 · 300 pruebas en verde · `astro build`: completo
+
+---
+
+## Pruebas de la clienta, y dos cosas que salieron de ahí
+
+Mar recorrió el panel cargando de verdad: zona, amenidad, propiedad en borrador, propiedad publicada, vista en el sitio, cambio de destacadas. **Todo funcionó.** Es el camino que ninguna de las 302 pruebas recorre, y era el que faltaba.
+
+Reportó dos cosas.
+
+### "Los cambios en la página principal no impactan" — impactaban
+
+El sitio en vivo **sí** tenía las ediciones: decía "Tu sueño...." y "Your dream is reality!", exactamente lo que ella había escrito. El que mostraba el texto viejo era **el `localhost` que yo le había abierto** para que entrara al panel.
+
+La causa: `obtenerConfiguracion` guarda los textos en memoria la primera vez y no los vuelve a consultar. El comentario decía "se consulta una vez por build", y para producción es correcto —el sitio se genera en un proceso que arranca y termina—. Pero **el servidor de desarrollo vive horas**, así que la caché sobrevivía a cualquier edición.
+
+El sitio nunca estuvo roto. Pero desde la pantalla donde ella estaba probando, guardar parecía no servir de nada, **que es la peor forma de equivocarse**: te hace desconfiar de tu propio trabajo. Ahora la caché se apaga en desarrollo.
+
+### El video del hero: el campo rechazaba lo único que funciona
+
+Mar quería poner un video descargado y preguntó qué ruta poner, o si convenía subirlo a un Drive. Las dos opciones que tenía en la cabeza estaban cerradas, y por motivos que no se ven desde el panel.
+
+**Un video de Drive o de cualquier otro dominio no se reproduce.** La cabecera de seguridad del sitio no declara `media-src`, así que los medios caen en `default-src 'self'`: **solo se puede reproducir un video servido desde el propio sitio.** Drive además no da una dirección directa a un archivo de video.
+
+Y acá estaba el callejón sin salida, que armé yo en UJ-12: el campo "Video de fondo" se valida con `urlSegura`, que **solo aceptaba `http://` y `https://`**. O sea que rechazaba `/video/hero.mp4` —lo único que funciona— y aceptaba direcciones externas que el navegador después bloquea al reproducir. El panel decía que sí a lo que no anda y que no a lo que anda.
+
+`urlSegura` ahora acepta rutas del propio sitio. **No es un permiso de más**: sin esquema no hay `javascript:` posible. Lo que sí se sigue rechazando es `//otro-sitio.com`, que parece una ruta y es una dirección externa con el esquema implícito — tiene su prueba.
+
+El mensaje de error y la ayuda del campo ahora dicen la verdad: que el archivo tiene que estar en el sitio, que un enlace de Drive no se va a ver, y cuál es la forma de la ruta.
+
+### El video, comprimido
+
+El original: **33 MB, 4K a 60 fps, 10,8 segundos**. Para un fondo que arranca solo es muchísimo — un visitante desde el celular se come 33 MB antes de ver nada, y unas 3.000 visitas agotarían el tráfico mensual del plan gratuito de Netlify.
+
+No hay `ffmpeg` en el equipo, pero macOS trae `avconvert`. Lo que dieron sus presets:
+
+| Preset           | Resolución  | Peso       |
+| ---------------- | ----------- | ---------- |
+| original         | 3840×2160   | 33 MB      |
+| 1920×1080        | 1920×1080   | 21 MB      |
+| 1280×720         | 1280×720    | 15 MB      |
+| 960×540          | 960×540     | 9,5 MB     |
+| **AppleM4VWiFi** | **480×272** | **721 KB** |
+
+El salto entre 9,5 MB y 721 KB es enorme porque los presets de tamaño codifican a calidad casi sin pérdida —7 Mbps para 540p, que es un disparate para web— y el de WiFi está pensado para streaming. No hay nada en el medio, y `avconvert` no deja elegir bitrate.
+
+**Quedó instalado el de 721 KB** en `frontend/public/video/hero.mp4`, como provisorio. Se ve bien detrás del velo oscuro del hero, pero **a 1920 px de ancho es un agrandado de 4×**, y eso se nota en una pantalla grande.
+
+> **Lo que conviene hacer**: el archivo parece de Pexels, por el nombre. Pexels ofrece el mismo clip en **Full HD**, que pesa bastante menos que el 4K y es una codificación de 1080p de verdad, no un 4K recomprimido dos veces. Bajar esa versión da mejor calidad **y** menos peso que cualquier cosa que se pueda sacar recomprimiendo acá.
+
+`astro check`: 0 errores · ESLint: 0 · **302 pruebas en verde** · `astro build`: completo

@@ -34,9 +34,21 @@ export type Configuracion = Record<string, string>;
 
 let cacheConfig: Configuracion | null = null;
 
-/** Los textos editables. Se consulta una vez por build. */
+/**
+ * Los textos editables. Se consulta **una vez por build**.
+ *
+ * En producción eso es exactamente lo que se quiere: el sitio se genera de
+ * una, en un proceso que arranca y termina, así que una consulta alcanza para
+ * todas las páginas.
+ *
+ * **En desarrollo la caché se apaga.** El servidor de `astro dev` vive horas,
+ * así que la caché sobrevivía a cualquier edición: se cambiaba un texto en el
+ * panel, se recargaba la portada, y seguía apareciendo el texto viejo. El
+ * sitio no estaba roto —en producción el cambio sí salía— pero desde acá
+ * parecía que guardar no servía de nada, que es la peor forma de equivocarse.
+ */
 export async function obtenerConfiguracion(): Promise<Configuracion> {
-  if (cacheConfig) return cacheConfig;
+  if (cacheConfig && import.meta.env.PROD) return cacheConfig;
   const filas = await db.select().from(siteSettings);
   cacheConfig = Object.fromEntries(filas.map((f) => [f.key, f.valueEs ?? '']));
   return cacheConfig;

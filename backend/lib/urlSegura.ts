@@ -10,9 +10,26 @@
  * `data:`, `vbscript:`, y lo que aparezca el año que viene.
  */
 export function urlSegura(valor: string): boolean {
-  if (valor.trim() === '') return true;
+  const v = valor.trim();
+  if (v === '') return true;
+
+  /*
+    Una dirección del propio sitio, como `/video/hero.mp4`.
+
+    Hace falta y no es un permiso de más. La política de seguridad del sitio
+    solo deja cargar medios del propio dominio, así que **un video siempre va
+    a vivir acá**; sin esto, el campo "Video de fondo" del panel rechazaba lo
+    único que funciona y aceptaba direcciones externas que el navegador
+    después bloqueaba al reproducir. Un callejón sin salida.
+
+    No hay riesgo: sin esquema no hay `javascript:` posible. Lo que sí se
+    rechaza es `//otro-sitio.com`, que parece una ruta y es una dirección
+    externa con el esquema implícito.
+  */
+  if (v.startsWith('/') && !v.startsWith('//')) return true;
+
   try {
-    const u = new URL(valor.trim());
+    const u = new URL(v);
     return u.protocol === 'http:' || u.protocol === 'https:';
   } catch {
     return false;

@@ -67,7 +67,7 @@ export const CATALOGO: ClaveConfig[] = [
     key: 'hero.video_url',
     etiqueta: 'Video de fondo',
     ayuda:
-      'Dirección de un archivo .mp4. Si está vacío, la portada usa el video que vino de fábrica.',
+      'El archivo tiene que estar en el sitio: pegá una ruta como /video/hero.mp4. Un enlace de Drive o de otra página no se va a ver, lo bloquea la seguridad del sitio. Si lo dejás vacío, la portada muestra la foto de fondo.',
     tipo: 'url',
     grupo: 'hero',
   },
@@ -163,7 +163,9 @@ export function revisarValor(clave: ClaveConfig, bruto: string): string | null {
     case 'url':
       if (v.length > LARGO_URL) return 'La dirección es demasiado larga';
       // Mensaje concreto: "inválido" no le dice a nadie qué arreglar.
-      return urlSegura(v) ? null : 'Tiene que ser una dirección que empiece con http:// o https://';
+      return urlSegura(v)
+        ? null
+        : 'Tiene que empezar con http://, https:// o con una barra, como /video/hero.mp4';
 
     case 'email':
       return CORREO.test(v) ? null : 'No parece un correo electrónico';
