@@ -2318,3 +2318,34 @@ Pedido de Mar después de ver el video andando: el claim rosa **"Tu sueño. Nues
 ### Un error de método que casi se cuela
 
 El primer intento de este cambio **no se guardó**: el script fallaba en una verificación posterior y el archivo se escribía recién al final, así que abortó sin escribir nada. Lo detecté midiendo en el navegador —el peso seguía en 400— y no leyendo el archivo. **Medir después de tocar, siempre**: si me hubiera fiado del "ok" del script, habría dado por hecho un cambio que nunca pasó.
+
+---
+
+## Dos correcciones del hero, pedidas después de verlo andando
+
+### La transparencia del encabezado duraba 120 píxeles
+
+El efecto arrancaba bien pero se terminaba enseguida: `animation-range: 0 120px`. La barra ya estaba verde sólido apenas empezabas a bajar, con el video todavía a la vista.
+
+Ahora el rango es **`55vh 85vh`**: empieza a pintarse al 55% de la pantalla y termina al 85%, justo antes de que el hero salga de cuadro y aparezca la sección clara de abajo — que es donde el verde hace falta para que el logo y el menú, que son blancos, se sigan leyendo.
+
+**Medido con scroll real**, en una ventana de 820 px: a 0 y a 435 px transparente; a 500 px empieza a pintarse (20%); a 1000 px verde pleno.
+
+### La cursiva se probó y no gustó
+
+El título en Playfair cursiva y negrita quedó lindo como bloque, pero la clienta lo rechazó por **los signos de pregunta y la Q**. Tiene razón en lo concreto: en Playfair cursiva esas formas son muy caligráficas —la Q lleva un rasgo largo que cruza, y los `¿?` quedan muy inclinados— y le dan un aire que no es el de la marca.
+
+Volvió a **mayúsculas y sin cursiva**, como estaba. Se conservó la parte del pedido que sí funcionaba: el tamaño, que quedó en 50 px en lugar de los 46 originales.
+
+Y se **quitó el `latin-700-italic`** que había cargado para esto: si nadie lo usa, es un archivo de fuente que se baja al pedo. La regla del proyecto es "solo los pesos que la marca realmente usa, ni uno más", y vale en los dos sentidos.
+
+Lo que **sí se conserva** del cambio anterior, porque resolvía un problema real y no se discutió: el velo radial centrado, la sombra de texto, y el claim en semibold a 28 px.
+
+### Dos trampas de medición, otra vez
+
+Las anoto porque me costaron tiempo y son del entorno, no del sitio.
+
+1. **Con el panel del navegador oculto, las animaciones ligadas al scroll no avanzan.** Medí la barra transparente en todas las posiciones y parecía una regresión grave. No lo era: el panel estaba escondido. Hay que traerlo al frente antes de medir cualquier cosa que dependa del scroll o de cuadros de animación.
+2. **`window.scrollTo` no mueve la página en el panel**; `scrollY` se queda en 0. Hay que usar la acción de scroll del navegador, que es un scroll de verdad.
+
+Es la tercera vez en este proyecto que una herramienta de medición informa algo que no pasa. La regla que vale: **cuando una medición dice que algo está roto, confirmar que la medición funciona antes de "arreglar" nada.**

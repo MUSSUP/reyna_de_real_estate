@@ -142,7 +142,19 @@ const enlaces = [
       background-color: transparent;
       animation: pintar-barra linear both;
       animation-timeline: scroll();
-      animation-range: 0 120px;
+      /*
+        La transparencia dura casi todo el hero, no 120 píxeles.
+
+        El hero mide una pantalla completa (`min-h-[100svh]`). Con el rango
+        viejo la barra ya estaba verde sólido a los 120 px de scroll: se
+        oscurecía apenas empezabas a bajar, con el video todavía a la vista.
+
+        Ahora arranca a pintarse recién al 55% de la pantalla y termina al
+        85%, o sea justo antes de que el hero salga de cuadro y aparezca la
+        sección clara de abajo — que es donde el verde hace falta para que el
+        logo y el menú, que son blancos, se sigan leyendo.
+      */
+      animation-range: 55vh 85vh;
     }
   }
 
