@@ -2025,3 +2025,44 @@ Y ahora hay una prueba que **sigue la cadena de importaciones de cada página** 
 ✅ `X-Robots-Tag: noindex` todavía puesto — es correcto hoy, y es la acción **A-11** antes de entregar
 
 **Lo que no se puede verificar desde afuera**: que Netlify haya registrado la función programada. Las funciones programadas no se pueden invocar por HTTP, así que hay que mirarlo en el panel de Netlify, en Functions.
+
+---
+
+## IT-09 · Auditoría de rendimiento y accesibilidad — 🟡 En curso
+
+### El menú del celular — el hallazgo más consecuente que quedaba del sitio público
+
+Venía abierto desde la revisión del Hito 1 y lo confirmé midiendo: los enlaces del encabezado eran `hidden ... sm:inline-block`, así que **por debajo de 640 px estaban en `display: none`**. Desde la ficha de una propiedad en un teléfono, lo único alcanzable era el logo —que lleva al inicio— y el botón de Contacto. **Al catálogo y a las noticias no se llegaba.**
+
+Importa más de lo que parece: los clientes de Laura entran casi todos desde el teléfono, y la ficha de una propiedad es la página a la que llegan desde WhatsApp o desde una búsqueda. Entraban a ver una casa y no tenían forma de ver las otras.
+
+Es un **`<details>`**, no un botón con script. Tres razones:
+
+1. **Funciona sin JavaScript** — mismo criterio que el resto del sitio público (D-16).
+2. El navegador le da solo el comportamiento de teclado y el anuncio de abierto/cerrado. Un `div` con `onclick` habría que cablearlo a mano, y es donde se rompe la accesibilidad.
+3. **La política de seguridad del sitio prohíbe los scripts incrustados** (`script-src 'self'`), así que un desplegable con script tendría que ser un archivo aparte para algo que el navegador ya sabe hacer.
+
+El triángulo propio del `summary` se saca en los dos motores: `list-style` para Firefox, el pseudoelemento para Safari y Chrome.
+
+**Verificado con clics de verdad, no abriéndolo por JavaScript**
+
+✅ A 500 px: la hamburguesa se ve, mide 44×44, se toca, abre, y **"Propiedades" lleva al catálogo**
+✅ El panel abierto **entra en pantalla** (no se sale por el costado)
+✅ A 1180 px: la hamburguesa desaparece y vuelven los tres enlaces en línea
+✅ Cada enlace del menú mide 44 px de alto
+
+### Dos cosas que parecían defectos y no lo eran
+
+**El desborde horizontal.** Las mediciones daban `scrollWidth` 502 contra `clientWidth` 375 — parecía que la página se salía de la pantalla. No: la emulación del panel informa un ancho y dibuja con otro. Midiendo contra el ancho real, lo único que se extiende a lo ancho es **el carrusel de fotos**, que es a propósito. Es la segunda vez en este proyecto que la herramienta de medición miente sobre el encabezado; conviene recordarlo.
+
+**Los puntitos de la galería.** El árbol de accesibilidad los mostraba como enlaces sin nombre. Mirando el marcado, **tienen nombre**: "Ver foto 1 de 6", en un `span` para lectores de pantalla. El árbol no lo mostraba; el marcado está bien.
+
+### Lo que queda por revisar de IT-09
+
+- Contraste de color en los textos chicos sobre crema y sobre verde.
+- Tamaño de los destinos táctiles en el pie y en la sección de contacto: varios miden 20 px de alto. Son enlaces de texto en línea, que la norma exceptúa, pero son los que alguien toca para llamar o escribir.
+- Peso de la portada y orden de carga de las fuentes.
+- Foco visible al recorrer con el teclado.
+- Las mismas pasadas sobre la home, el catálogo y las noticias.
+
+`astro check`: 0 errores · ESLint: 0 · `astro build`: completo

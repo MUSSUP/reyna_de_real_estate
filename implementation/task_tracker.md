@@ -77,7 +77,7 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | UJ-14 | Leer el informe Reyna Insights           | ✅     | "estratégica" → "inteligente"                                    |
 | UJ-15 | Leer las noticias                        | ✅     | **Adelantado del Hito 3**: el menú ya lo enlazaba (revisión I-1) |
 | UJ-16 | Conocer a Laura                          | ✅     | Texto aprobado. **Diseñar para que funcione sin foto** (D-10)    |
-| IT-09 | Auditoría de rendimiento y accesibilidad | ⬜     |                                                                  |
+| IT-09 | Auditoría de rendimiento y accesibilidad | 🟡     | Menú móvil resuelto. Falta contraste, foco y pesos               |
 | IT-10 | Auditoría de seguridad final             | ⬜     | Obligatoria. Verificar que `owners` no se filtre                 |
 | IT-11 | Verificación con y sin datos             | ⬜     | Obligatoria                                                      |
 | IT-12 | Despliegue y entrega                     | ⬜     | DNS en Don Web, con acceso ✅                                    |
@@ -118,6 +118,7 @@ Bloquean la entrega pero no son código.
 | 2026-08-20 | Planificación completa v2.0                                                                                                                                                                                                                                           |
 | 2026-08-21 | Dominio resuelto: Don Web, con acceso de Musapp. Riesgo R-04 cerrado                                                                                                                                                                                                  |
 | 2026-08-21 | Decisión D-11: se suman galería y noticias/informes. Bilingüe sigue afuera. Plan a v3.0 — 28 tareas                                                                                                                                                                   |
+| 2026-10-17 | **Menú del celular** (IT-09). Los enlaces del encabezado estaban ocultos por debajo de 640 px: desde la ficha de una propiedad en un teléfono no se llegaba al catálogo. Es un `<details>`, así que anda sin JavaScript                                               |
 | 2026-10-17 | **Revisión del Hito 2**: 1 crítico, 9 importantes, 13 menores. Todos los importantes cerrados. El crítico: un informe publicado no tenía página y el panel mandaba al 404. Y había declarado UJ-10 completa sin cumplir 4 de sus criterios escritos — los leí después |
 | 2026-10-17 | **Migración 0005**: `updated_at` en las cinco tablas de catálogo. Sin esto, renombrar una zona no encendía el aviso de cambios sin publicar. ⚠️ Hay que correrla contra la base antes del próximo despliegue                                                          |
 | 2026-10-17 | **UJ-08b completada. Hito 2 cerrado.** Las cinco listas del formulario se administran desde el panel: hasta hoy había que entrar a la base para sumar una zona. Nada se borra si está en uso — para tres de los cinco, la base lo habría borrado en silencio          |

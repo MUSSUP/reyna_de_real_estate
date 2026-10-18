@@ -38,6 +38,7 @@ const enlaces = [
     </a>
 
     <div class="flex items-center gap-1 sm:gap-4">
+      {/* En pantalla ancha los enlaces van a la vista, como siempre. */}
       {
         enlaces.map((e) => (
           <a
@@ -48,17 +49,79 @@ const enlaces = [
           </a>
         ))
       }
+
       <a
         href="/#contacto"
         class="inline-flex min-h-[44px] items-center rounded-full bg-rosa px-5 py-2 font-cuerpo text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-[400ms] ease-[var(--ease-marca)] hover:bg-rosa-hover"
       >
         Contacto
       </a>
+
+      {
+        /*
+        El menú del celular.
+
+        Hasta acá los enlaces estaban ocultos por debajo de 640 px: desde la
+        ficha de una propiedad en un teléfono **no había forma de llegar al
+        catálogo ni a las noticias**. Solo el logo, que lleva al inicio. Y los
+        clientes de Laura entran casi todos desde el teléfono.
+
+        Es un `<details>`, no un botón con script: es un desplegable de
+        verdad, **funciona sin JavaScript**, y el navegador le da solo el
+        comportamiento de teclado y el anuncio de abierto/cerrado. La política
+        de seguridad del sitio además prohíbe los scripts incrustados.
+      */
+      }
+      <details data-menu class="relative sm:hidden">
+        <summary
+          class="flex min-h-[44px] min-w-[44px] cursor-pointer list-none items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+          aria-label="Abrir el menú"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+          </svg>
+        </summary>
+
+        <nav
+          aria-label="Secciones del sitio"
+          class="absolute right-0 top-[calc(100%+0.5rem)] min-w-[11rem] rounded-[var(--radius-card)] bg-verde p-2 shadow-[0_18px_40px_rgba(0,0,0,0.3)] ring-1 ring-white/15"
+        >
+          {
+            enlaces.map((e) => (
+              <a
+                href={e.href}
+                class="flex min-h-[44px] items-center rounded-[var(--radius-campo)] px-4 font-cuerpo text-xs font-medium uppercase tracking-[0.12em] text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                {e.texto}
+              </a>
+            ))
+          }
+        </nav>
+      </details>
     </div>
   </nav>
 </header>
 
 <style>
+  /* El `summary` trae un triángulo propio en cada motor. Se saca en los dos:
+     `list-style` para Firefox y el pseudoelemento para Safari y Chrome. */
+  [data-menu] > summary {
+    list-style: none;
+  }
+  [data-menu] > summary::-webkit-details-marker,
+  [data-menu] > summary::marker {
+    display: none;
+  }
+
   /* Sobre el hero arranca transparente y se vuelve verde al bajar 120px.
      El efecto se hace con una animación ligada al scroll, en CSS puro.
 
