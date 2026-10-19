@@ -2467,3 +2467,25 @@ Dicho explícitamente, para que nadie suponga de más:
 - **La seguridad de las cuentas de terceros** —Supabase, Netlify, el correo de la marca— queda del lado de quien las administra. Conviene activar segundo factor en las tres antes de transferirlas.
 
 `astro check`: 0 errores · ESLint: 0 · **304 pruebas en verde** · `astro build`: completo
+
+---
+
+## El cupo de publicaciones, a la vista
+
+El 18/10 el presupuesto de Netlify se agotó **sin que nadie lo supiera**, hasta que la clienta apretó "Publicar cambios" y no pasó nada. Un límite invisible es una trampa.
+
+Los números, leídos del panel de facturación y no estimados: el plan gratuito da **300 créditos por mes y cada despliegue cuesta 15** — veinte despliegues habían consumido exactamente 300. O sea **20 publicaciones por mes**, y el ciclo arranca el día 5.
+
+Ahora el panel muestra, al lado del botón, **"Te quedan 13 publicaciones este mes"**. No impide nada: deja decidir con el dato a la vista.
+
+**Tres decisiones de diseño:**
+
+- **Se cuenta contra el ciclo de facturación, no contra el mes calendario.** El ciclo arranca el 5, así que el 2 de noviembre todavía corre el ciclo que empezó el 5 de octubre. Contar por mes calendario daría un número tranquilizador y falso justo en los días en que importa.
+- **El color aparece solo cuando conviene mirarlo**: gris mientras sobra, ámbar con cinco o menos, rojo al llegar a cero. Un color de alerta permanente deja de significar algo.
+- **Los dos números viven en `publicacion.ts` con un aviso.** Si alguna vez se cambia de plan, hay que actualizarlos ahí, y la prueba los fija para que el cambio sea deliberado.
+
+**Lo que el contador no ve**: cuenta las publicaciones pedidas desde el panel. Un despliegue disparado por un push a GitHub no deja registro y no se cuenta — por eso importa el control de despliegues que quedó comprometido antes, que hace que esos dejen de existir.
+
+_Pruebas_: 8 casos nuevos — el ciclo que arranca el día 5, el que todavía corre antes del 5, el día 5 mismo, el cruce de fin de año, el conteo que ignora el ciclo anterior, el cero sin publicaciones, y el estado que trae ambos números. **311 en verde.**
+
+`astro check`: 0 errores · ESLint: 0 · `astro build`: completo

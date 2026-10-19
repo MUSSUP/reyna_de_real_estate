@@ -29,6 +29,9 @@ export const GET: APIRoute = async ({ request }) => {
         publicando: e.publicando,
         ultimaPublicacion: e.ultimaPublicacion?.toISOString() ?? null,
         configurado: Boolean(leerEnv('NETLIFY_BUILD_HOOK_URL')),
+        // Para que el límite del plan se vea antes de apretar, no después.
+        publicacionesUsadas: e.publicacionesUsadas,
+        publicacionesDelPlan: e.publicacionesDelPlan,
       },
     },
     { headers: sinCache },

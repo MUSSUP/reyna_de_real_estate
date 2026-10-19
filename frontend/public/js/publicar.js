@@ -15,6 +15,7 @@
 
   var boton = caja.querySelector('[data-publicar]');
   var texto = caja.querySelector('[data-estado-publicacion]');
+  var cupo = caja.querySelector('[data-cupo-publicacion]');
 
   var vigilando = null;
   var marcaAlPublicar = null;
@@ -61,9 +62,47 @@
       });
   }
 
+  /**
+   * Cuántas publicaciones se usaron del mes.
+   *
+   * El plan tiene un tope y hasta ahora no se veía: se agotó sin aviso y el
+   * botón dejó de hacer efecto, sin que nada lo explicara. Mostrarlo no
+   * impide nada — solo deja decidir con el dato a la vista.
+   */
+  function pintarCupo(estado) {
+    if (!cupo) return;
+
+    var usadas = estado.publicacionesUsadas;
+    var tope = estado.publicacionesDelPlan;
+    if (typeof usadas !== 'number' || typeof tope !== 'number' || tope <= 0) {
+      cupo.classList.add('hidden');
+      return;
+    }
+
+    var quedan = Math.max(tope - usadas, 0);
+    cupo.classList.remove('hidden');
+
+    if (quedan === 0) {
+      cupo.textContent = 'Sin publicaciones disponibles este mes';
+      cupo.className = 'text-xs font-semibold text-red-700';
+      return;
+    }
+
+    cupo.textContent =
+      quedan === 1
+        ? 'Te queda 1 publicación este mes'
+        : 'Te quedan ' + quedan + ' publicaciones este mes';
+
+    // Se tiñe solo cuando conviene mirarlo: con el cupo holgado es un dato
+    // más, y un color de alerta permanente deja de significar nada.
+    cupo.className =
+      'text-xs ' + (quedan <= 5 ? 'font-semibold text-[#8a6a28]' : 'text-texto-suave');
+  }
+
   function pintar(estado) {
     if (!estado) return;
     caja.hidden = false;
+    pintarCupo(estado);
 
     if (!estado.configurado) {
       // No se ofrece un botón que no puede funcionar.

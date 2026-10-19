@@ -12,6 +12,9 @@ import {
   publicar,
   VENTANA_AGRUPADO_SEGUNDOS,
   type Disparador,
+  inicioDelCiclo,
+  publicacionesDelCiclo,
+  PUBLICACIONES_POR_CICLO,
 } from '../../backend/lib/publicacion';
 import { crearPropiedad } from '../../backend/lib/propiedades';
 import { properties, propertyTypes, publicaciones, zones } from '../../backend/db/schema';
@@ -200,5 +203,71 @@ describe('el estado que ve el panel', () => {
       const e = await obtenerEstado(db);
       expect(e.hayCambiosSinPublicar).toBe(false);
     }
+  });
+});
+
+/**
+ * El cupo de publicaciones del mes.
+ *
+ * El plan de Netlify tiene un tope y hasta el 18/10 era invisible: se agotó
+ * sin que nadie lo supiera, hasta que el botón "Publicar cambios" dejó de
+ * hacer efecto y nada lo explicaba. El panel ahora lo muestra, así que el
+ * conteo tiene que ser correcto o el número miente — que sería peor que no
+ * mostrarlo.
+ */
+describe('el cupo del ciclo de facturación', () => {
+  it('el ciclo arranca el día 5 del mes en curso', () => {
+    const inicio = inicioDelCiclo(new Date('2026-10-19T12:00:00'));
+    expect(inicio.getDate()).toBe(5);
+    expect(inicio.getMonth()).toBe(9); // octubre
+  });
+
+  it('antes del día 5, el ciclo todavía es el del mes anterior', () => {
+    // El 2 de noviembre el ciclo que corre sigue siendo el que empezó el 5
+    // de octubre: el 5 de noviembre no llegó.
+    const inicio = inicioDelCiclo(new Date('2026-11-02T12:00:00'));
+    expect(inicio.getDate()).toBe(5);
+    expect(inicio.getMonth()).toBe(9); // octubre
+  });
+
+  it('el día 5 mismo ya es ciclo nuevo', () => {
+    const inicio = inicioDelCiclo(new Date('2026-11-05T09:00:00'));
+    expect(inicio.getMonth()).toBe(10); // noviembre
+  });
+
+  it('cruza bien el fin de año', () => {
+    const inicio = inicioDelCiclo(new Date('2027-01-03T12:00:00'));
+    expect(inicio.getMonth()).toBe(11); // diciembre
+    expect(inicio.getFullYear()).toBe(2026);
+  });
+
+  it('cuenta solo las publicaciones del ciclo en curso', async () => {
+    const ahora = new Date('2026-10-19T12:00:00');
+    await db.insert(publicaciones).values([
+      // Del ciclo anterior: no se cuentan.
+      { createdAt: new Date('2026-09-20T10:00:00') },
+      { createdAt: new Date('2026-10-04T23:59:00') },
+      // De este ciclo.
+      { createdAt: new Date('2026-10-05T00:01:00') },
+      { createdAt: new Date('2026-10-12T10:00:00') },
+      { createdAt: new Date('2026-10-19T08:00:00') },
+    ]);
+
+    expect(await publicacionesDelCiclo(db, ahora)).toBe(3);
+  });
+
+  it('sin publicaciones cuenta cero, no falla', async () => {
+    expect(await publicacionesDelCiclo(db, new Date('2026-10-19T12:00:00'))).toBe(0);
+  });
+
+  it('el estado trae lo usado y lo que permite el plan', async () => {
+    await db.insert(publicaciones).values({ createdAt: new Date() });
+    const e = await obtenerEstado(db);
+
+    expect(e.publicacionesUsadas).toBe(1);
+    expect(e.publicacionesDelPlan).toBe(PUBLICACIONES_POR_CICLO);
+    // Veinte sale de 300 créditos del plan a 15 por despliegue, leído del
+    // panel de facturación. Si cambia el plan, cambia acá.
+    expect(PUBLICACIONES_POR_CICLO).toBe(20);
   });
 });

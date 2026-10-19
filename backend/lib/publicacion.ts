@@ -8,7 +8,7 @@
  * Igual que el resto, recibe la base y el disparador por parámetro (D-17): así
  * se prueban el agrupado y el webhook caído sin llamar a Netlify de verdad.
  */
-import { desc, gt, max, ne, sql } from 'drizzle-orm';
+import { count, desc, gt, gte, max, ne, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import {
   amenities,
@@ -99,23 +99,81 @@ export async function ultimoCambio(db: Db): Promise<Date | null> {
   return fechas.length ? new Date(Math.max(...fechas)) : null;
 }
 
+/**
+ * El presupuesto mensual de publicaciones del plan de Netlify.
+ *
+ * El plan gratuito da **300 créditos por mes y cada despliegue cuesta 15**.
+ * No es una estimación: se leyó del panel de facturación, donde veinte
+ * despliegues habían consumido exactamente 300 créditos.
+ *
+ * Importa que esto se vea en pantalla. El 18/10 el presupuesto se agotó sin
+ * que nadie lo supiera hasta que la clienta apretó "Publicar cambios" y no
+ * pasó nada. Un límite invisible es una trampa; un número al lado del botón
+ * es una decisión informada.
+ *
+ * ⚠️ Si alguna vez se cambia de plan, estos dos números hay que actualizarlos.
+ */
+export const PUBLICACIONES_POR_CICLO = 20;
+
+/** Día del mes en que arranca el ciclo de facturación. */
+export const DIA_INICIO_CICLO = 5;
+
+/**
+ * Cuándo empezó el ciclo de facturación en curso.
+ *
+ * Si hoy es 19 de octubre y el ciclo arranca el 5, el ciclo corriente empezó
+ * el 5 de octubre. Si hoy fuera 2 de noviembre, habría empezado el 5 de
+ * octubre también — todavía no llegó el 5 de noviembre.
+ */
+export function inicioDelCiclo(ahora = new Date()): Date {
+  const inicio = new Date(ahora);
+  inicio.setHours(0, 0, 0, 0);
+  inicio.setDate(DIA_INICIO_CICLO);
+  if (inicio > ahora) inicio.setMonth(inicio.getMonth() - 1);
+  return inicio;
+}
+
+/** Cuántas veces se publicó en el ciclo en curso. */
+export async function publicacionesDelCiclo(db: Db, ahora = new Date()): Promise<number> {
+  const filas = await db
+    .select({ n: count() })
+    .from(publicaciones)
+    .where(gte(publicaciones.createdAt, inicioDelCiclo(ahora)));
+  return filas[0]?.n ?? 0;
+}
+
 export interface Estado {
   hayCambiosSinPublicar: boolean;
   ultimaPublicacion: Date | null;
   ultimoCambio: Date | null;
   /** Verdadero mientras una publicación reciente puede seguir corriendo. */
   publicando: boolean;
+  /** Cuántas veces se publicó en el ciclo de facturación en curso. */
+  publicacionesUsadas: number;
+  /** Cuántas permite el plan. De ahí sale el "7 de 20" del panel. */
+  publicacionesDelPlan: number;
 }
 
 export async function obtenerEstado(db: Db): Promise<Estado> {
-  const [ultima, cambio] = await Promise.all([ultimaPublicacion(db), ultimoCambio(db)]);
+  const [ultima, cambio, usadas] = await Promise.all([
+    ultimaPublicacion(db),
+    ultimoCambio(db),
+    publicacionesDelCiclo(db),
+  ]);
 
   // Sin ninguna publicación registrada, cualquier contenido está sin publicar.
   const hayCambiosSinPublicar = cambio !== null && (ultima === null || cambio > ultima);
 
   const publicando = ultima !== null && Date.now() - ultima.getTime() < SEGUNDOS_ESTIMADOS * 1000;
 
-  return { hayCambiosSinPublicar, ultimaPublicacion: ultima, ultimoCambio: cambio, publicando };
+  return {
+    hayCambiosSinPublicar,
+    ultimaPublicacion: ultima,
+    ultimoCambio: cambio,
+    publicando,
+    publicacionesUsadas: usadas,
+    publicacionesDelPlan: PUBLICACIONES_POR_CICLO,
+  };
 }
 
 export interface EntradaPublicar {

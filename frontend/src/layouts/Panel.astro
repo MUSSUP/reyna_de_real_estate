@@ -113,6 +113,15 @@ const estaActivo = (href: string) =>
             }
             <div data-publicacion hidden class="flex items-center gap-3">
               <span data-estado-publicacion class="text-xs text-texto-suave"></span>
+              {
+                /*
+                Cuántas publicaciones quedan en el mes. El plan tiene un tope y
+                hasta ahora era invisible: se agotó sin que nadie lo supiera,
+                hasta que el botón dejó de hacer efecto. Un número al lado del
+                botón convierte una trampa en una decisión informada.
+              */
+              }
+              <span data-cupo-publicacion class="hidden text-xs text-texto-suave"></span>
               <button
                 type="button"
                 data-publicar
