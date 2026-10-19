@@ -4,6 +4,35 @@
   command = "npm run build"
   publish = "dist"
 
+  # Quién puede gastar el presupuesto de despliegues.
+  #
+  # El plan gratuito da **300 créditos por mes y cada despliegue cuesta 15**:
+  # veinte por mes, ni uno más. El 18/10 se agotaron los veinte — quince los
+  # gastaron commits de desarrollo— y cuando la clienta quiso publicar no
+  # quedaba nada. Su herramienta dejó de funcionar por trabajo que no era suyo.
+  #
+  # Con esto, un despliegue solo arranca si viene del botón "Publicar cambios"
+  # del panel —que es para lo que está el presupuesto— o si el mensaje del
+  # commit lo pide con [desplegar].
+  #
+  # Netlify lee esta orden al revés de lo que uno espera:
+  #   salir con 0          → **cancela** el despliegue
+  #   salir con otra cosa  → lo deja seguir
+  #
+  # **Falla del lado seguro, y está probado.** Si no se puede leer el mensaje
+  # del commit —git no responde, la referencia no existe— sale con 1 y el
+  # despliegue se hace igual. La primera versión hacía lo contrario: ante un
+  # error se salteaba, que es el peor final posible — la clienta se queda sin
+  # publicar y nada se lo avisa.
+  #
+  # La cadena va entre comillas simples triples: TOML no toca lo de adentro.
+  ignore = '''
+    if [ -n "$INCOMING_HOOK_TITLE" ]; then exit 1; fi
+    MENSAJE=$(git log -1 --format=%B "$COMMIT_REF" 2>/dev/null) || exit 1
+    case "$MENSAJE" in *"[desplegar]"*) exit 1 ;; esac
+    exit 0
+  '''
+
 # Funciones propias, aparte de las que genera Astro. Por ahora solo la que
 # mantiene despierto el proyecto de Supabase.
 [functions]
