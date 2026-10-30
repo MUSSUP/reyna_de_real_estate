@@ -2489,3 +2489,51 @@ Ahora el panel muestra, al lado del botón, **"Te quedan 13 publicaciones este m
 _Pruebas_: 8 casos nuevos — el ciclo que arranca el día 5, el que todavía corre antes del 5, el día 5 mismo, el cruce de fin de año, el conteo que ignora el ciclo anterior, el cero sin publicaciones, y el estado que trae ambos números. **311 en verde.**
 
 `astro check`: 0 errores · ESLint: 0 · `astro build`: completo
+
+---
+
+## Supabase se pausó por tercera vez, y la función que debía evitarlo estaba ciega
+
+El 29/10 el sitio en vivo apareció **sin fotos**: una imagen real de la portada devolvía `000`. Supabase pausado otra vez — y `mantener-despierta` llevaba desde el 18 sin cumplir su trabajo.
+
+### Lo que NO era, aunque yo estaba seguro
+
+Al comparar la función con el resto del proyecto encontré que ella se conectaba **sin `ssl: 'require'`** mientras `db/client.ts` sí lo pone en producción. Parecía la causa evidente.
+
+**Lo probé y era falso.** Las dos formas conectan igual: `postgres.js` negocia TLS solo cuando el servidor lo pide. Es la tercera vez en este proyecto que un diagnóstico "evidente" no sobrevive a la primera medición, y la única razón por la que no lo reporté como causa es que lo probé antes de decirlo.
+
+### Lo que sí era mío, y es peor
+
+**Los tres finales de la función devolvían 200.** Falte la credencial, falle la conexión o salga todo bien: éxito. Netlify no tenía forma de distinguir una ejecución buena de una rota.
+
+Y eso lo escribí a propósito. El comentario original decía: _"se devuelve 200 igual: si devolviera error, Netlify marcaría la ejecución como fallida y mandaría avisos por algo que se va a reintentar solo en tres días"_.
+
+**Cambié ruido por ceguera.** Un aviso cada tres días es molesto; una base pausada es la clienta mostrando su catálogo sin una sola imagen. Estuvo rota once días y nos enteramos porque se cayeron las fotos.
+
+Ahora falla con 500 cuando falta la credencial y cuando la base no responde. **Verificado corriendo la función de verdad**: 200 contra la base real, 500 al quitarle `DATABASE_URL`.
+
+### Y pasa a correr todos los días
+
+Antes era cada tres, con el argumento de que el límite ronda la semana y eso daba margen. **El margen eran dos intentos**, y fallaron los dos.
+
+Una consulta trivial por día no cuesta nada medible —el cómputo de todo el mes fue menos de un crédito de trescientos— y da siete oportunidades en vez de dos. Para un mecanismo cuyo fallo deja el sitio sin fotos, el margen barato vale más que la elegancia.
+
+> **Lo que todavía no sabemos**: por qué no corrió. La función **sí figura registrada** en Netlify, así que no es eso. Queda por mirar su registro de ejecuciones: si dice "falta DATABASE_URL", la variable no está alcanzando a las funciones; si dice "la base no respondió", es conexión; si no hay ninguna ejecución, Netlify la paró junto con los despliegues al agotarse los créditos. **Con el 500 nuevo, la próxima vez se va a ver.**
+
+## La ficha sin galería ya no muestra media pantalla vacía
+
+Hallazgo **I-4**, abierto desde la revisión del Hito 1 en agosto.
+
+La galería se armaba solo con las fotos de `property_images`. Pero publicar exige imagen principal y **no exige galería**, así que una propiedad con portada y sin fotos extra es un estado perfectamente normal: la tarjeta del catálogo se veía bien —ahí sí había respaldo— y la ficha quedaba con la columna izquierda en blanco al lado de los datos.
+
+Ahora, sin galería, la ficha usa la portada.
+
+## La suite de pruebas era frágil bajo carga
+
+Una corrida completa tardó 474 segundos y dejó **dos pruebas caídas**; la siguiente murió sin memoria. No era el código: corriendo los trece archivos en grupos, **las 311 pasan**.
+
+La causa es que **cada archivo levanta un Postgres entero en memoria** y vitest abre uno por núcleo. Con `maxWorkers: 2` tarda 204 segundos y pasa entero.
+
+Es más lento en una máquina ociosa y confiable en una ocupada. Para una suite que decide si algo se entrega, la confiabilidad vale más — y una prueba que falla por contención enseña a desconfiar de las rojas, que es justo lo contrario de para lo que están.
+
+`astro check`: 0 errores · ESLint: 0 · **311 pruebas en verde** · `astro build`: completo

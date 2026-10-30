@@ -287,11 +287,24 @@ export async function obtenerPropiedad(slug: string) {
     .innerJoin(amenities, eq(propertyAmenities.amenityId, amenities.id))
     .where(eq(propertyAmenities.propertyId, propiedad.id));
 
+  const galeria = imgs
+    .map((i) => prepararImagen(i.storagePath, i.width, i.height, i.altEs ?? propiedad.titulo))
+    .filter((i): i is ImagenLista => i !== null);
+
+  /*
+    Sin galería, la ficha muestra la portada.
+
+    Publicar exige imagen principal pero **no exige galería**, así que una
+    propiedad con portada y sin fotos extra es un estado normal — y así, la
+    tarjeta del catálogo se veía bien y la ficha quedaba con media pantalla
+    vacía al lado de los datos. La tarjeta ya tenía este respaldo; la ficha
+    no. (Hallazgo I-4 de la revisión del Hito 1.)
+  */
+  if (galeria.length === 0 && propiedad.portada) galeria.push(propiedad.portada);
+
   return {
     ...propiedad,
-    galeria: imgs
-      .map((i) => prepararImagen(i.storagePath, i.width, i.height, i.altEs ?? propiedad.titulo))
-      .filter((i): i is ImagenLista => i !== null),
+    galeria,
     comodidades,
   };
 }
