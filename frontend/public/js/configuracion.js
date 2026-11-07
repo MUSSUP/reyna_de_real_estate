@@ -110,7 +110,19 @@
       }
 
       if (aviso) {
-        aviso.textContent = datos.data && datos.data.cambios === 0 ? 'Sin cambios' : 'Guardado';
+        var d = datos.data || {};
+        // `faltan` llega sólo si hay claves del catálogo que no existen en la
+        // base, que es el estado de una instalación migrada y sin sembrar. Es
+        // lo único que no se puede resolver desde esta pantalla, así que se
+        // dice con el comando adentro en vez de dejar un "Sin cambios" falso.
+        if (d.faltan) {
+          aviso.textContent =
+            'Se guardó lo que se pudo. Faltan ' +
+            d.faltan +
+            ' textos que todavía no existen en la base: hay que correr `npm run seed` una vez.';
+        } else {
+          aviso.textContent = d.cambios === 0 ? 'Sin cambios' : 'Guardado';
+        }
         aviso.classList.remove('hidden');
       }
     } catch {

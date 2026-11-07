@@ -69,11 +69,17 @@ export const PUT: APIRoute = async ({ request }) => {
     // 303 para que el "atrás" del navegador no reenvíe el guardado.
     return new Response(null, {
       status: 303,
-      headers: { ...sinCache, Location: `${VUELTA}?guardado=${r.cambios}` },
+      headers: {
+        ...sinCache,
+        Location: `${VUELTA}?guardado=${r.cambios}${r.faltan ? `&faltan=${r.faltan}` : ''}`,
+      },
     });
   }
 
-  return Response.json({ ok: true, data: { cambios: r.cambios } }, { headers: sinCache });
+  return Response.json(
+    { ok: true, data: { cambios: r.cambios, faltan: r.faltan } },
+    { headers: sinCache },
+  );
 };
 
 /** El formulario sin JavaScript solo sabe mandar `POST`. */

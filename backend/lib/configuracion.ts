@@ -240,7 +240,18 @@ export async function listarConfiguracion(db: Db): Promise<GrupoConfig[]> {
 // --- Guardar ----------------------------------------------------------------
 
 export type ResultadoConfig =
-  { tipo: 'ok'; cambios: number } | { tipo: 'datos'; errores: Record<string, string> };
+  | {
+      tipo: 'ok';
+      cambios: number;
+      /**
+       * Cuántas claves del catálogo no existen todavía en la base. Pasa sobre
+       * una base migrada y sin sembrar. No es un error —lo demás se guardó—
+       * pero tiene que llegar a la pantalla: sin esto, guardar no escribía
+       * nada y avisaba "Sin cambios".
+       */
+      faltan?: number;
+    }
+  | { tipo: 'datos'; errores: Record<string, string> };
 
 /**
  * Guarda los valores que llegan. Solo claves del catálogo, y solo las que
@@ -284,8 +295,22 @@ export async function guardarConfiguracion(db: Db, crudo: unknown): Promise<Resu
   const ahora = new Date();
   let cambios = 0;
 
+  let faltan = 0;
+
   for (const [clave, valor] of entradas) {
-    if (!actuales.has(clave.key)) continue; // La siembra crea las claves; acá no se inventan.
+    if (!actuales.has(clave.key)) {
+      // La siembra crea las claves; acá no se inventan. Pero antes esto se
+      // salteaba **sin dejar rastro**, así que sobre una base migrada y sin
+      // sembrar alguien podía reescribir los diecinueve campos, apretar
+      // Guardar y leer "Sin cambios": un fallo silencioso en la pantalla que
+      // define todos los textos del sitio.
+      //
+      // Se siguen salteando —crear configuración desde un formulario es
+      // justo lo que esta función no hace— pero ahora se cuentan, para que
+      // quien guarde se entere en vez de creer que ya estaba todo igual.
+      faltan++;
+      continue;
+    }
     if (actuales.get(clave.key) === valor) continue;
     await db
       .update(siteSettings)
@@ -294,5 +319,5 @@ export async function guardarConfiguracion(db: Db, crudo: unknown): Promise<Resu
     cambios++;
   }
 
-  return { tipo: 'ok', cambios };
+  return faltan > 0 ? { tipo: 'ok', cambios, faltan } : { tipo: 'ok', cambios };
 }

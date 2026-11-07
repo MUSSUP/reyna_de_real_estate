@@ -2606,3 +2606,27 @@ Queda documentado en `netlify.toml` junto con el otro efecto lateral que tampoco
 Verificado corriendo la regla contra el commit nuevo: **despliega**.
 
 `astro check`: 0 errores, 0 advertencias · ESLint: 0 · **311 pruebas en verde** · `astro build`: **no se pudo correr, Supabase pausada**
+
+## Los menores de la revisión final
+
+Cuatro de los seis. Los dos que quedan afuera cambian decisiones ya declaradas y van consultados.
+
+**m-1 · Configuración decía "Sin cambios" después de reescribir los diecinueve campos.** Sobre una base migrada y sin sembrar, ninguna clave existe todavía, y `guardarConfiguracion` las salteaba con un `continue` mudo: devolvía `cambios: 0` y la pantalla pintaba "Sin cambios". Un fallo silencioso, en la pantalla que define todos los textos del sitio.
+
+**Acá me frenó una prueba, y tenía razón.** El primer arreglo fue crear la clave que falta. La suite lo rechazó: existe `no crea claves nuevas aunque lleguen con nombre del catálogo`, y el comentario de la función explica por qué —_"no hay por qué dejarle crear configuración nueva"_—. Es una decisión de endurecimiento, no un descuido, y hace pareja con la de ignorar claves que no están en el catálogo.
+
+Así que el arreglo correcto era otro: **el defecto nunca fue saltearlas, fue mentir.** Se siguen salteando, pero se cuentan, y el conteo llega a la pantalla por los dos caminos —con y sin JavaScript— con el comando adentro: _"Se guardó lo que se pudo. Faltan 19 textos que todavía no existen en la base: hay que correr `npm run seed` una vez."_
+
+Y lo que se puede guardar se guarda igual: una clave faltante no bloquea las otras dieciocho. Si bloqueara, agregar un campo al catálogo sin su migración dejaría la pantalla entera sin poder guardar nada.
+
+_Pruebas_: 3 nuevas —el aviso de faltantes, que no aparece cuando están todas, y que lo existente se guarda igual— más la vieja, que sigue en verde sin tocarla. **314 en total.**
+
+> Vale anotar el método, porque es el valor de tener la prueba escrita: la prueba no me dijo "esto está mal", me dijo "esto contradice algo que decidiste a propósito". Sin ella, habría dado vuelta una decisión de seguridad sin enterarme.
+
+**m-2 · "Salir" era un botón visible que no hacía nada sin JavaScript.** Mismo criterio que el de publicar, que esto ya lo tenía resuelto: nace oculto y lo revela `panel.js`, recién después de confirmar que hay `fetch`. Si el script no corre, el botón no está — que es mejor que estar y no responder.
+
+**m-4 · El texto alternativo del retrato salía del título de la sección**, que es editable: cambiarlo a "Mi historia" dejaba _"Retrato de Mi historia"_. Queda fijo. El nombre de marca todavía no está decidido (A-09), así que no hay de dónde sacarlo bien.
+
+**m-5 · Destacadas decía lo contrario de lo que pasaba, con la base vacía.** Sin ninguna propiedad mostraba _"No queda ninguna publicada fuera de la portada"_, que sugiere que hay publicadas y están todas arriba. Ahora distingue las dos situaciones.
+
+`astro check`: 0 errores, 0 advertencias · ESLint: 0 · **314 pruebas en verde**

@@ -11,6 +11,12 @@
   var boton = document.querySelector('[data-cerrar-sesion]');
   if (!boton || typeof window.fetch !== 'function') return;
 
+  // El botón nace oculto en el armazón y se revela acá, recién después de
+  // confirmar que hay `fetch`. Si este script no corre —o corre en un
+  // navegador sin `fetch`— queda escondido, que es lo correcto: salir depende
+  // de él, y un botón visible que no hace nada es peor que no tenerlo.
+  boton.hidden = false;
+
   boton.addEventListener('click', function () {
     boton.disabled = true;
     boton.textContent = 'Saliendo…';

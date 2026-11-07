@@ -241,6 +241,41 @@ describe('qué se puede tocar', () => {
     expect(await leer('redes.youtube')).toBeNull();
   });
 
+  // Saltearlas es lo correcto; hacerlo en silencio no. Sobre una base migrada
+  // y sin sembrar se podían reescribir todos los campos, apretar Guardar y
+  // leer "Sin cambios" sin que se hubiera escrito nada.
+  it('avisa cuántas claves faltan en vez de decir que no hubo cambios', async () => {
+    await db.delete(siteSettings).where(eq(siteSettings.key, 'redes.youtube'));
+    await db.delete(siteSettings).where(eq(siteSettings.key, 'redes.instagram'));
+
+    const r = await guardarConfiguracion(db, {
+      'redes.youtube': 'https://youtube.com/x',
+      'redes.instagram': 'https://instagram.com/x',
+    });
+
+    expect(r).toMatchObject({ tipo: 'ok', cambios: 0, faltan: 2 });
+  });
+
+  it('cuando están todas las claves no informa faltantes', async () => {
+    const r = await guardarConfiguracion(db, { 'hero.title': 'Otro título' });
+    expect(r).toMatchObject({ tipo: 'ok', cambios: 1 });
+    expect(r.tipo === 'ok' && r.faltan).toBeUndefined();
+  });
+
+  // Lo que se pudo guardar se guarda igual: una clave faltante no puede
+  // bloquear las otras dieciocho.
+  it('guarda lo que existe aunque falte otra clave', async () => {
+    await db.delete(siteSettings).where(eq(siteSettings.key, 'redes.youtube'));
+
+    const r = await guardarConfiguracion(db, {
+      'hero.title': 'Título nuevo',
+      'redes.youtube': 'https://youtube.com/x',
+    });
+
+    expect(r).toMatchObject({ tipo: 'ok', cambios: 1, faltan: 1 });
+    expect(await leer('hero.title')).toBe('Título nuevo');
+  });
+
   it('un valor que no es texto se rechaza en vez de guardarse como "[object Object]"', async () => {
     const r = await guardarConfiguracion(db, { 'hero.title': { malicioso: true } });
     expect(r.tipo).toBe('datos');

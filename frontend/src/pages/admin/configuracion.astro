@@ -30,6 +30,11 @@ const grupos = await listarConfiguracion(getDb());
 const guardado = params.get('guardado');
 const cambios = guardado !== null && guardado !== 'ilegible' ? Number(guardado) : null;
 
+// Cuántos textos no existen todavía en la base. Llega sólo sobre una
+// instalación migrada y sin sembrar, y es lo único que no se arregla desde
+// esta pantalla: antes se guardaba nada y decía "No había nada para cambiar".
+const faltan = Number(params.get('faltan')) || 0;
+
 let errores: Record<string, string> = {};
 const revisar = params.get('revisar');
 if (revisar) {
@@ -101,7 +106,11 @@ const claseCampo =
           role="status"
           class="mt-4 rounded-[var(--radius-campo)] border border-[#b6cec6] bg-[#e4ede9] px-4 py-3 text-sm text-verde"
         >
-          {cambios === 0 ? 'No había nada para cambiar.' : 'Cambios guardados.'}
+          {faltan > 0
+            ? `Se guardó lo que se pudo. Faltan ${faltan} textos que todavía no existen en la base: hay que correr "npm run seed" una vez.`
+            : cambios === 0
+              ? 'No había nada para cambiar.'
+              : 'Cambios guardados.'}
         </p>
       )
     }

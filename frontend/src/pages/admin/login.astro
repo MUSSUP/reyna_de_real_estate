@@ -108,8 +108,10 @@ const volver = /^\/admin(\/[\w\-/]*)?$/.test(pedido) ? pedido : '/admin';
             guardarla— y evita que alguien busque un enlace que no existe. */
         }
         <p class="text-center text-sm text-texto-suave">
-          La contraseña no se puede recuperar desde esta pantalla: si se pierde, hay que volver a
-          generarla desde el servidor. Guardala en un lugar seguro.
+          La contraseña no se puede recuperar desde esta pantalla. Si se pierde, hay que volver a
+          crearla desde la consola del proyecto con <code class="whitespace-nowrap"
+            >npm run db:crear-admin</code
+          >. Guardala en un lugar seguro.
         </p>
 
         <noscript>

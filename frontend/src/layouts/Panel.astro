@@ -132,9 +132,16 @@ const estaActivo = (href: string) =>
             </div>
 
             {usuario && <span class="hidden text-texto-suave sm:inline">{usuario}</span>}
+            {
+              /* Mismo criterio que el botón de publicar: nace oculto y lo revela
+                `panel.js`. Depende del script, así que sin él un botón visible
+                sería un botón que parece funcionar y no hace nada — el modo de
+                fallo que este proyecto viene cerrando en todos lados. */
+            }
             <button
               type="button"
               data-cerrar-sesion
+              hidden
               class="rounded-full border border-verde/25 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-verde transition-colors hover:bg-verde hover:text-white"
             >
               Salir

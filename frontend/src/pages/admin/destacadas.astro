@@ -28,6 +28,13 @@ const error = Astro.url.searchParams.get('error');
 const { destacadas, disponibles, invisibles } = await listarDestacables(getDb());
 
 const ordenInicial = destacadas.map((d) => d.id).join(',');
+
+// Dos situaciones distintas terminaban en el mismo cartel. Con propiedades
+// cargadas y todas en la portada, "no queda ninguna afuera" es la verdad. Con
+// la base recién instalada no hay ninguna en ningún lado, y ese mismo texto
+// sugiere lo contrario: que hay publicadas y están todas arriba.
+const sinNingunaPropiedad =
+  destacadas.length === 0 && disponibles.length === 0 && invisibles.length === 0;
 const cuantas = destacadas.length;
 const resumen =
   cuantas === 0
@@ -159,7 +166,11 @@ const resumen =
           { hidden: disponibles.length > 0 },
         ]}
       >
-        No queda ninguna publicada fuera de la portada.
+        {
+          sinNingunaPropiedad
+            ? 'Todavía no hay propiedades publicadas. Cuando publiques una con su imagen principal, va a aparecer acá para poder subirla a la portada.'
+            : 'No queda ninguna publicada fuera de la portada.'
+        }
       </p>
 
       {

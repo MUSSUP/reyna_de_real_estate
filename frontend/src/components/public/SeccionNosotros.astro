@@ -53,9 +53,13 @@ const [entrada, ...resto] = parrafos;
           {foto ? (
             <div class="grid gap-10 lg:grid-cols-[1fr_320px] lg:items-start lg:gap-14">
               {/* En móvil el retrato va arriba: el orden lo fija la grilla. */}
+              {/* El texto alternativo es fijo a propósito. Salía del título de
+                la sección, que es editable: cambiarlo a "Mi historia" dejaba
+                "Retrato de Mi historia". El nombre de marca todavía no está
+                decidido (A-09), así que no hay de dónde sacarlo bien. */}
               <img
                 src={foto}
-                alt={`Retrato de ${titulo === 'Conóceme' ? 'Laura Cabral' : titulo}`}
+                alt="Retrato"
                 loading="lazy"
                 decoding="async"
                 width="640"
