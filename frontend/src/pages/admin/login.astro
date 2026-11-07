@@ -102,6 +102,16 @@ const volver = /^\/admin(\/[\w\-/]*)?$/.test(pedido) ? pedido : '/admin';
           Ingresar
         </button>
 
+        {
+          /* No hay recuperación de contraseña: necesita mandar un correo y eso
+            todavía no está. Decirlo acá sirve *antes* de perderla —empuja a
+            guardarla— y evita que alguien busque un enlace que no existe. */
+        }
+        <p class="text-center text-sm text-texto-suave">
+          La contraseña no se puede recuperar desde esta pantalla: si se pierde, hay que volver a
+          generarla desde el servidor. Guardala en un lugar seguro.
+        </p>
+
         <noscript>
           <p class="text-center text-sm text-texto-suave">
             El panel necesita JavaScript activado para funcionar.

@@ -59,7 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
       request,
       { ok: false, error: ERROR_GENERICO },
       503,
-      '/consulta-no-enviada?motivo=error',
+      '/consulta-no-enviada/error',
     );
   }
 
@@ -73,7 +73,7 @@ export const POST: APIRoute = async ({ request }) => {
       request,
       { ok: false, error: 'No pudimos leer tu consulta. Probá de nuevo.' },
       400,
-      '/consulta-no-enviada?motivo=error',
+      '/consulta-no-enviada/error',
     );
   }
 
@@ -102,7 +102,7 @@ export const POST: APIRoute = async ({ request }) => {
           error: `Ya recibimos varias consultas tuyas. Probá de nuevo en ${minutos} minutos, o escribinos por WhatsApp.`,
         },
         429,
-        '/consulta-no-enviada?motivo=limite',
+        '/consulta-no-enviada/limite',
       );
     }
 
@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
         request,
         { ok: false, error: 'Revisá los datos marcados', campos: resultado.campos },
         400,
-        '/consulta-no-enviada?motivo=datos',
+        '/consulta-no-enviada/datos',
       );
 
     case 'ilegible':
@@ -119,7 +119,7 @@ export const POST: APIRoute = async ({ request }) => {
         request,
         { ok: false, error: 'No pudimos leer tu consulta. Probá de nuevo.' },
         400,
-        '/consulta-no-enviada?motivo=error',
+        '/consulta-no-enviada/error',
       );
 
     case 'nose-guardo':
@@ -127,7 +127,7 @@ export const POST: APIRoute = async ({ request }) => {
         request,
         { ok: false, error: ERROR_GENERICO },
         503,
-        '/consulta-no-enviada?motivo=error',
+        '/consulta-no-enviada/error',
       );
   }
 };

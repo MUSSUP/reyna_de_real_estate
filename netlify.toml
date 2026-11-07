@@ -25,6 +25,19 @@
   # error se salteaba, que es el peor final posible — la clienta se queda sin
   # publicar y nada se lo avisa.
   #
+  # **Dos efectos laterales que hay que conocer, porque no avisan:**
+  #
+  # 1. Un despliegue lanzado a mano desde el panel de Netlify ("Trigger
+  #    deploy") **se cancela en silencio** si el mensaje del último commit no
+  #    lleva [desplegar]. En el panel se ve como un despliegue que terminó sin
+  #    construir nada, no como un error. Para desplegar a mano: poner la marca
+  #    en el commit, o usar el botón del panel de administración.
+  # 2. Netlify lee este archivo **del commit que está construyendo**, no del
+  #    último. O sea que la regla se aplica a sí misma: si el commit de más
+  #    arriba no lleva la marca, se saltea su propio despliegue. Ya pasó dos
+  #    veces, la segunda por agregar un commit encima de uno que sí la tenía.
+  #    **Antes de empujar, verificar que el mensaje de arriba la lleve.**
+  #
   # La cadena va entre comillas simples triples: TOML no toca lo de adentro.
   ignore = '''
     if [ -n "$INCOMING_HOOK_TITLE" ]; then exit 1; fi
@@ -114,6 +127,14 @@
 
 # Una sola dirección canónica: sin www. Evita contenido duplicado para
 # los buscadores.
+# La dirección vieja del aviso de consulta no enviada. Pasó de ser una página
+# con el motivo en la query a una por motivo, generada al construir, para que
+# no necesite la base justo cuando la base es lo que falló.
+[[redirects]]
+  from = "/consulta-no-enviada"
+  to = "/consulta-no-enviada/error"
+  status = 301
+
 [[redirects]]
   from = "https://www.reynaderealestate.com/*"
   to = "https://reynaderealestate.com/:splat"

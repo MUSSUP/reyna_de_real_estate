@@ -125,8 +125,10 @@ export const CLAVES_CONFIGURACION: {
   { key: 'hero.question', valueEs: '¿Qué estás buscando hoy?', group: 'hero', inputType: 'texto' },
   { key: 'hero.cta_invertir', valueEs: 'Invertir', group: 'hero', inputType: 'texto' },
   { key: 'hero.cta_rentar', valueEs: 'Rentar', group: 'hero', inputType: 'texto' },
-  // Vacío a propósito: la clienta todavía no entregó el video (D-10).
-  { key: 'hero.video_url', valueEs: '', group: 'hero', inputType: 'url' },
+  // El archivo vive en `frontend/public/video/hero.mp4`, así que una
+  // instalación nueva tiene que arrancar apuntándole. Dejarlo vacío hacía que
+  // la portada naciera con la foto de respaldo y el video ahí sin usarse.
+  { key: 'hero.video_url', valueEs: '/video/hero.mp4', group: 'hero', inputType: 'url' },
   { key: 'nosotros.title', valueEs: 'Conóceme', group: 'nosotros', inputType: 'texto' },
   { key: 'nosotros.body', valueEs: TEXTO_CONOCEME, group: 'nosotros', inputType: 'parrafo' },
   {

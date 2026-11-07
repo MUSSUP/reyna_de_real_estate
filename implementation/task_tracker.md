@@ -1,6 +1,6 @@
 # Seguimiento — Reyna de Real Estate
 
-Actualizado: 2026-10-17 · Estado: **en ejecución — Hito 3**
+Actualizado: 2026-11-07 · Estado: **en ejecución — Hito 3, antes de entregar**
 Alcance: **v3.0 — híbrido ampliado, español** (decisiones B5 y D-11)
 
 Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
@@ -9,13 +9,20 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 
 ## Progreso
 
-| Bloque                       | Tareas | Estado                                             |
-| ---------------------------- | ------ | -------------------------------------------------- |
-| Infraestructura              | 8      | 🟢 6/8 (+2 parciales)                              |
-| Hito 1 · Visitante           | 6      | ✅ 6/6                                             |
-| Hito 2 · Administración      | 7      | ✅ 7/7 · **cerrado**                               |
-| Hito 3 · Contenido y entrega | 7      | 🟢 5/7                                             |
-| **Total**                    | **28** | **25/28** terminadas · 3 parciales · 1 sin empezar |
+> Los números salen de contar los estados de las tablas de abajo, uno por uno.
+> Estuvieron inflados dos veces: conviene recontar antes de tocarlos.
+
+| Bloque                  | Tareas | Estado                                                             |
+| ----------------------- | ------ | ------------------------------------------------------------------ |
+| Infraestructura         | 8      | 🟢 5/8 · 3 parciales (IT-06, IT-08, IT-09) · 1 sin empezar (IT-12) |
+| Hito 1 · Visitante      | 6      | ✅ 6/6                                                             |
+| Hito 2 · Administración | 8      | ✅ 8/8 · **cerrado** (incluye UJ-08b)                              |
+| Hito 3 · Contenido      | 3      | ✅ 3/3 (UJ-14, UJ-15, UJ-16)                                       |
+| **Total**               | **29** | **24 terminadas · 4 parciales · 1 sin empezar**                    |
+
+**Lo que falta para entregar**: IT-12 (dominio, guía de uso y transferencia), terminar IT-09
+(medir el peso con las fotos reales) e IT-06 (cuenta de Resend). IT-08 queda parcial porque
+nunca se probó `docker compose up` — Docker no está instalado en el equipo.
 
 ---
 

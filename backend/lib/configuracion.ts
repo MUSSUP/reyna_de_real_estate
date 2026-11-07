@@ -87,8 +87,12 @@ export const CATALOGO: ClaveConfig[] = [
   {
     key: 'nosotros.photo',
     etiqueta: 'Tu retrato',
+    // Mismo caso que `hero.video_url`: el CSP del sitio sólo deja mostrar
+    // imágenes propias o del almacenamiento, así que una dirección de Drive o
+    // de Instagram se guarda sin error y después no se ve. Sin este aviso el
+    // único síntoma es un hueco, que no se puede diagnosticar desde el panel.
     ayuda:
-      'Dirección de la imagen. Si está vacío, la sección se ve bien igual: está diseñada sin foto.',
+      'Subí la foto como portada de una propiedad y pegá acá su dirección, o usá una ruta de este sitio como /fotos/laura.jpg. Un enlace de Drive, Instagram u otra página no se va a ver: lo bloquea la seguridad del sitio. Si lo dejás vacío, la sección se ve bien igual: está diseñada sin foto.',
     tipo: 'url',
     grupo: 'nosotros',
   },

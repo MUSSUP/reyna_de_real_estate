@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import Corona from '../components/public/Corona.astro';
+import Boton from '../components/public/Boton.astro';
+
+/**
+ * Lo que se ve cuando el servidor no pudo armar una página.
+ *
+ * **No consulta la base, a propósito.** Es la página que aparece justo cuando
+ * algo de fondo falló, y la causa más probable en este proyecto es que la
+ * base no responda. Una página de error que necesita la base para dibujarse
+ * no sirve para nada: se cae con la misma caída que debería explicar. Por eso
+ * no usa la barra superior ni el pie, que leen la configuración.
+ *
+ * Antes de que existiera, cualquier fallo mostraba el error genérico de
+ * Astro: una pantalla en blanco con "Internal server error", en inglés, sin
+ * marca y sin una sola pista de qué hacer. La clienta se iba a encontrar con
+ * eso **sin nadie a quien preguntarle**, porque es lo que pasa cuando el
+ * proyecto de Supabase se pausa — y durante el desarrollo se pausó tres
+ * veces.
+ *
+ * El detalle técnico del error **no se muestra**: puede contener nombres de
+ * tablas o fragmentos de la cadena de conexión. Va al registro del servidor,
+ * que es donde se lee.
+ */
+export const prerender = false;
+
+const { error } = Astro.props;
+if (error) console.error('Error al armar la página:', error);
+
+Astro.response.status = 500;
+---
+
+<Base
+  titulo="Algo no funcionó — Reyna de Real Estate"
+  descripcion="Tuvimos un problema para mostrar esta página."
+  noIndexar={true}
+>
+  <main class="flex min-h-screen items-center justify-center bg-crema px-6 py-20">
+    <div class="w-full max-w-[52ch] text-center">
+      <Corona tamano={48} clase="mx-auto text-rosa" />
+
+      <p class="texto-claim mt-6 text-xs text-texto-suave">Error 500</p>
+      <h1 class="mt-3 font-titulo text-3xl text-verde sm:text-4xl">Algo no funcionó</h1>
+
+      <p class="mx-auto mt-4 text-texto-suave">
+        No pudimos mostrar esta página. No es algo que hayas hecho vos — ya quedó registrado de
+        nuestro lado.
+      </p>
+
+      <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Boton variante="primario" href="/">Volver al inicio</Boton>
+        <Boton variante="terciario" href="/propiedades">Ver propiedades</Boton>
+      </div>
+
+      {
+        /*
+        La parte para quien administra el sitio.
+
+        Se escribe en la página y no en un registro que nadie va a mirar,
+        porque quien lo necesita es la clienta y lo necesita justo cuando no
+        tiene a quién preguntarle. Está abajo y en letra chica para que no le
+        hable a un visitante, pero está.
+
+        No se nombra ninguna dirección interna ni ningún dato del proyecto: la
+        pista alcanza para quien tiene las llaves y no le dice nada a quien no.
+      */
+      }
+      <div class="mt-12 border-t border-black/10 pt-6 text-left">
+        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-texto-suave">
+          Si administrás este sitio
+        </p>
+        <p class="mt-2 text-sm text-texto-suave">
+          La causa más habitual es que <strong>la base de datos esté pausada</strong>. Pasa sola
+          cuando el sitio queda unos días sin movimiento, y se nota porque las fotos de las
+          propiedades también desaparecen.
+        </p>
+        <p class="mt-2 text-sm text-texto-suave">
+          Se arregla entrando al panel de Supabase con la cuenta de la marca y apretando
+          <strong>Restore project</strong>. Tarda un par de minutos y no se pierde nada.
+        </p>
+      </div>
+    </div>
+  </main>
+</Base>

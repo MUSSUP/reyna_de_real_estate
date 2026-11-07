@@ -1,29 +1,31 @@
 ---
-import Base from '../layouts/Base.astro';
-import BarraSuperior from '../components/public/BarraSuperior.astro';
-import PieDePagina from '../components/public/PieDePagina.astro';
-import BotonWhatsApp from '../components/public/BotonWhatsApp.astro';
-import Corona from '../components/public/Corona.astro';
-import Boton from '../components/public/Boton.astro';
-import { obtenerConfiguracion } from '../lib/datos';
-import { enlaceWhatsApp } from '../lib/whatsapp';
+import Base from '../../layouts/Base.astro';
+import BarraSuperior from '../../components/public/BarraSuperior.astro';
+import PieDePagina from '../../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../../components/public/BotonWhatsApp.astro';
+import Corona from '../../components/public/Corona.astro';
+import Boton from '../../components/public/Boton.astro';
+import { obtenerConfiguracion } from '../../lib/datos';
+import { enlaceWhatsApp } from '../../lib/whatsapp';
 
 /**
  * Adónde llega quien intentó consultar **sin JavaScript** y algo falló.
  *
- * Antes el servidor redirigía a `/#contacto?envio=error`. Eso no funcionaba de
- * dos maneras a la vez: el `?envio=error` quedaba dentro del fragmento —así
- * que no era una query string— y aunque lo hubiera sido, nadie la leía. El
- * visitante volvía al tope de la home sin ningún mensaje, convencido de que
- * había enviado la consulta. La revisión del Hito 1 lo encontró.
+ * **Se genera al construir, una página por motivo.** Antes era una sola página
+ * con el motivo en la dirección, generada en el servidor — y para armarse
+ * consultaba la base.
  *
- * Se genera en el servidor porque el mensaje depende del motivo, y el motivo
- * llega en la dirección.
+ * Eso tenía un problema que se ve recién al decirlo en voz alta: **esta es la
+ * página que ofrece el WhatsApp cuando la base falló.** Si para dibujarse
+ * necesita la base, el día que de verdad haga falta no aparece: el visitante
+ * recibe un error crudo en vez del teléfono de Laura. En un sitio de
+ * captación, esa es la diferencia entre perder una consulta y perder un
+ * cliente.
+ *
+ * Generándola al construir, los datos de contacto quedan horneados y la
+ * página se sirve como un archivo. No hay nada que pueda fallar al pedirla.
  */
-export const prerender = false;
-
-const config = await obtenerConfiguracion();
-const whatsapp = enlaceWhatsApp(config);
+export const prerender = true;
 
 type Motivo = 'datos' | 'limite' | 'error';
 
@@ -48,9 +50,15 @@ const MENSAJES: Record<Motivo, { titulo: string; explicacion: string; queHacer: 
   },
 };
 
-const crudo = Astro.url.searchParams.get('motivo');
-const motivo: Motivo = crudo === 'datos' || crudo === 'limite' ? crudo : 'error';
+export async function getStaticPaths() {
+  return (['datos', 'limite', 'error'] as const).map((motivo) => ({ params: { motivo } }));
+}
+
+const motivo = Astro.params.motivo as Motivo;
 const { titulo, explicacion, queHacer } = MENSAJES[motivo];
+
+const config = await obtenerConfiguracion();
+const whatsapp = enlaceWhatsApp(config);
 ---
 
 <Base

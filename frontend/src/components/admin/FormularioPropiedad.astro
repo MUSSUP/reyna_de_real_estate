@@ -92,7 +92,17 @@ const PESTANAS = [
     data-panel="datos"
     class="pt-6"
   >
-    <h2 data-titulo-seccion class="mb-4 font-titulo text-lg text-verde">Datos</h2>
+    <h2 data-titulo-seccion class="mb-2 font-titulo text-lg text-verde">Datos</h2>
+    {
+      /* Las tres primeras listas salen de Catálogos. Cuando están vacías, la
+        pantalla de alta lo dice y manda para allá; cuando tienen contenido no
+        lo decía nadie, y no hay forma de adivinar dónde se agrega una zona
+        nueva. Va una vez acá en vez de repetido en cada campo. */
+    }
+    <p class="mb-4 text-sm text-texto-suave">
+      Las listas de Tipología, Zona y Desarrollista se administran en
+      <a href="/admin/catalogos" class="text-verde underline hover:text-rosa">Catálogos</a>.
+    </p>
     <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       <CampoPanel
         id="p-tipo"
