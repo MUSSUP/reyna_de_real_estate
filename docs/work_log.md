@@ -2537,3 +2537,72 @@ La causa es que **cada archivo levanta un Postgres entero en memoria** y vitest 
 Es más lento en una máquina ociosa y confiable en una ocupada. Para una suite que decide si algo se entrega, la confiabilidad vale más — y una prueba que falla por contención enseña a desconfiar de las rojas, que es justo lo contrario de para lo que están.
 
 `astro check`: 0 errores · ESLint: 0 · **311 pruebas en verde** · `astro build`: completo
+
+---
+
+# 2026-11-07 · Lo que encontró la revisión final
+
+La última revisión obligatoria antes de entregar. Devolvió **3 críticos, 8 importantes y 6 menores**. Se cerraron los dos críticos que eran código, más cinco importantes.
+
+## Las dos fallas críticas eran la misma historia
+
+Con Supabase pausada —y se pausó tres veces— había **dos páginas que se generaban en el momento de mirarlas**. O sea que justo cuando la base no respondía, no mostraban un aviso: mostraban el error crudo del servidor.
+
+### La página de "consulta no enviada" era la peor de las dos
+
+Es la que ve alguien que quiso escribirle a la clienta y no pudo. Leía los datos de contacto de la base para ofrecer el teléfono y el WhatsApp como alternativa — **exactamente lo que no se puede hacer en la página que se muestra cuando algo falló.** Si la base estaba caída, el visitante quedaba frente a un error del servidor en inglés, sin ningún camino para contactar.
+
+Pasó a ser **tres páginas horneadas al construir**, una por motivo (`datos`, `limite`, `error`), con los datos de contacto ya adentro. Los seis redireccionamientos de `api/leads.ts` apuntan a los tres, y la dirección vieja queda con un 301 para que un enlace guardado no muera.
+
+Era **la última página pública que dependía de la base**. Ahora no queda ninguna: fuera de `/admin` y `/api`, lo único que no se hornea es `POST /api/leads` y la página de error.
+
+### Y hay una página de error propia
+
+Antes, cualquier falla del servidor mostraba la página genérica de Netlify: en inglés, sin el logo, sin ninguna indicación. Ahora hay una en español, con la corona, que ofrece volver a la portada.
+
+Abajo lleva un bloque **"Si administrás este sitio"** que dice lo que de verdad hace falta saber: que lo más probable es que la base esté pausada por inactividad, y que se reactiva desde el panel de Supabase con "Restore project". Es el diagnóstico que a nosotros nos llevó tres caídas y once días de ceguera; dejarlo escrito en la propia página de error es el lugar donde nadie puede no encontrarlo.
+
+**Verificada toda su cadena de importaciones libre de base** (`Base`, `Corona`, `Boton`). Es la condición que la hace servir para algo: una página de error que necesitara la base no se podría dibujar nunca, que es precisamente el defecto que vino a tapar.
+
+> **Lo que no se pudo verificar**: Astro solo usa la página 500 propia en producción, y construir necesita la base, que está pausada. Queda para el primer despliegue.
+
+## Cuatro callejones sin salida
+
+Ninguno de los cuatro daba error. Todos dejaban a la clienta sin forma de darse cuenta de qué pasó — que es el modo de fallo que importa cuando ya no tiene a quién llamar.
+
+**El campo del retrato.** La ayuda decía "Dirección de la imagen" e invitaba a pegar una. Pero el CSP del sitio es `img-src 'self' data: https://*.supabase.co`: una dirección de Drive o de Instagram **se guarda sin error y después no se ve**, sin más síntoma que un hueco. El campo del video ya avisaba de esto; el del retrato no, y encima es el que invita a pegar algo de afuera. Ahora dice qué sí funciona: la dirección de una foto ya subida, o una ruta del propio sitio.
+
+**La pantalla de ingreso** no decía que la contraseña no se puede recuperar. El aviso sirve **antes** de perderla, no después: empuja a guardarla, y evita que alguien busque un enlace que no existe. Redactado sin nombrar a Musapp, porque el sitio se transfiere.
+
+**El formulario de propiedad** no decía de dónde salen las listas de tipología, zona y desarrollista. Cuando están vacías, la pantalla de alta lo explica y manda a Catálogos; cuando ya tienen contenido no lo decía nadie, y no hay manera de adivinar dónde se agrega una zona nueva. Va una vez arriba de la sección, no repetido en cada campo.
+
+**La semilla** dejaba la portada sin video, con el archivo ahí sin usarse: el comentario decía "la clienta todavía no entregó el video" y el video ya estaba en el repositorio desde octubre. Una instalación nueva nacía con la foto de respaldo.
+
+## La documentación afirmaba cosas que el código no hacía
+
+Es el hallazgo incómodo, porque son **los dos archivos que se leen al empezar cada sesión**. Decían:
+
+| Lo que decía                                   | Lo que era                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------------------------- |
+| IT-10, IT-11 y IT-12 sin empezar               | **IT-10 e IT-11 están hechas.** Mandaba a rehacer la auditoría de seguridad |
+| "la contraseña de la administradora se perdió" | Hay una de desarrollo; falta la de la clienta (A-10)                        |
+| 300 pruebas                                    | 311                                                                         |
+| La función de guardia corre cada tres días     | Todos los días, y ahora falla con 500                                       |
+| Supabase se pausó dos veces                    | Tres                                                                        |
+| 25 de 28 · 3 parciales · 1 sin empezar         | Suma 29. **Los números estaban inflados por segunda vez**                   |
+| Nada sobre el portón de despliegues            | Es lo que decide si la clienta puede publicar                               |
+| "el video se carga desde el panel, sin código" | Se pega una ruta; **el archivo lo pone alguien con el código**              |
+
+Corregido contando los estados de las tablas uno por uno, y la tabla de progreso ahora **dice de dónde salen los números** y avisa de recontar antes de tocarlos. Un número de avance inventado no es un detalle administrativo: es la primera cosa que alguien lee para decidir qué hacer.
+
+También quedaron escritos en la memoria el presupuesto de Netlify, el portón, el tope de procesos de la suite, el CSP, y las dos cosas que se pidieron y se decidió no hacer (EstateWave y los permisos por rol), para que no se reabran por olvido.
+
+## Y una trampa que había vuelto
+
+Netlify lee `netlify.toml` **del commit que está construyendo**, así que el portón se aplica a sí mismo: si el mensaje del commit de más arriba no lleva `[desplegar]`, **se saltea su propio despliegue y nada avisa**. Se arregló el 7/11 enmendando el commit de arriba… y volvió a aparecer al agregar un commit encima de ese.
+
+Queda documentado en `netlify.toml` junto con el otro efecto lateral que tampoco avisa: **un despliegue lanzado a mano desde el panel de Netlify se cancela en silencio** si el commit no lleva la marca. En el panel se ve como un despliegue que terminó sin construir nada, no como un error.
+
+Verificado corriendo la regla contra el commit nuevo: **despliega**.
+
+`astro check`: 0 errores, 0 advertencias · ESLint: 0 · **311 pruebas en verde** · `astro build`: **no se pudo correr, Supabase pausada**
