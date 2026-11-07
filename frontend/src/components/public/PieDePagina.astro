@@ -32,6 +32,10 @@ const redes = [
 ].filter((r) => r.href !== '');
 
 const anio = new Date().getFullYear();
+
+/** Las tres filas de contacto comparten el círculo del ícono. */
+const iconoContacto =
+  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-verde text-white';
 ---
 
 <footer class="bg-crema">
@@ -41,16 +45,24 @@ const anio = new Date().getFullYear();
       <ul class="order-2 flex flex-col gap-3 text-sm lg:order-1">
         {
           telMx && (
-            <li class="flex items-center gap-3">
-              <span
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-verde text-white"
-                aria-hidden="true"
+            <li>
+              {/*
+                El enlace envuelve al ícono, no al revés.
+
+                Antes el ícono era un adorno fuera del enlace, así que tocarlo
+                no hacía nada — y es justo donde apunta el dedo. El enlace
+                quedaba en la altura del texto, unos 20 px: chico para un
+                teléfono, que es desde donde entra casi todo el mundo.
+              */}
+              <a
+                href={`tel:${soloDigitos(telMx)}`}
+                class="-mx-2 flex min-h-[44px] items-center gap-3 rounded-full px-2 transition-colors hover:text-verde"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 2.2Z" />
-                </svg>
-              </span>
-              <a href={`tel:${soloDigitos(telMx)}`} class="hover:text-verde">
+                <span class={iconoContacto} aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 2.2Z" />
+                  </svg>
+                </span>
                 {telMx}
               </a>
             </li>
@@ -58,39 +70,38 @@ const anio = new Date().getFullYear();
         }
         {
           telAr && (
-            <li class="flex items-center gap-3">
-              <span
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-verde text-white"
-                aria-hidden="true"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-3.2-.7a11.3 11.3 0 0 1-4.6-4c-.3-.5-1.1-1.6-1.1-3 0-1.5.7-2.2 1-2.5.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2c.1.2.1.4 0 .6l-.4.6-.3.3c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.4.3.2.5.1.6 0l1-1.1c.2-.3.4-.2.6-.1l2 1c.2.1.4.2.4.3.1.2.1.7-.1 1.3Z" />
-                </svg>
-              </span>
+            <li>
               <a
                 href={enlaceWhatsApp(config, { numero: telAr })}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="hover:text-verde"
+                class="-mx-2 flex min-h-[44px] items-center gap-3 rounded-full px-2 transition-colors hover:text-verde"
               >
+                <span class={iconoContacto} aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-3.2-.7a11.3 11.3 0 0 1-4.6-4c-.3-.5-1.1-1.6-1.1-3 0-1.5.7-2.2 1-2.5.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2c.1.2.1.4 0 .6l-.4.6-.3.3c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.4.3.2.5.1.6 0l1-1.1c.2-.3.4-.2.6-.1l2 1c.2.1.4.2.4.3.1.2.1.7-.1 1.3Z" />
+                  </svg>
+                </span>
                 {telAr}
                 <span class="sr-only">(WhatsApp, se abre en una pestaña nueva)</span>
               </a>
             </li>
           )
         }
-        <li class="flex items-center gap-3">
-          <span
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-verde text-white"
-            aria-hidden="true"
+        <li>
+          <a
+            href={`mailto:${email}`}
+            class="-mx-2 flex min-h-[44px] items-center gap-3 rounded-full px-2 transition-colors hover:text-verde"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-              ><path
-                d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm.9 2 8.1 5.6L20.1 7H3.9Z"
-              ></path></svg
-            >
-          </span>
-          <a href={`mailto:${email}`} class="break-all hover:text-verde">{email}</a>
+            <span class={iconoContacto} aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                ><path
+                  d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm.9 2 8.1 5.6L20.1 7H3.9Z"
+                ></path></svg
+              >
+            </span>
+            <span class="break-all">{email}</span>
+          </a>
         </li>
       </ul>
 
