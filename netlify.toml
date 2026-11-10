@@ -37,6 +37,11 @@
   #    arriba no lleva la marca, se saltea su propio despliegue. Ya pasó dos
   #    veces, la segunda por agregar un commit encima de uno que sí la tenía.
   #    **Antes de empujar, verificar que el mensaje de arriba la lleve.**
+  # 3. La búsqueda es de texto y abarca **todo el mensaje**, no sólo la
+  #    primera línea. O sea que **mencionar la marca alcanza para dispararla**:
+  #    un commit que explique en su cuerpo "la marca va en el commit del
+  #    dominio" se despliega solo. Para hablar de ella sin activarla, nombrarla
+  #    sin los corchetes.
   #
   # La cadena va entre comillas simples triples: TOML no toca lo de adentro.
   ignore = '''

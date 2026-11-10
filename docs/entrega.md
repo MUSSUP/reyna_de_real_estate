@@ -52,6 +52,9 @@ panel o si el mensaje del commit dice `[desplegar]`**. Dos cosas que no avisan:
   tres veces. Verificalo antes de empujar.
 - Un despliegue lanzado a mano desde el panel de Netlify **se cancela en silencio** por el mismo
   motivo. En el panel se ve como terminado sin construir, no como error.
+- La búsqueda es de texto y abarca **todo el mensaje del commit**, no sólo la primera línea. Así que
+  **mencionar la marca alcanza para dispararla**: un commit cuyo cuerpo explique dónde va la marca se
+  despliega solo. Para hablar de ella sin activarla, nombrarla sin los corchetes.
 
 Un commit que sólo toca documentación **no lleva la marca**: el portón no es una molestia que haya que
 esquivar, es la razón por la que a la clienta le quedan publicaciones.
