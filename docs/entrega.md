@@ -161,7 +161,7 @@ no usa la página 500 propia): se importa `createHandler` de `.netlify/build/ent
 | A-10 | Que la clienta ponga su propia contraseña (`npm run db:crear-admin`)                                            | pendiente                |
 | A-11 | Abrir el sitio a Google                                                                                         | **preparado**: ver abajo |
 
-### ⚠️ Apuntar el dominio: hay que cambiar `PUBLIC_SITE_URL` en Netlify
+### ⚠️ Apuntar el dominio: hay que borrar `PUBLIC_SITE_URL` de Netlify
 
 **Esto no avisa y arruinaría la migración.** Hoy la variable `PUBLIC_SITE_URL` del panel de Netlify
 vale `https://reyna-de-real-estate.netlify.app`, y de ahí salen **todas las direcciones canónicas, los
@@ -172,8 +172,14 @@ Si se apunta `reynaderealestate.com` sin cambiar esa variable, cada página del 
 estar diciendo a Google _"la versión de verdad de esta página está en la dirección vieja"_. El día que
 se apunte el dominio:
 
-1. Cambiar `PUBLIC_SITE_URL` a `https://reynaderealestate.com` en Netlify.
+1. **Borrar `PUBLIC_SITE_URL` de Netlify.** Alcanza con borrarla: `astro.config.mjs` ya tiene
+   `https://reynaderealestate.com` como respaldo, así que borrar es más seguro que editar — no hay
+   dirección que se pueda escribir mal. (Editarla al dominio también sirve.)
 2. Volver a desplegar — las direcciones se escriben al construir, no se recalculan.
+
+**Apuntar el dominio no obliga a abrir el sitio a Google.** Son dos cosas separadas: se puede tener el
+dominio funcionando y la indexación todavía bloqueada, que es lo correcto mientras el sitio muestre
+datos de demostración. Ver A-11.
 
 ### A-11 · Abrir el sitio a Google
 
@@ -182,9 +188,17 @@ inventadas con precios inventados bajo la marca de la clienta es lo peor que pod
 alguien la busca.
 
 El `sitemap.xml` ya está hecho (`frontend/src/pages/sitemap.xml.ts`) y se genera al construir, con las
-propiedades, las noticias con su paginado y los informes. Para abrir el sitio hacen falta **tres**
-cosas, y conviene hacerlas el día que el dominio propio esté apuntado y con la variable ya corregida
-—indexar la dirección de Netlify sería enseñarle a Google una dirección que se va a abandonar—:
+propiedades, las noticias con su paginado y los informes.
+
+**Antes de abrirlo tienen que estar dadas dos condiciones que hoy no lo están:**
+
+- **Contenido real.** Mientras el catálogo sea de demostración, lo que indexaría Google son propiedades
+  que no existen con precios que no existen, bajo la marca de la clienta.
+- **El nombre de marca decidido** (A-09). Hoy el logo dice una cosa y el pie otra en la misma página.
+  Abrir el sitio a los buscadores con dos nombres es enseñarles a no reconocer ninguno.
+
+Cumplidas esas dos, y con el dominio ya apuntado y la variable borrada —indexar la dirección de
+Netlify sería enseñarle a Google una dirección que se va a abandonar—, son **tres** pasos:
 
 1. Borrar `frontend/public/robots.txt`.
 2. Quitar las tres cabeceras `X-Robots-Tag = "noindex, nofollow"` de `netlify.toml`.
