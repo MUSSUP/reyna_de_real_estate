@@ -9,7 +9,9 @@ Actualizado: 2026-11-07
 **En ejecución. 24 terminadas, 4 parciales, 1 sin empezar** (29 filas en el seguimiento: las 28 del plan más UJ-08b).
 **🎯 El sitio público está entero. El panel está cerrado y revisado. Falta la entrega (IT-12).**
 
-**En vivo**: <https://reyna-de-real-estate.netlify.app> · Panel: `/admin`
+**En vivo**: <https://reynaderealestate.com> · Panel: `/admin`
+El dominio quedó apuntado el **10/11**: certificado de Let's Encrypt emitido, `www` y `http` redirigen
+al dominio raíz con HTTPS. La dirección vieja de Netlify sigue respondiendo.
 ✅ **Al día.** El 10/11 se empujaron los nueve commits que esperaban desde el 18/10 y Netlify construyó.
 Verificado en vivo: las fotos volvieron, las tres páginas de consulta no enviada, la página de error,
 el aviso de contraseña en el ingreso y los destinos táctiles del pie. **El portón dejó pasar su propio
@@ -53,7 +55,12 @@ indexación todavía bloqueada a propósito.
 **Lo que falta no es código**: apuntar el dominio, la cuenta de Resend, el nombre de marca, las fotos
 de Laura, y la transferencia.
 
-> ⚠️ **Al apuntar el dominio hay que borrar `PUBLIC_SITE_URL` de Netlify.** Hoy vale
+> 🔴 **PENDIENTE AHORA: borrar `PUBLIC_SITE_URL` de Netlify.** El dominio ya funciona, pero **la
+> canónica que sirve hoy dice `https://reyna-de-real-estate.netlify.app/`** — verificado en vivo el
+> 10/11. O sea que cada página del dominio nuevo le está diciendo a Google que la versión de verdad
+> está en la dirección vieja. Se arregla borrando la variable y volviendo a desplegar.
+>
+> ⚠️ **El detalle completo, para la próxima vez.** Hoy vale
 > `https://reyna-de-real-estate.netlify.app` y de ahí salen **todas las canónicas, los `og:url` y el
 > mapa del sitio** — verificado en vivo. Sin tocarla, cada página del dominio nuevo le diría a Google
 > que la versión de verdad está en la dirección vieja. **Borrarla alcanza**: `astro.config.mjs` ya
