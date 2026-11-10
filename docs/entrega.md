@@ -161,6 +161,40 @@ no usa la página 500 propia): se importa `createHandler` de `.netlify/build/ent
 | A-10 | Que la clienta ponga su propia contraseña (`npm run db:crear-admin`)                                            | pendiente                |
 | A-11 | Abrir el sitio a Google                                                                                         | **preparado**: ver abajo |
 
+### El DNS: un solo registro para la raíz, o el certificado no sale
+
+El dominio está en **Don Web**. Netlify pide, para la raíz:
+
+```
+reynaderealestate.com    A    75.2.60.5
+```
+
+(o un `ALIAS`/`ANAME` a `apex-loadbalancer.netlify.com`, si el proveedor los soporta — es más
+resistente, porque sigue a Netlify si cambia la IP.)
+
+**Lo que no avisa: agregar el registro de Netlify no alcanza si quedan los viejos.** El 10/11 el
+dominio tenía **cinco** registros A a la vez —el de Netlify más cuatro de un Cloudflare anterior
+(`104.16.42.105`, `104.19.241.93`, `104.16.36.105`, `104.19.240.93`)— y el DNS repartía las visitas
+entre los cinco: **cuatro de cada cinco caían en `error code: 1001`**.
+
+Y tiene una consecuencia que bloquea todo lo demás: **Netlify no puede emitir el certificado HTTPS**
+mientras pase eso, porque la validación falla las veces que cae en un registro ajeno. Si el
+certificado queda "Waiting" sin explicación, lo primero que hay que mirar es si la raíz resuelve a
+una sola dirección:
+
+```bash
+dig +short reynaderealestate.com A
+```
+
+Tiene que devolver **una sola línea**. Si devuelve varias, sobran registros.
+
+`www` es un `CNAME` a la raíz, que está bien: se arregla solo cuando la raíz queda limpia. Pero
+**un nombre no puede tener un `CNAME` y registros `A` a la vez** — si el panel muestra ambos para
+`www`, los `A` sobran.
+
+El TTL es **14400 (4 horas)**: después de borrar, los servidores que ya guardaron las direcciones
+viejas pueden seguir usándolas hasta ese tiempo.
+
 ### ⚠️ Apuntar el dominio: hay que borrar `PUBLIC_SITE_URL` de Netlify
 
 **Esto no avisa y arruinaría la migración.** Hoy la variable `PUBLIC_SITE_URL` del panel de Netlify
