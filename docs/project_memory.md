@@ -53,10 +53,14 @@ indexación todavía bloqueada a propósito.
 **Lo que falta no es código**: apuntar el dominio, la cuenta de Resend, el nombre de marca, las fotos
 de Laura, y la transferencia.
 
-> ⚠️ **Al apuntar el dominio hay que cambiar `PUBLIC_SITE_URL` en Netlify.** Hoy vale
+> ⚠️ **Al apuntar el dominio hay que borrar `PUBLIC_SITE_URL` de Netlify.** Hoy vale
 > `https://reyna-de-real-estate.netlify.app` y de ahí salen **todas las canónicas, los `og:url` y el
-> mapa del sitio** — verificado en vivo. Sin cambiarla, cada página del dominio nuevo le diría a
-> Google que la versión de verdad está en la dirección vieja. Está escrito en `docs/entrega.md`.
+> mapa del sitio** — verificado en vivo. Sin tocarla, cada página del dominio nuevo le diría a Google
+> que la versión de verdad está en la dirección vieja. **Borrarla alcanza**: `astro.config.mjs` ya
+> tiene el dominio como respaldo, así que no hay dirección que escribir mal. Está en `docs/entrega.md`.
+>
+> **Apuntar el dominio no obliga a abrir el sitio a Google** (A-11): eso además necesita contenido real
+> y el nombre de marca decidido (A-09).
 
 **Y antes de cualquier push, dos cosas que ya costaron caro:**
 
