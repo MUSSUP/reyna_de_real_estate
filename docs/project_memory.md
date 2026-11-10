@@ -10,7 +10,10 @@ Actualizado: 2026-11-07
 **🎯 El sitio público está entero. El panel está cerrado y revisado. Falta la entrega (IT-12).**
 
 **En vivo**: <https://reyna-de-real-estate.netlify.app> · Panel: `/admin`
-⚠️ **Lo que está en vivo es la construcción del 18 de octubre.** Hay cuatro commits sin empujar.
+✅ **Al día.** El 10/11 se empujaron los nueve commits que esperaban desde el 18/10 y Netlify construyó.
+Verificado en vivo: las fotos volvieron, las tres páginas de consulta no enviada, la página de error,
+el aviso de contraseña en el ingreso y los destinos táctiles del pie. **El portón dejó pasar su propio
+despliegue**, que era la trampa que había aparecido tres veces.
 
 **Infraestructura**
 
@@ -39,10 +42,22 @@ Cerrados los dos críticos de código (C-2, C-3), los importantes I-1 a I-8 y lo
 
 ## ⚠️ Lo primero al retomar
 
-**Está bloqueado por dos cosas externas, en este orden:**
+**Queda una sola cosa de código sin verificar, y es la más importante: C-1.**
 
-1. **Supabase se pausa sola y hay que reactivarla desde su panel.** Pasó **tres veces**. Cuando pasa, el sitio sigue en pie —es estático— pero **las fotos desaparecen**. Con la base caída no se puede construir: la construcción consulta la base para generar las fichas, falla, y **gasta un despliegue en algo roto**. Mirar antes de empujar.
-2. **Hay cuatro commits sin empujar** más el trabajo de la revisión final. Van todos juntos en un solo despliegue.
+**Nadie apretó nunca "Publicar cambios" con el portón de despliegues puesto.** Es la única herramienta de
+Laura. Si el webhook de Netlify no manda `INCOMING_HOOK_TITLE`, el portón lee el mensaje del último
+commit, no encuentra `[desplegar]` y **cancela el despliegue en silencio**: el panel dice "Publicando…"
+cinco minutos y termina en "Está tardando más de lo normal". Se prueba en dos minutos con acceso al
+panel, y no se puede probar de otra forma.
+
+**Y antes de cualquier push, dos cosas que ya costaron caro:**
+
+1. **Mirar si Supabase está despierta.** Se pausa sola; pasó **tres veces**. Con la base caída la
+   construcción falla y **gasta un despliegue en algo roto**. El chequeo barato es una consulta directa:
+   si el subdominio del proyecto devuelve `000` está pausada, si devuelve `401` está arriba. **Ojo: al
+   reactivarla el API vuelve antes que el pooler de Postgres**, así que puede dar `401` y la conexión
+   seguir diciendo `tenant/user not found` unos minutos. Hay que esperar a que conecte de verdad.
+2. **Verificar que el mensaje del commit de arriba lleve `[desplegar]`** (ver más abajo).
 
 **El commit de más arriba tiene que llevar `[desplegar]` en el mensaje.** Netlify lee `netlify.toml` **del commit que construye**, así que el portón se aplica a sí mismo: si el mensaje de arriba no tiene la marca, se saltea su propio despliegue y nada avisa. Ya pasó dos veces — la segunda, por agregar un commit encima del que sí la tenía. **Verificar antes de empujar, no después.**
 
