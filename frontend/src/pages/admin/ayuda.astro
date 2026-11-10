@@ -1,0 +1,242 @@
+---
+import Panel from '../../layouts/Panel.astro';
+
+/**
+ * La guía de uso del panel, adentro del panel.
+ *
+ * **No consulta la base, y es deliberado.** `auth.ts` verifica la sesión con
+ * el JWT y nada más, así que esta pantalla se dibuja incluso con la base
+ * pausada — que es exactamente cuando hace falta, porque el síntoma de la
+ * pausa es que el sitio se queda sin fotos y el resto del panel tira error.
+ * Si esta página consultara la base, sería inútil justo el día que importa.
+ *
+ * Por eso acá no se importa nada de `lib/datos` ni de `lib/panel`. Si alguna
+ * vez hace falta mostrar un dato real, va en otra pantalla.
+ *
+ * Vive en el panel y no en un archivo aparte porque después de la entrega la
+ * clienta no tiene a quién preguntarle: la ayuda tiene que estar donde
+ * trabaja, no en un documento que se pierde.
+ */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+
+const SECCIONES = [
+  { id: 'publicar', titulo: 'Lo primero: nada se ve hasta que publicás' },
+  { id: 'cupo', titulo: 'Tenés 20 publicaciones por mes' },
+  { id: 'propiedades', titulo: 'Cargar una propiedad' },
+  { id: 'destacadas', titulo: 'Elegir las de la portada' },
+  { id: 'articulos', titulo: 'Escribir noticias e informes' },
+  { id: 'consultas', titulo: 'Las consultas que te dejan' },
+  { id: 'textos', titulo: 'Cambiar los textos del sitio' },
+  { id: 'roto', titulo: 'Si el sitio aparece sin fotos' },
+  { id: 'clave', titulo: 'La contraseña' },
+  { id: 'limites', titulo: 'Lo que no se puede hacer desde acá' },
+];
+
+const h2 = 'mt-10 scroll-mt-6 font-titulo text-xl text-verde sm:text-2xl';
+const p = 'mt-3 leading-relaxed text-texto';
+const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm leading-relaxed';
+---
+
+<Panel titulo="Ayuda" usuario={sesion?.name} activo="/admin/ayuda">
+  <div class="max-w-[72ch]">
+    <p class="text-texto-suave">
+      Cómo funciona cada parte del panel, y qué hacer si algo no anda. Esta página funciona siempre,
+      incluso si el resto del panel da error.
+    </p>
+
+    <nav aria-label="Secciones de la ayuda" class="mt-6 rounded-[var(--radius-card)] bg-white p-5">
+      <p class="text-xs font-semibold uppercase tracking-[0.1em] text-texto-suave">
+        En esta página
+      </p>
+      <ol class="mt-3 flex flex-col gap-1.5 text-sm">
+        {
+          SECCIONES.map((s, i) => (
+            <li>
+              <a href={`#${s.id}`} class="text-verde underline underline-offset-2 hover:text-rosa">
+                {i + 1}. {s.titulo}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <h2 id="publicar" class={h2}>1. Lo primero: nada se ve hasta que publicás</h2>
+    <p class={p}>
+      Todo lo que hacés en el panel —cargar una propiedad, cambiar un texto, escribir una noticia—
+      se guarda al instante, pero <strong>el sitio sigue mostrando lo de antes</strong>. Para que el
+      público lo vea tenés que apretar <strong>“Publicar cambios”</strong>, el botón de arriba a la
+      derecha.
+    </p>
+    <p class={p}>
+      Cuando hay algo sin publicar, ahí arriba dice <em>“Hay cambios sin publicar”</em>. Después de
+      apretar, el sitio tarda <strong>uno o dos minutos</strong> en actualizarse. Es normal.
+    </p>
+    <div class={`${caja} border-verde bg-[#eef5f4]`}>
+      <strong>Por qué funciona así</strong>: el sitio no le pregunta nada a la base de datos cuando
+      alguien entra, sino que está escrito de antemano. Por eso carga rápido y aguanta visitas sin
+      caerse — y por eso hay que avisarle cuándo volver a escribirse.
+    </div>
+
+    <h2 id="cupo" class={h2}>2. Tenés 20 publicaciones por mes</h2>
+    <p class={p}>
+      El plan del servicio permite <strong>20 publicaciones por mes</strong>. Al lado del botón ves
+      cuántas te quedan. Se renueva el <strong>día 5</strong> de cada mes.
+    </p>
+    <p class={p}>
+      <strong>El consejo importante</strong>: no publiques cambio por cambio.
+      <em>Cargá todo lo que tengas para cargar y publicá una sola vez.</em> Publicar diez propiedades
+      juntas cuesta lo mismo que publicar una: <strong>1 de tus 20</strong>. Lo que se cuenta son
+      las veces que apretás el botón, no cuánto cambiaste.
+    </p>
+    <p class={p}>
+      Si llegás a cero, el botón queda apagado hasta que se renueve. Lo que hayas guardado no se
+      pierde: se publica todo junto cuando vuelva el cupo.
+    </p>
+
+    <h2 id="propiedades" class={h2}>3. Cargar una propiedad</h2>
+    <p class={p}>
+      En <strong>Propiedades → Nueva</strong>. Nace como <strong>borrador</strong>: podés dejarla a
+      medias y seguir otro día, nadie la ve.
+    </p>
+    <p class={p}>
+      Para poder publicarla necesita <strong>imagen principal</strong>. Las fotos extra son
+      opcionales: si no cargás ninguna, la ficha usa la principal y se ve bien igual.
+    </p>
+    <p class={p}>
+      Las listas de <strong>tipología, zona y desarrollista</strong> no se escriben en el formulario:
+      salen de <a href="/admin/catalogos" class="text-verde underline">Catálogos</a>. Si te falta
+      una zona, la creás ahí y después aparece en el formulario. Lo mismo las amenidades.
+    </p>
+
+    <h2 id="destacadas" class={h2}>4. Elegir las de la portada</h2>
+    <p class={p}>
+      En <a href="/admin/destacadas" class="text-verde underline">Destacadas</a>. Son las que salen
+      en el carrusel de la portada, y podés ordenarlas: el orden de la lista es el orden en que se
+      ven.
+    </p>
+    <p class={p}>
+      Sólo aparecen para elegir las que están <strong>publicadas y con imagen principal</strong>. Si
+      no encontrás una propiedad acá, es por eso.
+    </p>
+
+    <h2 id="articulos" class={h2}>5. Escribir noticias e informes</h2>
+    <p class={p}>
+      En <a href="/admin/articulos" class="text-verde underline">Artículos</a>. Hay
+      <strong>vista previa</strong>: te muestra exactamente cómo va a salir, con el mismo lector que
+      usa el sitio, así que lo que ves es lo que queda.
+    </p>
+    <p class={p}>En el texto podés usar:</p>
+    <ul class="mt-3 flex flex-col gap-2 text-texto">
+      <li>
+        <strong>Una línea en blanco</strong> separa párrafos.
+      </li>
+      <li>
+        <code class="rounded bg-[#eceae7] px-1.5 py-0.5 text-sm">## Un subtítulo</code> al empezar la
+        línea.
+      </li>
+      <li>
+        <code class="rounded bg-[#eceae7] px-1.5 py-0.5 text-sm">&gt; Una frase destacada</code> para
+        resaltar algo.
+      </li>
+      <li>
+        Un enlace:
+        <code class="rounded bg-[#eceae7] px-1.5 py-0.5 text-sm"
+          >[el texto que se ve](https://la-direccion)</code
+        >
+      </li>
+    </ul>
+    <p class={p}>
+      <strong>No hay negritas ni listas.</strong> Y si escribís un enlace y queda con los corchetes a
+      la vista en la vista previa, es que la dirección tiene algo raro — revisala.
+    </p>
+
+    <h2 id="consultas" class={h2}>6. Las consultas que te dejan</h2>
+    <p class={p}>
+      En <a href="/admin/leads" class="text-verde underline">Consultas</a> está todo el que dejó sus datos
+      en el sitio. Podés escribir <strong>notas internas</strong> en cada una: nunca se publican, son
+      sólo para vos.
+    </p>
+    <p class={p}>
+      Se ven las <strong>200 más recientes</strong>. El botón de exportar te las baja todas en una
+      planilla.
+    </p>
+    <div class={`${caja} border-[#ddc79a] bg-[#f7eeda]`}>
+      <strong>Por ahora no te llega un aviso por mail</strong> cuando entra una consulta: hace falta contratar
+      un servicio de correo. <strong>Las consultas se guardan igual</strong> y las ves acá, pero conviene
+      entrar a mirar. En el Tablero, las que no tuvieron aviso figuran como “Sin aviso”.
+    </div>
+
+    <h2 id="textos" class={h2}>7. Cambiar los textos del sitio</h2>
+    <p class={p}>
+      En <a href="/admin/configuracion" class="text-verde underline">Configuración</a>: el título de
+      la portada, tu presentación, los teléfonos, el WhatsApp, las redes.
+    </p>
+    <p class={p}>
+      Casi todos los campos se pueden <strong>dejar vacíos</strong> sin romper nada: el sitio usa un texto
+      de respaldo o esconde la parte. Cada campo dice abajo qué pasa si lo vacías. Dos casos que conviene
+      saber: si vaciás <strong>tu presentación</strong>, la sección “Conóceme” no aparece; si vaciás
+      el <strong>WhatsApp principal</strong>, desaparecen todos los botones de WhatsApp del sitio.
+    </p>
+    <div class={`${caja} border-[#ddc79a] bg-[#f7eeda]`}>
+      <strong>Las fotos y el video tienen una regla</strong>: sólo se pueden mostrar imágenes que
+      estén en este sitio. Si pegás la dirección de una foto de Drive, de Instagram o de otra
+      página, se guarda sin dar error pero <strong>después no se ve</strong>. Para tu retrato: subí
+      la foto como imagen de una propiedad y pegá acá esa dirección.
+    </div>
+
+    <h2 id="roto" class={h2}>8. Si el sitio aparece sin fotos</h2>
+    <p class={p}>
+      Es el problema más probable, y <strong>lo podés arreglar sola en dos minutos</strong>. El
+      síntoma: el sitio carga pero las fotos no aparecen, o el panel te da un error.
+    </p>
+    <p class={p}>
+      La causa casi siempre es la misma: <strong>la base de datos se pausó por inactividad</strong>.
+      El plan gratuito la suspende si pasan varios días sin que nadie la use. Para despertarla:
+    </p>
+    <ol class="mt-3 flex list-decimal flex-col gap-2 pl-6 text-texto">
+      <li>Entrá a <strong>supabase.com</strong> con la cuenta del proyecto.</li>
+      <li>Abrí el proyecto de Reyna de Real Estate.</li>
+      <li>Apretá <strong>“Restore project”</strong>.</li>
+      <li>Esperá unos minutos. Las fotos vuelven solas, sin tener que publicar nada.</li>
+    </ol>
+    <p class={p}>
+      Si las fotos no vuelven después de eso, o el panel sigue dando error, ahí sí hace falta
+      alguien técnico.
+    </p>
+
+    <h2 id="clave" class={h2}>9. La contraseña</h2>
+    <div class={`${caja} border-red-300 bg-red-50`}>
+      <strong>No se puede recuperar desde la pantalla de ingreso.</strong> No hay “olvidé mi contraseña”:
+      para eso haría falta el servicio de correo que todavía no está. Si la perdés, hay que volver a crearla
+      desde la consola del proyecto, y eso necesita a alguien con el código.
+      <strong>Guardala en un lugar seguro</strong> — un administrador de contraseñas, o anotada donde
+      no se pierda.
+    </div>
+
+    <h2 id="limites" class={h2}>10. Lo que no se puede hacer desde acá</h2>
+    <p class={p}>Para que no las busques:</p>
+    <ul class="mt-3 flex flex-col gap-3 text-texto">
+      <li>
+        <strong>Cambiar el video de la portada.</strong> El campo existe en Configuración, pero el archivo
+        tiene que estar en el sitio, y subirlo necesita a alguien con el código. Lo que sí podés es <em
+          >quitarlo</em
+        >: vaciando el campo, la portada muestra la foto de fondo.
+      </li>
+      <li>
+        <strong>Avisos por mail</strong> de consultas nuevas, y recuperar la contraseña. Las dos cosas
+        esperan que se contrate un servicio de correo.
+      </li>
+      <li>
+        <strong>Dar acceso a alguien con permisos limitados.</strong> Se pueden crear más usuarios, pero
+        todos ven todo — incluidos los datos de los propietarios y las consultas. Si le das acceso a alguien,
+        tenelo en cuenta.
+      </li>
+      <li>
+        <strong>El sitio en inglés.</strong> Quedó fuera de lo acordado.
+      </li>
+    </ul>
+  </div>
+</Panel>

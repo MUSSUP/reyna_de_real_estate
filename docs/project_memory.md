@@ -46,8 +46,17 @@ Cerrados los dos críticos de código (C-2, C-3), los importantes I-1 a I-8 y lo
 panel y el sitio cambió. **El portón de despliegues está probado por los tres caminos** — push con la
 marca, webhook del panel, y cancelar un commit que no la lleva.
 
-**Lo que falta para entregar no es código**: IT-12 (dominio, guía de uso, transferencia), la cuenta de
-Resend, el nombre de marca y las fotos de Laura.
+**IT-12 avanzó el 10/11**: la **guía de uso vive en el panel** (`/admin/ayuda`) y hay un documento de
+entrega para quien herede el código (`docs/entrega.md`). El `sitemap.xml` quedó hecho, con la
+indexación todavía bloqueada a propósito.
+
+**Lo que falta no es código**: apuntar el dominio, la cuenta de Resend, el nombre de marca, las fotos
+de Laura, y la transferencia.
+
+> ⚠️ **Al apuntar el dominio hay que cambiar `PUBLIC_SITE_URL` en Netlify.** Hoy vale
+> `https://reyna-de-real-estate.netlify.app` y de ahí salen **todas las canónicas, los `og:url` y el
+> mapa del sitio** — verificado en vivo. Sin cambiarla, cada página del dominio nuevo le diría a
+> Google que la versión de verdad está en la dirección vieja. Está escrito en `docs/entrega.md`.
 
 **Y antes de cualquier push, dos cosas que ya costaron caro:**
 
@@ -171,6 +180,10 @@ Dos mecanismos existen por esto:
 
 - `design/design_summary.md` — leer al iniciar cada tarea
 - `implementation/task_tracker.md` — 29 filas, 3 hitos, bitácora
+- `docs/entrega.md` — **el camino de entrada para quien hereda el repositorio**: las tres cosas que
+  sorprenden, lo que no está hecho, y las acciones de entrega
+- `frontend/src/pages/admin/ayuda.astro` — **la guía de la clienta**. Si cambia cómo funciona algo,
+  se actualiza ahí. No consulta la base a propósito: funciona con Supabase pausada
 - `docs/work_log.md` — el relato de cada journey y por qué se decidió lo que se decidió
 - `docs/decision_log.md` — las decisiones de arquitectura
 - `design/referencias/` — 6 capturas de la versión aprobada + PDF de correcciones

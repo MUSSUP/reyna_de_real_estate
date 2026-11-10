@@ -2691,3 +2691,59 @@ Con el cupo agotado el botón seguía habilitado: cinco minutos de "Publicando�
 Se aplica **sólo en cero**, así que el criterio de que el contador no estorbe sigue intacto mientras quede aunque sea una publicación. Y no es una decisión nueva: el mismo archivo ya hacía esto cuando la publicación no está configurada —_"no se ofrece un botón que no puede funcionar"_—. La diferencia es que ahí el botón se esconde y acá se ve apagado, porque el cambio es temporal y el cartel de al lado ya explica por qué.
 
 `astro check`: 0 errores, 0 advertencias · ESLint: 0 · **323 pruebas en verde** · `astro build`: **completo, contra PGlite**
+
+## IT-12, primera parte · La guía, el documento de entrega y el mapa del sitio
+
+### La guía de la clienta vive en el panel
+
+Podía ser un documento aparte, y se eligió una pantalla en `/admin/ayuda` por una razón: **después de la entrega no tiene a quién preguntarle.** Un archivo que se manda por correo se pierde; una pantalla del panel está donde trabaja, el día que algo no anda.
+
+**Y no consulta la base, que es la decisión que la hace servir para algo.** `auth.ts` verifica la sesión con el JWT y nada más —no toca la base—, así que la pantalla se dibuja incluso con Supabase pausada. Eso importa porque el síntoma de la pausa es justamente que el sitio se queda sin fotos y el resto del panel tira error: si la ayuda necesitara la base, sería inútil el único día que hace falta.
+
+Verificado sobre el sitio construido, comparando qué importa cada trozo del paquete:
+
+| Trozo                      | Importa                                                     |
+| -------------------------- | ----------------------------------------------------------- |
+| `ayuda_*.mjs`              | el armazón, el compilador, nada más                         |
+| `index_*.mjs` (el tablero) | además `panel_*.mjs` y `articulos_*.mjs` — la capa de datos |
+
+Y pidiéndole `/admin/ayuda` a la función **sin ninguna variable de base en el entorno**: redirige al ingreso, que es lo correcto, en vez de reventar.
+
+Diez secciones, en el orden en que le van a pasar las cosas. Las dos que más valen no son instrucciones de uso:
+
+- **"Si el sitio aparece sin fotos"** — los cuatro pasos para despertar Supabase desde su panel. Es el problema más probable del proyecto y lo puede resolver sola en dos minutos. A nosotros nos llevó tres caídas y once días de ceguera entenderlo.
+- **"Lo que no se puede hacer desde acá"** — el video de la portada, los avisos por mail, los permisos limitados, el sitio en inglés. Decirlo es más útil que dejar que las busque.
+
+También quedó escrito lo que más la va a confundir al principio: **nada se ve en el sitio hasta que aprieta "Publicar cambios"**, y que publicar diez propiedades juntas cuesta lo mismo que publicar una.
+
+### El documento de entrega, para quien herede el código
+
+`docs/entrega.md`. Otro lector, otro documento: la memoria del proyecto tiene el estado y la bitácora tiene el por qué de cada decisión, pero ninguna de las dos se lee en la primera hora. Esto sí.
+
+Lo organicé alrededor de **las tres cosas que sorprenden**: que el sitio público sea estático y publicar sea un despliegue, que haya veinte despliegues por mes con un portón que los protege, y que Supabase se pause sola.
+
+### El mapa del sitio, escrito a mano
+
+`frontend/src/pages/sitemap.xml.ts`, como endpoint. **Sin agregar una dependencia**: son veinte líneas, y en este proyecto sumar paquetes ya salió mal una vez —`npm audit fix` rompió el árbol entero y hubo que restaurar el `package-lock.json` de una copia—.
+
+Incluye la portada, el catálogo, las fichas, el listado de noticias con su paginado, las noticias y los informes. Deja afuera el panel, las APIs, las páginas de error, las de consulta no enviada, `/gracias` y `/sistema`.
+
+**Las fichas van sin `lastmod`**, y eso lo decidió un error de tipos: `PropiedadLista` no tiene `updatedAt` porque trae sólo los campos públicos. Ese conjunto acotado es la defensa que mantiene los datos de los propietarios fuera del sitio, y no se amplía por una fecha que el formato declara opcional. **El tipo hizo exactamente su trabajo.**
+
+El mapa no sirve de nada todavía, y está bien: la indexación sigue bloqueada a propósito mientras el sitio muestre datos de demostración.
+
+### El hallazgo: `PUBLIC_SITE_URL` arruinaría la migración del dominio
+
+Al mirar el mapa generado salió con direcciones `localhost`, porque así está el `.env` local. Eso llevó a preguntar con qué dominio construye Netlify — y la respuesta, verificada en vivo, es que la portada declara:
+
+```
+<link rel="canonical" href="https://reyna-de-real-estate.netlify.app/">
+```
+
+O sea que **`PUBLIC_SITE_URL` en Netlify apunta a la dirección de Netlify**, y de ahí salen todas las canónicas, los `og:url` y el mapa del sitio. Si se apunta `reynaderealestate.com` sin cambiar esa variable, cada página del dominio nuevo le estaría diciendo a Google _"la versión de verdad de esta página está en la dirección vieja"_ — que es exactamente lo contrario de lo que se busca al mudar un dominio.
+
+No avisa de ninguna forma: el sitio funciona perfecto y el daño es invisible. Quedó escrito como paso obligatorio del dominio en `docs/entrega.md` y en la memoria.
+
+> Apareció por un camino lateral: nadie estaba revisando canónicas. Salió de preguntarse por qué el mapa decía `localhost`.
+
+`astro check`: 0 errores, 0 advertencias · ESLint: 0 · **323 pruebas en verde** · `astro build`: completo contra la base real
