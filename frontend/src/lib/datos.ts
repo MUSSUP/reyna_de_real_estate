@@ -371,6 +371,15 @@ export async function obtenerInformes() {
     .orderBy(desc(articles.isPinned), desc(articles.publishedAt));
 }
 
+/**
+ * Cuántas noticias entran en una pantalla del listado.
+ *
+ * Nueve llenan exactamente la grilla de tres columnas sin dejar una fila a
+ * medias. El número vive acá porque lo usan la primera página y las
+ * siguientes, y tienen que coincidir o el paginado se descalza.
+ */
+export const NOTICIAS_POR_PAGINA = 9;
+
 export async function obtenerNoticias(limite?: number) {
   const consulta = db
     .select()

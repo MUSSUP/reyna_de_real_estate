@@ -32,8 +32,8 @@ Actualizado: 2026-11-07
 ✅ Revisión del Hito 2: 1 crítico, 9 importantes, 13 menores. Todos los importantes cerrados
 
 **Revisión final** (la obligatoria antes de entregar): hecha. 3 críticos, 8 importantes, 6 menores.
-Cerrados C-2 (página de error propia), C-3 (la página de "consulta no enviada" ya no depende de la base), I-1, I-2, I-4, I-5, I-6, I-7, I-8 y los menores m-1, m-2, m-4, m-5.
-**Abiertos**: C-1 (probar una publicación real desde el panel — necesita Netlify), I-3 (paginado de noticias), I-9 (Resend), m-3 (enlaces en las noticias), m-6 (el botón al llegar a cero).
+Cerrados los dos críticos de código (C-2, C-3), los importantes I-1 a I-8 y los menores m-1 a m-6.
+**Abiertos, y los dos dependen de algo de afuera**: **C-1** —probar una publicación real desde el panel con el portón puesto, que necesita Netlify— e **I-9** —los avisos por correo, que necesitan la cuenta de Resend—.
 
 ---
 
@@ -99,7 +99,7 @@ Dos mecanismos existen por esto:
 
 - **El sitio público es estático** (D-04). Las visitas no tocan la base y publicar dispara un rebuild. **Ninguna página pública se genera en el servidor**: lo único que no se hornea es `POST /api/leads` —el único que toca la base en una visita— y `500.astro`, que es la página de error y está verificada libre de base. Hay que mantenerlo así: una página pública con `prerender = false` deja de verse cuando Supabase se pausa.
 - **Los formularios públicos funcionan sin JavaScript** (D-16). En el panel rige **donde la técnica de interacción falla sin él**: destacadas y configuración son formularios de verdad, porque arrastrar no dispara nada en pantallas táctiles y la clienta entra desde el celular. Artículos y catálogos **necesitan JavaScript y lo dicen con un `<noscript>`**. No es lo mismo que "todo el panel anda sin JavaScript": eso lo afirmaba esta memoria y era más de lo que el código hacía.
-- **La lógica va en `backend/lib/`, con base y servicios por parámetro** (D-17). `npm test` corre vitest sobre PGlite con las migraciones reales: **314 casos** en 13 archivos, incluidas las de autenticación, privacidad de `owners`, D-19 y una que exige que ningún mensaje de error salga en inglés.
+- **La lógica va en `backend/lib/`, con base y servicios por parámetro** (D-17). `npm test` corre vitest sobre PGlite con las migraciones reales: **323 casos** en 13 archivos, incluidas las de autenticación, privacidad de `owners`, D-19 y una que exige que ningún mensaje de error salga en inglés.
 - **La suite va con `maxWorkers: 2`** y no hay que subirlo. Cada archivo levanta **un Postgres entero en memoria**; sin tope tarda 474 s, tira dos pruebas falsas y la corrida siguiente muere sin memoria. Con el tope: 204 s y pasa entera. **Una prueba que falla por contención enseña a desconfiar de las rojas, que es lo contrario de para lo que están.**
 - **Un solo middleware de sesión** (D-13). Todo endpoint del panel usa `requerirSesion`: verificado archivo por archivo, los 17.
 - **Lo que necesita el navegador no comparte archivo con lo que solo corre en el servidor** (D-19). Dos archivos sin dependencias existen por eso: `anchosImagen.ts` y `urlSegura.ts`, y el procesamiento de imágenes vive separado (`imagenesPropiedad.ts`, `imagenesArticulo.ts`). Importar aritmética desde el módulo de imágenes arrastraba `sharp` a todas las páginas y rompió un despliegue. **Hay una prueba que sigue la cadena de importaciones de cada página y falla si alguna llega a `sharp`.**
@@ -115,6 +115,8 @@ Dos mecanismos existen por esto:
 - **Astro 7, no Astro 5** (D-12): la rama 5 tenía XSS en el framework. `sharp` fijado a ≥0.35.3 por `overrides` — no bajarlo.
 - **No correr `npm audit fix`.** Rompió el árbol de dependencias (`@netlify/blobs` desapareció y la construcción falló) y hubo que restaurar `package-lock.json` de una copia. **Tampoco `--omit=dev`**: poda eslint y vitest.
 - **El repositorio es público** (D-20). Las comunicaciones sobre la clienta viven fuera.
+- **Se puede construir el sitio entero sin Supabase**, y conviene cuando la base está pausada. Se parcha `backend/db/client.ts` para que use **PGlite** —el mismo Postgres en WebAssembly de las pruebas, pero apuntando a una carpeta en disco—, se corren las migraciones y una siembra mínima, se construye, se mira el `dist/`, y **se revierte el parche**. La semilla real no sirve para esto: sube imágenes a Supabase Storage y falla con la base caída. Así se verificaron el paginado, los enlaces, las tres páginas de consulta no enviada y la página de error.
+- **La página de error se verifica invocando la función del sitio construido**, no con `astro dev`: en desarrollo Astro no usa la página 500 propia. Se importa `createHandler` de `.netlify/build/entry.mjs`, se pide `/500` **sin ninguna variable de base en el entorno**, y se mira que responda 500 en castellano. Pedir `/admin` no sirve: el portón de sesión redirige antes de tocar la base.
 - **Medir antes de afirmar, sin excepción.** Cuatro veces en este proyecto un diagnóstico "evidente" no sobrevivió a la primera medición: el SSL de la función, el contador de errores con `grep -c error`, el tamaño del presupuesto de Netlify, y un comentario que afirmaba que el código fallaba del lado seguro cuando no.
 
 ---

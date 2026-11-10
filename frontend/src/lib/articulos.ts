@@ -5,8 +5,30 @@
  * HTML**: se parte en bloques y cada bloque se renderiza como un elemento, con
  * el texto interpolado — que Astro escapa solo. Meter contenido editable en la
  * página con `set:html` es la forma más común de abrir un XSS, y acá no hace
- * ninguna falta: alcanza con títulos y párrafos.
+ * ninguna falta.
+ *
+ * Los enlaces son la excepción aparente, y tampoco usan `set:html`: un párrafo
+ * se parte además en **trozos**, y el que lleva dirección se dibuja como un
+ * `<a>` con el texto y el `href` interpolados. Sigue sin haber HTML editable
+ * en la página; lo único que entra es una dirección, y antes pasa por
+ * `urlSegura`, que valida en positivo.
  */
+import { urlSegura } from '../../../backend/lib/urlSegura';
+
+/**
+ * Un pedazo de párrafo. Sin `url` es texto; con `url` es un enlace.
+ *
+ * Existe para poder dibujar enlaces sin insertar HTML. El componente recorre
+ * los trozos y decide el elemento; el texto y la dirección siempre viajan
+ * interpolados.
+ *
+ * **No vive dentro del bloque a propósito.** Un bloque describe la estructura
+ * del texto —qué es título, qué es cita— y el corte en enlaces es una
+ * decisión de cómo se dibuja un párrafo. Guardar las dos cosas juntas
+ * duplicaba el mismo texto en dos formas, con el riesgo de que una quedara
+ * vieja; el componente pide el corte cuando lo necesita.
+ */
+export type Trozo = { texto: string; url?: string };
 
 export type Bloque =
   /** `##` — una sección del texto. */
@@ -16,6 +38,46 @@ export type Bloque =
   /** `>` — una cita destacada, para respirar entre bloques largos. */
   | { tipo: 'cita'; texto: string }
   | { tipo: 'parrafo'; texto: string };
+
+/**
+ * `[texto](dirección)`, la forma de Markdown que ya conoce cualquiera que
+ * haya escrito en internet.
+ *
+ * El texto no puede tener `]` ni salto de línea, y la dirección no puede
+ * tener espacios ni `)`. Es a propósito: un patrón estrecho no se pelea con
+ * los corchetes y paréntesis que alguien escriba por otro motivo.
+ */
+const ENLACE = /\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+
+/**
+ * Parte un párrafo en texto y enlaces.
+ *
+ * Una dirección que no sirve **no se descarta**: el párrafo queda tal como se
+ * escribió, con los corchetes a la vista. Es más honesto que tragarse el
+ * texto o dibujar un enlace que no lleva a ninguna parte — quien escribió ve
+ * que algo no salió y puede corregirlo.
+ */
+export function trozosDeParrafo(texto: string): Trozo[] {
+  const trozos: Trozo[] = [];
+  let desde = 0;
+
+  for (const encontrado of texto.matchAll(ENLACE)) {
+    const url = encontrado[2]!.trim();
+    const indice = encontrado.index!;
+
+    // `urlSegura` acepta la cadena vacía (un campo sin llenar no es un error)
+    // y rutas del propio sitio. Acá lo vacío sí es un error: un enlace sin
+    // destino no es un enlace.
+    if (url === '' || !urlSegura(url)) continue;
+
+    if (indice > desde) trozos.push({ texto: texto.slice(desde, indice) });
+    trozos.push({ texto: encontrado[1]!.trim(), url });
+    desde = indice + encontrado[0]!.length;
+  }
+
+  if (desde < texto.length) trozos.push({ texto: texto.slice(desde) });
+  return trozos;
+}
 
 /**
  * Parte el cuerpo en bloques.

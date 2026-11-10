@@ -1,0 +1,82 @@
+---
+import Base from '../../../layouts/Base.astro';
+import BarraSuperior from '../../../components/public/BarraSuperior.astro';
+import PieDePagina from '../../../components/public/PieDePagina.astro';
+import BotonWhatsApp from '../../../components/public/BotonWhatsApp.astro';
+import Contenedor from '../../../components/public/Contenedor.astro';
+import SeparadorCorona from '../../../components/public/SeparadorCorona.astro';
+import ListadoNoticias from '../../../components/public/ListadoNoticias.astro';
+import Paginador from '../../../components/public/Paginador.astro';
+import { NOTICIAS_POR_PAGINA, obtenerConfiguracion, obtenerNoticias } from '../../../lib/datos';
+import { t } from '../../../i18n';
+
+/**
+ * Las pantallas del listado de noticias, de la segunda en adelante.
+ *
+ * **Arranca en la 2 a propósito.** La primera es `/noticias`, y generar
+ * además `/noticias/pagina/1` dejaría la misma lista en dos direcciones: para
+ * un buscador eso es contenido duplicado, y para quien comparte el enlace es
+ * una dirección fea de una página que ya tiene una linda.
+ *
+ * Vive en `pagina/` y no en una ruta comodín sobre `/noticias/` porque al
+ * lado hay `[slug].astro`, y los títulos los escribe la clienta: una noticia
+ * que se llamara "2026" generaría `/noticias/2026` y chocaría con la página
+ * 2026. El prefijo hace que eso no pueda pasar.
+ *
+ * Se genera al construir, como el resto del sitio público (D-04).
+ */
+export async function getStaticPaths() {
+  const todas = await obtenerNoticias();
+  const paginas = Math.ceil(todas.length / NOTICIAS_POR_PAGINA);
+
+  const rutas = [];
+  for (let n = 2; n <= paginas; n++) {
+    rutas.push({
+      params: { n: String(n) },
+      props: {
+        pagina: n,
+        paginas,
+        noticias: todas.slice((n - 1) * NOTICIAS_POR_PAGINA, n * NOTICIAS_POR_PAGINA),
+      },
+    });
+  }
+  return rutas;
+}
+
+interface Props {
+  pagina: number;
+  paginas: number;
+  noticias: Awaited<ReturnType<typeof obtenerNoticias>>;
+}
+
+const { pagina, paginas, noticias } = Astro.props as Props;
+const config = await obtenerConfiguracion();
+---
+
+<Base
+  titulo={`Noticias del mercado inmobiliario — página ${pagina} — Reyna de Real Estate`}
+  descripcion="Novedades y análisis del mercado de Riviera Maya: desarrollos, tendencias y qué mirar antes de invertir."
+>
+  <BarraSuperior />
+
+  <main id="contenido" class="pt-24">
+    <Contenedor>
+      <header class="py-10 text-center sm:py-14">
+        <p class="texto-claim text-xs text-texto-suave">Reyna de Real Estate</p>
+        <h1 class="mt-3 font-titulo text-3xl text-verde sm:text-4xl">{t('noticias.titulo')}</h1>
+        <SeparadorCorona clase="mt-4" />
+        <p class="mx-auto mt-5 max-w-[56ch] text-texto-suave">{t('noticias.bajada')}</p>
+      </header>
+
+      <div class="pb-20">
+        <ListadoNoticias noticias={noticias} />
+        <div class="mt-12">
+          <Paginador pagina={pagina} total={paginas} base="/noticias" />
+        </div>
+      </div>
+    </Contenedor>
+  </main>
+
+  <PieDePagina config={config} />
+  <BotonWhatsApp config={config} />
+</Base>

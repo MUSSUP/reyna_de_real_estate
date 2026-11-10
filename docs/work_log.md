@@ -2630,3 +2630,64 @@ _Pruebas_: 3 nuevas —el aviso de faltantes, que no aparece cuando están todas
 **m-5 · Destacadas decía lo contrario de lo que pasaba, con la base vacía.** Sin ninguna propiedad mostraba _"No queda ninguna publicada fuera de la portada"_, que sugiere que hay publicadas y están todas arriba. Ahora distingue las dos situaciones.
 
 `astro check`: 0 errores, 0 advertencias · ESLint: 0 · **314 pruebas en verde**
+
+## 2026-11-10 · El paginado, los enlaces, y construir sin Supabase
+
+Las tres cosas que quedaban de la revisión final y que Mar aprobó hacer. La más valiosa de la sesión no es ninguna de las tres: es que **se pudo verificar todo sin la base**.
+
+### Construir el sitio entero sin Supabase
+
+Supabase lleva pausada desde el 29/10 y en vivo sigue la construcción del 18/10. Eso dejaba sin verificar la página de error, las tres páginas de consulta no enviada y ahora el paginado — todo lo que sólo existe cuando el sitio se construye.
+
+La salida es la misma técnica que usó la segunda mitad de IT-11: **parchar la capa de datos y revertir.** Se apunta `backend/db/client.ts` a **PGlite** —el mismo Postgres en WebAssembly que usan las pruebas, pero con una carpeta en disco en vez de memoria—, se corren las migraciones reales, se siembra, se construye, se mira el `dist/`, y se saca el parche.
+
+**La semilla real no sirve para esto**: además de escribir en la base sube imágenes a Supabase Storage, que está caído igual. Hubo que sembrar a mano los diecinueve textos —leyéndolos del archivo de la semilla, no inventándolos— más veintitrés noticias, para que dieran tres páginas con la última incompleta, que es el caso que más se rompe.
+
+Lo que apareció haciéndolo:
+
+|                     |                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------- |
+| Paginado            | `/noticias` con 9, `/noticias/pagina/2` con 9, `/noticias/pagina/3` con 5. **No se genera `/pagina/1`** |
+| Consulta no enviada | Las tres páginas son HTML estático **con el WhatsApp y el teléfono adentro**                            |
+| Página de error     | Responde **500**, en castellano, con el bloque de administración                                        |
+| El informe          | Sigue igual: 4 títulos, 2 citas, 8 párrafos, ningún corchete a la vista                                 |
+
+**La página de error se verificó invocando la función del sitio construido**, no con `astro dev`: en desarrollo Astro no usa la página 500 propia, así que ahí no se ve nunca. Se importa `createHandler` de `.netlify/build/entry.mjs` y se le pide `/500` **sin ninguna variable de base en el entorno**. Responde 500 con la página completa — que es la propiedad que la hace servir para algo, y hasta hoy estaba deducida leyendo imports, no medida.
+
+> Primero probé pidiendo `/admin`, que es donde Laura se va a encontrar el problema. Devolvió **302**: el portón de sesión redirige antes de tocar la base. Buen recordatorio de que el camino que uno imagina no es el que corre.
+
+### El paginado que a UJ-15 le faltaba
+
+El criterio decía "paginado correcto" y no había ninguno: `obtenerNoticias()` sin argumento traía todas y la página las dibujaba en una grilla. Con tres noticias no se nota; con cuarenta son cuarenta imágenes en una carga.
+
+Son enlaces de verdad a direcciones que existen, no botones: el sitio es estático, funciona sin JavaScript y Google puede recorrerlo.
+
+Tres decisiones:
+
+- **La página 1 es `/noticias`, y `/noticias/pagina/1` no existe.** Una sola dirección para la portada del listado; generar las dos deja la misma lista en dos lugares, que para un buscador es contenido duplicado.
+- **Vive en `pagina/` y no en una ruta comodín sobre `/noticias/`.** Al lado está `[slug].astro` y los títulos los escribe la clienta: una noticia titulada "2026" generaría `/noticias/2026` y chocaría con la página 2026. El prefijo hace que no pueda pasar.
+- **Nueve por página**, que llenan exactamente la grilla de tres columnas sin dejar una fila a medias. El número vive en `lib/datos.ts` porque lo usan las dos páginas y tienen que coincidir.
+
+La grilla salió a `ListadoNoticias.astro` y el paginador a `Paginador.astro`: duplicada en dos archivos, se desincroniza.
+
+### Enlaces en las noticias, sin abrir un XSS
+
+UJ-10 prometía "con formato" y la clienta no podía poner un enlace. En una página de novedades del mercado inmobiliario, eso se siente.
+
+Lo delicado es que el cuerpo lo escribe ella y **nunca se inserta como HTML** — es la decisión que mantiene cerrado el agujero más común. Los enlaces no la rompen: un párrafo se parte además en **trozos**, y el que lleva dirección se dibuja como un `<a>` con el texto y el `href` **interpolados**. Sigue sin haber HTML editable en la página; lo único que entra es una dirección, y antes pasa por `urlSegura`, que valida en positivo.
+
+**Una dirección que no sirve no se descarta**: el párrafo queda tal como se escribió, con los corchetes a la vista. Es más honesto que tragarse el texto o dibujar un enlace muerto — quien escribió ve que algo no salió.
+
+> **Primero lo hice mal y seis pruebas me lo dijeron.** Metí los trozos adentro del bloque, lo que duplicaba el mismo texto en dos formas y rompió seis pruebas que no tenían nada que ver. Un bloque describe la estructura del texto; cortar en enlaces es cómo se dibuja un párrafo. Moviéndolo al componente, las veintiuna pruebas originales pasan sin tocar ninguna. **Si un cambio chico rompe pruebas lejanas, casi siempre el cambio está en el lugar equivocado.**
+
+Verificado en una página construida de verdad: el enlace externo sale con `target="_blank" rel="noopener noreferrer"`, el interno sin nada de eso, y `[tocá acá](javascript:alert(1))` sale **como texto**, no como enlace.
+
+_Pruebas_: 9 nuevas sobre los trozos, incluidos `javascript:`, `data:`, `vbscript:`, `//otro-sitio.com`, el destino vacío, y un `<script>` en el texto del enlace.
+
+### El botón de publicar, apagado en cero
+
+Con el cupo agotado el botón seguía habilitado: cinco minutos de "Publicando…" terminados en "Está tardando más de lo normal", y apretar de nuevo.
+
+Se aplica **sólo en cero**, así que el criterio de que el contador no estorbe sigue intacto mientras quede aunque sea una publicación. Y no es una decisión nueva: el mismo archivo ya hacía esto cuando la publicación no está configurada —_"no se ofrece un botón que no puede funcionar"_—. La diferencia es que ahí el botón se esconde y acá se ve apagado, porque el cambio es temporal y el cartel de al lado ya explica por qué.
+
+`astro check`: 0 errores, 0 advertencias · ESLint: 0 · **323 pruebas en verde** · `astro build`: **completo, contra PGlite**

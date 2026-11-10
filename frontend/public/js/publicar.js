@@ -70,22 +70,23 @@
    * impide nada — solo deja decidir con el dato a la vista.
    */
   function pintarCupo(estado) {
-    if (!cupo) return;
-
     var usadas = estado.publicacionesUsadas;
     var tope = estado.publicacionesDelPlan;
     if (typeof usadas !== 'number' || typeof tope !== 'number' || tope <= 0) {
-      cupo.classList.add('hidden');
-      return;
+      if (cupo) cupo.classList.add('hidden');
+      // Sin el dato no se sabe si queda cupo, así que no se asume que no:
+      // bloquear el botón por falta de información sería peor que dejarlo.
+      return false;
     }
 
     var quedan = Math.max(tope - usadas, 0);
+    if (!cupo) return quedan === 0;
     cupo.classList.remove('hidden');
 
     if (quedan === 0) {
       cupo.textContent = 'Sin publicaciones disponibles este mes';
       cupo.className = 'text-xs font-semibold text-red-700';
-      return;
+      return true;
     }
 
     cupo.textContent =
@@ -97,12 +98,14 @@
     // más, y un color de alerta permanente deja de significar nada.
     cupo.className =
       'text-xs ' + (quedan <= 5 ? 'font-semibold text-[#8a6a28]' : 'text-texto-suave');
+
+    return false;
   }
 
   function pintar(estado) {
     if (!estado) return;
     caja.hidden = false;
-    pintarCupo(estado);
+    var sinCupo = pintarCupo(estado);
 
     if (!estado.configurado) {
       // No se ofrece un botón que no puede funcionar.
@@ -118,6 +121,24 @@
     }
 
     if (estado.hayCambiosSinPublicar) {
+      // Con el cupo agotado el botón no puede funcionar: Netlify deja de
+      // construir y no avisa. Habilitado, el resultado era cinco minutos de
+      // "Publicando…" terminados en "Está tardando más de lo normal", y
+      // apretarlo de nuevo. Es el mismo criterio que ya se aplica cuando la
+      // publicación no está configurada, con una diferencia: ahí el botón se
+      // esconde, y acá conviene que se vea apagado, porque el cambio es
+      // temporal —vuelve solo al renovar el ciclo— y el cartel de al lado ya
+      // explica por qué.
+      //
+      // El contador sigue sin estorbar mientras quede aunque sea una: esto se
+      // aplica sólo en cero, donde no hay decisión que informar.
+      if (sinCupo) {
+        decir('Hay cambios sin publicar. Se publican cuando renueve el cupo', 'pendiente');
+        mostrarBoton(true);
+        boton.disabled = true;
+        return;
+      }
+
       decir('Hay cambios sin publicar', 'pendiente');
       mostrarBoton(true);
       boton.disabled = false;

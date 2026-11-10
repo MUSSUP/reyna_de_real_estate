@@ -6,7 +6,12 @@
  * convertirse en HTML** — la página interpola texto, nunca lo inserta.
  */
 import { describe, expect, it } from 'vitest';
-import { bloquesDeTexto, fechaLegible, minutosDeLectura } from '../../frontend/src/lib/articulos';
+import {
+  bloquesDeTexto,
+  fechaLegible,
+  minutosDeLectura,
+  trozosDeParrafo,
+} from '../../frontend/src/lib/articulos';
 import { generarSlug, slugUnico } from '../../backend/lib/slug';
 
 describe('bloquesDeTexto', () => {
@@ -162,5 +167,72 @@ describe('slugs de propiedades', () => {
     expect(slugUnico('casa-abaton', [])).toBe('casa-abaton');
     expect(slugUnico('casa-abaton', ['casa-abaton'])).toBe('casa-abaton-2');
     expect(slugUnico('casa-abaton', ['casa-abaton', 'casa-abaton-2'])).toBe('casa-abaton-3');
+  });
+});
+
+describe('enlaces dentro de un párrafo', () => {
+  it('parte el párrafo en texto y enlace', () => {
+    expect(trozosDeParrafo('Mirá [esta nota](https://ejemplo.com/x) de hoy.')).toEqual([
+      { texto: 'Mirá ' },
+      { texto: 'esta nota', url: 'https://ejemplo.com/x' },
+      { texto: ' de hoy.' },
+    ]);
+  });
+
+  it('un párrafo sin enlaces es un solo trozo', () => {
+    expect(trozosDeParrafo('Nada que enlazar.')).toEqual([{ texto: 'Nada que enlazar.' }]);
+  });
+
+  it('reconoce varios enlaces en el mismo párrafo', () => {
+    const t = trozosDeParrafo('[uno](https://a.com) y [dos](https://b.com)');
+    expect(t).toEqual([
+      { texto: 'uno', url: 'https://a.com' },
+      { texto: ' y ' },
+      { texto: 'dos', url: 'https://b.com' },
+    ]);
+  });
+
+  it('acepta una ruta del propio sitio', () => {
+    expect(trozosDeParrafo('Ver [las propiedades](/propiedades).')).toEqual([
+      { texto: 'Ver ' },
+      { texto: 'las propiedades', url: '/propiedades' },
+      { texto: '.' },
+    ]);
+  });
+
+  // Lo importante: una dirección que no se puede seguir no se convierte en
+  // enlace, y el texto no se pierde — queda tal como se escribió, para que
+  // quien escribió vea que algo no salió.
+  it('no hace enlace con esquemas que ejecutan código', () => {
+    for (const malo of [
+      'javascript:alert(1)',
+      'JavaScript:alert(1)',
+      'data:text/html;base64,PHNjcmlwdD4=',
+      'vbscript:msgbox(1)',
+    ]) {
+      const texto = `Tocá [acá](${malo}) ahora`;
+      expect(trozosDeParrafo(texto)).toEqual([{ texto }]);
+    }
+  });
+
+  it('no confunde //otro-sitio con una ruta propia', () => {
+    const texto = 'Mirá [acá](//malicioso.com)';
+    expect(trozosDeParrafo(texto)).toEqual([{ texto }]);
+  });
+
+  it('un enlace sin destino no es un enlace', () => {
+    const texto = 'Mirá [acá]()';
+    expect(trozosDeParrafo(texto)).toEqual([{ texto }]);
+  });
+
+  it('los corchetes y paréntesis que alguien escriba por otro motivo quedan igual', () => {
+    const texto = 'El precio (según el dueño) subió [mucho] este año.';
+    expect(trozosDeParrafo(texto)).toEqual([{ texto }]);
+  });
+
+  it('el texto del enlace nunca se interpreta como marcado', () => {
+    expect(trozosDeParrafo('[<script>alert(1)</script>](https://a.com)')).toEqual([
+      { texto: '<script>alert(1)</script>', url: 'https://a.com' },
+    ]);
   });
 });

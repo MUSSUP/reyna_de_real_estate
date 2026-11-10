@@ -1,0 +1,59 @@
+---
+/**
+ * Anterior / siguiente, con la posición a la vista.
+ *
+ * Son enlaces de verdad, no botones: el sitio es estático y cada página
+ * existe como dirección propia, así que funciona sin JavaScript, se puede
+ * abrir en otra pestaña y Google puede recorrerlo. Es lo que pide el criterio
+ * de UJ-15.
+ *
+ * La página 1 es `/noticias`, no `/noticias/pagina/1`: una sola dirección
+ * para la portada del listado, para no tener la misma lista en dos lugares.
+ */
+interface Props {
+  pagina: number;
+  total: number;
+  /** La base de las direcciones, sin barra final. */
+  base: string;
+}
+const { pagina, total, base } = Astro.props;
+
+const direccion = (n: number) => (n <= 1 ? base : `${base}/pagina/${n}`);
+const hayAnterior = pagina > 1;
+const haySiguiente = pagina < total;
+
+const estiloEnlace =
+  'rounded-full border border-verde/25 px-5 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-verde transition-colors hover:bg-verde hover:text-white';
+---
+
+{
+  total > 1 && (
+    <nav class="flex items-center justify-center gap-4 pb-4" aria-label="Páginas de noticias">
+      {hayAnterior ? (
+        <a href={direccion(pagina - 1)} rel="prev" class={estiloEnlace}>
+          Anterior
+        </a>
+      ) : (
+        /* El hueco se mantiene para que el número no salte de lugar entre
+           páginas. `aria-hidden` porque no hay nada que anunciar. */
+        <span aria-hidden="true" class:list={['invisible', estiloEnlace]}>
+          Anterior
+        </span>
+      )}
+
+      <p class="text-sm text-texto-suave">
+        Página {pagina} de {total}
+      </p>
+
+      {haySiguiente ? (
+        <a href={direccion(pagina + 1)} rel="next" class={estiloEnlace}>
+          Siguiente
+        </a>
+      ) : (
+        <span aria-hidden="true" class:list={['invisible', estiloEnlace]}>
+          Siguiente
+        </span>
+      )}
+    </nav>
+  )
+}

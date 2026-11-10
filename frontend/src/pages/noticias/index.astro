@@ -5,10 +5,11 @@ import PieDePagina from '../../components/public/PieDePagina.astro';
 import BotonWhatsApp from '../../components/public/BotonWhatsApp.astro';
 import Contenedor from '../../components/public/Contenedor.astro';
 import SeparadorCorona from '../../components/public/SeparadorCorona.astro';
-import CardNoticia from '../../components/public/CardNoticia.astro';
+import ListadoNoticias from '../../components/public/ListadoNoticias.astro';
+import Paginador from '../../components/public/Paginador.astro';
 import Corona from '../../components/public/Corona.astro';
 import Boton from '../../components/public/Boton.astro';
-import { obtenerConfiguracion, obtenerNoticias, prepararImagen } from '../../lib/datos';
+import { NOTICIAS_POR_PAGINA, obtenerConfiguracion, obtenerNoticias } from '../../lib/datos';
 import { t } from '../../i18n';
 
 /**
@@ -19,9 +20,19 @@ import { t } from '../../i18n';
  * por eso este journey se adelantó del Hito 3.
  *
  * Se genera al construir, como el resto del sitio público (D-04).
+ *
+ * Esta es la primera pantalla; de la segunda en adelante las dibuja
+ * `pagina/[n].astro`. Es la dirección canónica del listado: no existe
+ * `/noticias/pagina/1`, para no tener la misma lista en dos direcciones.
+ *
+ * El paginado lo pide UJ-15 por escrito. Con tres noticias no se nota, pero
+ * la clienta puede escribir todas las que quiera desde el panel, y sin esto
+ * cuarenta noticias eran cuarenta imágenes en una sola carga.
  */
 const config = await obtenerConfiguracion();
-const noticias = await obtenerNoticias();
+const todas = await obtenerNoticias();
+const paginas = Math.max(1, Math.ceil(todas.length / NOTICIAS_POR_PAGINA));
+const noticias = todas.slice(0, NOTICIAS_POR_PAGINA);
 ---
 
 <Base
@@ -41,29 +52,11 @@ const noticias = await obtenerNoticias();
 
       {
         noticias.length > 0 ? (
-          <div class="grid gap-6 pb-20 sm:grid-cols-2 lg:grid-cols-3">
-            {noticias.map((n, i) => {
-              const portada = prepararImagen(
-                n.coverPath,
-                n.coverWidth,
-                n.coverHeight,
-                n.coverAltEs ?? n.titleEs,
-              );
-              return (
-                <CardNoticia
-                  slug={n.slug}
-                  titulo={n.titleEs}
-                  bajada={n.excerptEs}
-                  fecha={n.publishedAt}
-                  imagenSrc={portada?.src}
-                  imagenSrcset={portada?.srcset}
-                  imagenAlt={portada?.alt}
-                  imagenAncho={portada?.width}
-                  imagenAlto={portada?.height}
-                  prioridad={i < 3}
-                />
-              );
-            })}
+          <div class="pb-20">
+            <ListadoNoticias noticias={noticias} primeraPagina />
+            <div class="mt-12">
+              <Paginador pagina={1} total={paginas} base="/noticias" />
+            </div>
           </div>
         ) : (
           // Sin noticias la página no queda en blanco: explica qué va a haber

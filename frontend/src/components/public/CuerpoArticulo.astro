@@ -1,5 +1,5 @@
 ---
-import type { Bloque } from '../../lib/articulos';
+import { type Bloque, trozosDeParrafo } from '../../lib/articulos';
 
 /**
  * Pinta el cuerpo de una noticia o de un informe.
@@ -12,6 +12,10 @@ import type { Bloque } from '../../lib/articulos';
  * panel; cada bloque se renderiza como un elemento con el texto interpolado,
  * que Astro escapa solo. Meter contenido editable con `set:html` es la forma
  * más común de abrir un XSS, y acá no hace ninguna falta.
+ *
+ * Los enlaces de un párrafo tampoco son una excepción: llegan ya separados en
+ * trozos desde `lib/articulos.ts`, con la dirección validada, y acá el `href`
+ * y el texto se interpolan como cualquier otra cosa.
  */
 interface Props {
   bloques: Bloque[];
@@ -19,6 +23,16 @@ interface Props {
   pilaresComoTarjetas?: boolean;
 }
 const { bloques, pilaresComoTarjetas = false } = Astro.props;
+
+/**
+ * Sólo las direcciones externas abren en otra pestaña.
+ *
+ * Un enlace a una propiedad del propio sitio se sigue en la misma, como
+ * cualquier navegación; sacar al visitante del sitio sí amerita la pestaña
+ * nueva. El `rel="noopener noreferrer"` que lo acompaña es el mismo criterio
+ * que ya se usa para los enlaces de Drive de las fichas.
+ */
+const esExterno = (url: string) => !url.startsWith('/');
 ---
 
 <div class="flex flex-col gap-5">
@@ -40,7 +54,22 @@ const { bloques, pilaresComoTarjetas = false } = Astro.props;
           <p class="font-titulo text-lg italic leading-snug text-verde sm:text-xl">{b.texto}</p>
         </blockquote>
       ) : (
-        <p class="text-[17px] leading-relaxed text-texto">{b.texto}</p>
+        <p class="text-[17px] leading-relaxed text-texto">
+          {trozosDeParrafo(b.texto).map((t) =>
+            t.url ? (
+              <a
+                href={t.url}
+                target={esExterno(t.url) ? '_blank' : undefined}
+                rel={esExterno(t.url) ? 'noopener noreferrer' : undefined}
+                class="text-verde underline decoration-dorado underline-offset-2 transition-colors hover:text-rosa"
+              >
+                {t.texto}
+              </a>
+            ) : (
+              t.texto
+            ),
+          )}
+        </p>
       ),
     )
   }
