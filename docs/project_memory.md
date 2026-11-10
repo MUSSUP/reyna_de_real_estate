@@ -36,19 +36,18 @@ despliegue**, que era la trampa que había aparecido tres veces.
 
 **Revisión final** (la obligatoria antes de entregar): hecha. 3 críticos, 8 importantes, 6 menores.
 Cerrados los dos críticos de código (C-2, C-3), los importantes I-1 a I-8 y los menores m-1 a m-6.
-**Abiertos, y los dos dependen de algo de afuera**: **C-1** —probar una publicación real desde el panel con el portón puesto, que necesita Netlify— e **I-9** —los avisos por correo, que necesitan la cuenta de Resend—.
+**C-1 cerrado el 10/11.** Queda abierto sólo **I-9**: los avisos por correo, que necesitan la cuenta de Resend.
 
 ---
 
 ## ⚠️ Lo primero al retomar
 
-**Queda una sola cosa de código sin verificar, y es la más importante: C-1.**
+**No queda nada de código sin verificar.** El 10/11 se cerró C-1: se apretó "Publicar cambios" en el
+panel y el sitio cambió. **El portón de despliegues está probado por los tres caminos** — push con la
+marca, webhook del panel, y cancelar un commit que no la lleva.
 
-**Nadie apretó nunca "Publicar cambios" con el portón de despliegues puesto.** Es la única herramienta de
-Laura. Si el webhook de Netlify no manda `INCOMING_HOOK_TITLE`, el portón lee el mensaje del último
-commit, no encuentra `[desplegar]` y **cancela el despliegue en silencio**: el panel dice "Publicando…"
-cinco minutos y termina en "Está tardando más de lo normal". Se prueba en dos minutos con acceso al
-panel, y no se puede probar de otra forma.
+**Lo que falta para entregar no es código**: IT-12 (dominio, guía de uso, transferencia), la cuenta de
+Resend, el nombre de marca y las fotos de Laura.
 
 **Y antes de cualquier push, dos cosas que ya costaron caro:**
 
