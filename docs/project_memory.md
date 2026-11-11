@@ -55,10 +55,9 @@ indexación todavía bloqueada a propósito.
 **Lo que falta no es código**: apuntar el dominio, la cuenta de Resend, el nombre de marca, las fotos
 de Laura, y la transferencia.
 
-> 🔴 **PENDIENTE AHORA: borrar `PUBLIC_SITE_URL` de Netlify.** El dominio ya funciona, pero **la
-> canónica que sirve hoy dice `https://reyna-de-real-estate.netlify.app/`** — verificado en vivo el
-> 10/11. O sea que cada página del dominio nuevo le está diciendo a Google que la versión de verdad
-> está en la dirección vieja. Se arregla borrando la variable y volviendo a desplegar.
+> ✅ **Resuelto el 11/11.** Se borró `PUBLIC_SITE_URL` de Netlify y se desplegó. Verificado en vivo:
+> la canónica y el `og:url` dicen `https://reynaderealestate.com/`, y el mapa del sitio trae sus 16
+> direcciones en el dominio propio. En el mismo despliegue entró la guía de la clienta.
 >
 > ⚠️ **El detalle completo, para la próxima vez.** Hoy vale
 > `https://reyna-de-real-estate.netlify.app` y de ahí salen **todas las canónicas, los `og:url` y el
