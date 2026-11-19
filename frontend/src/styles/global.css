@@ -146,7 +146,15 @@
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .aparece {
-      animation: aparecer linear both;
+      /* ⚠️ Sueltas, NO con el atajo `animation` — ver el comentario largo en
+         `BarraSuperior.astro`. El minificador mete `animation-timeline`
+         dentro del atajo, los navegadores descartan la declaración entera y
+         el efecto no llega al sitio construido. Acá el fallo es benigno
+         —el contenido queda visible, que es lo que importa— pero la
+         aparición no se veía desde el primer despliegue. */
+      animation-name: aparecer;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
       animation-timeline: view();
       /* Se completa cuando el elemento entró un 40% en pantalla. */
       animation-range: entry 0% entry 40%;

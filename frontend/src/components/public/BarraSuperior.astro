@@ -132,16 +132,40 @@ const enlaces = [
      claras. Verde sólido se ve distinto al diseño, pero siempre se lee.
 
      Es el principio de D-14: cuando el efecto no corre, se ve el contenido
-     sin efecto. Nunca al revés. */
+     sin efecto. Nunca al revés.
+
+     Por eso **la transparencia no se declara acá, sale del fotograma `from`**
+     con `animation-fill-mode: both`. Antes estaba declarada suelta dentro del
+     `@supports`, y cuando la animación se perdió en el minificado la barra
+     quedó transparente para siempre: el único estado que esto no puede tener.
+     Saliendo del fotograma, si la animación no corre no hay transparencia. */
   .barra-sobre-hero {
     background-color: var(--color-verde);
   }
 
   @supports (animation-timeline: scroll()) {
     .barra-sobre-hero {
-      background-color: transparent;
-      animation: pintar-barra linear both;
-      animation-timeline: scroll();
+      /* ⚠️ Estas cinco propiedades van sueltas, NO con el atajo `animation`.
+         No es estilo: con el atajo el efecto no llega al sitio construido.
+
+         El minificador de CSS mete `animation-timeline` dentro del atajo y
+         escribe `animation: linear both pintar-barra scroll()`. Los
+         navegadores no aceptan la línea de tiempo dentro del atajo, así que
+         descartan la declaración entera: `animation-name` queda en `none` y
+         no pasa nada. Escritas sueltas, el minificador las deja intactas.
+
+         Escrito al revés **se rompe sin que nada avise**, porque el
+         `@supports` sí pasa: el navegador soporta la propiedad, es el atajo
+         lo que no acepta. Pasó: la barra quedó transparente sobre las
+         secciones claras, con el logo blanco invisible.
+
+         Si alguien vuelve a juntarlas, se nota mirando el sitio construido:
+         `getComputedStyle(header).animationName` tiene que decir
+         `pintar-barra`, no `none`. */
+      animation-name: pintar-barra;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root);
       /*
         La transparencia dura casi todo el hero, no 120 píxeles.
 

@@ -2747,3 +2747,84 @@ No avisa de ninguna forma: el sitio funciona perfecto y el daño es invisible. Q
 > Apareció por un camino lateral: nadie estaba revisando canónicas. Salió de preguntarse por qué el mapa decía `localhost`.
 
 `astro check`: 0 errores, 0 advertencias · ESLint: 0 · **323 pruebas en verde** · `astro build`: completo contra la base real
+
+---
+
+## El encabezado no se pintaba: el minificador se comía la animación
+
+**2026-11-19.** El encabezado quedaba transparente para siempre en la portada. No era una
+regresión del diseño: el CSS del repositorio estaba bien escrito y el efecto nunca llegaba al
+sitio construido.
+
+### Qué pasaba
+
+En el sitio en vivo, sobre el encabezado:
+
+```
+animationName:     "none"        ← la declaración entera descartada
+animationTimeline: "auto"
+backgroundColor:   "rgba(0,0,0,0)"  a 913 px de scroll
+```
+
+El origen está en el minificado. El CSS fuente dice:
+
+```css
+animation: pintar-barra linear both;
+animation-timeline: scroll();
+```
+
+y Lightning CSS lo junta en el atajo:
+
+```css
+animation: linear both pintar-barra scroll()
+```
+
+**Los navegadores no aceptan la línea de tiempo dentro del atajo `animation`.** La declaración
+es inválida, se descarta completa, y `animation-name` queda en `none`. Reproducido en frío
+pasando el fragmento por el minificador a mano: con el atajo lo junta, con las propiedades
+sueltas las deja intactas.
+
+### Por qué no avisó nada
+
+Porque el `@supports (animation-timeline: scroll())` **sí pasa**. El navegador soporta la
+propiedad; lo que no acepta es el atajo. Así que la rama del respaldo —verde sólido, pensada
+justamente para esto— nunca se activó, y el bloque dejaba el fondo transparente a mano.
+
+Resultado: el único estado que el comentario del archivo decía que no podía pasar nunca. Logo
+y menú blancos sobre las secciones claras.
+
+### Los dos arreglos
+
+**1 · Propiedades sueltas, no el atajo.** Verificado contra el `dist/`: sobreviven enteras.
+
+**2 · La transparencia sale del fotograma `from`, no de una declaración suelta.** Era lo que
+convertía un efecto perdido en un encabezado ilegible. Con `animation-fill-mode: both`, antes
+del rango el navegador aplica el fotograma inicial, así que el efecto se ve igual — pero si la
+animación vuelve a perderse, **el fondo se queda verde**. El fallo pasa de invisible a obvio.
+
+De paso, `scroll()` → `scroll(root)`: para una barra fija, atar el efecto al scroll de la
+página es lo que se quiere decir, y no depende de qué ancestro sea contenedor de scroll.
+
+### No estaba sola
+
+`global.css` tenía el mismo atajo para la aparición de las secciones (`.aparece`, con `view()`),
+y estaba igual de descartada: `animationName: "none"` en vivo. **La aparición al scrollear no se
+vio nunca desde el primer despliegue.** Ahí el fallo era benigno —el contenido queda visible,
+que es lo que el comentario pedía— por eso nadie lo notó en meses.
+
+### Verificado sobre el sitio construido
+
+| Posición             | Fondo del encabezado      | Sombra  |
+| -------------------- | ------------------------- | ------- |
+| arriba del todo      | `rgba(0,0,0,0)`           | ninguna |
+| 70% de la pantalla   | `rgba(30,79,76,0.5)`      | media   |
+| 86% de la pantalla   | `rgb(30,79,76)`           | entera  |
+
+`animationName: "pintar-barra"` · `animationTimeline: "scroll(root)"`
+
+**La lección**: un `@supports` comprueba que el navegador entiende la propiedad, no que la
+declaración que escribiste haya sobrevivido al minificador. Cuando lo que se protege es la
+legibilidad, el estado seguro tiene que salir de la propia animación, no de una declaración
+que la acompaña.
+
+`astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde** · `astro build`: completo contra la base real
