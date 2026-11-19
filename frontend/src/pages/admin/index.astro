@@ -1,5 +1,6 @@
 ---
 import Panel from '../../layouts/Panel.astro';
+import AvisoGoogle from '../../components/admin/AvisoGoogle.astro';
 import { obtenerResumen, obtenerUltimasConsultas } from '../../lib/panel';
 import { fechaLegible } from '../../lib/articulos';
 
@@ -58,9 +59,20 @@ const contadores = [
 ].map((c) => ({ ...c, texto: c.n === 1 ? c.uno : c.varias }));
 
 const primerNombre = sesion?.name?.split(' ')[0] ?? '';
+
+/**
+ * El recordatorio de Google es sólo para quien puede hacer algo con él.
+ *
+ * Abrir el sitio a los buscadores es una decisión de la dueña del negocio, no
+ * de alguien invitado a cargar contenido. A esa persona el recuadro le pediría
+ * una gestión que no le corresponde y que no puede resolver.
+ */
+const completo = (sesion?.rol ?? 'completo') === 'completo';
 ---
 
 <Panel titulo="Tablero" usuario={sesion?.name}>
+  {completo && <AvisoGoogle />}
+
   <p class="text-texto-suave">
     {primerNombre ? `Hola, ${primerNombre}.` : 'Hola.'} Esto es lo que hay hoy.
   </p>
@@ -150,4 +162,6 @@ const primerNombre = sesion?.name?.split(' ')[0] ?? '';
       )
     }
   </section>
+
+  {completo && <script is:inline defer src="/js/aviso-google.js" />}
 </Panel>

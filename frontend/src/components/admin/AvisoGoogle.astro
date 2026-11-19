@@ -1,0 +1,54 @@
+---
+/**
+ * Recordatorio en el tablero: el sitio todavía no aparece en Google.
+ *
+ * No es un adorno — es la pieza que cierra una acción pendiente de la entrega
+ * (A-11). El bloqueo a los buscadores está puesto a propósito mientras el
+ * catálogo sea de muestra, y **sólo se puede quitar cuando la clienta tenga
+ * cargadas sus propiedades de verdad**. Nadie más que ella sabe cuándo pasa
+ * eso, así que el aviso existe para que se acuerde de avisar.
+ *
+ * **Arranca escondido y lo muestra el script**, no al revés. Si estuviera
+ * visible por omisión, quien ya lo descartó vería el recuadro aparecer y
+ * desaparecer en cada visita al panel, para siempre. El panel ya depende de
+ * JavaScript en casi todas sus pantallas (D-16 lo admite acá, no en el sitio
+ * público), así que el costo de esta decisión es una pantalla sin JavaScript
+ * que no ve el recordatorio — y la ganancia es que quien lo vio no lo sufra
+ * en cada entrada.
+ *
+ * El descarte vive en el navegador, no en la base. Es deliberado: no agrega
+ * una clave de configuración ni una migración por un recordatorio temporal, y
+ * si ella cambia de equipo lo vuelve a ver, que para un recordatorio no es un
+ * defecto.
+ */
+---
+
+<aside
+  data-aviso-google
+  hidden
+  class="mb-6 rounded-[var(--radius-card)] border border-[#e3d7bd] bg-[#fbf6ea] p-5"
+>
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="max-w-prose">
+      <h2 class="font-titulo text-lg text-[#8a6a28]">
+        Tu sitio todavía no aparece en Google
+      </h2>
+      <p class="mt-2 text-sm text-texto-suave">
+        Es a propósito. Mientras el catálogo sea de muestra, lo que encontraría alguien que te
+        busque son propiedades que no existen, con precios que no existen, bajo tu nombre.
+      </p>
+      <p class="mt-2 text-sm text-texto-suave">
+        <strong class="text-texto">Cuando tengas cargadas tus propiedades, avisale a Musapp.</strong>{' '}
+        Es un cambio de dos minutos, y recién ahí tu sitio empieza a aparecer en las búsquedas.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      data-aviso-google-ocultar
+      class="min-h-[44px] shrink-0 rounded-full border border-[#c9ab6a] px-5 text-sm font-semibold text-[#8a6a28] transition-colors hover:bg-[#f2e7cd]"
+    >
+      Ya le avisé
+    </button>
+  </div>
+</aside>

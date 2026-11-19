@@ -18,8 +18,8 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | Hito 1 · Visitante      | 6      | ✅ 6/6                                                       |
 | Hito 2 · Administración | 8      | ✅ 8/8 · **cerrado** (incluye UJ-08b)                        |
 | Hito 3 · Contenido      | 3      | ✅ 3/3 (UJ-14, UJ-15, UJ-16)                                 |
-| Hito 4 · Autonomía      | 3      | ✅ 3/3 · **cerrado y probado en vivo** (UJ-17, UJ-18, UJ-19) |
-| **Total**               | **32** | **28 terminadas · 4 parciales**                              |
+| Hito 4 · Autonomía      | 4      | ✅ 4/4 · **probado en vivo** (UJ-17 a UJ-19) + UJ-20         |
+| **Total**               | **33** | **29 terminadas · 4 parciales**                              |
 
 > Las IT-09 a IT-12 figuran en la tabla del Hito 3 por orden de trabajo, pero se cuentan
 > como infraestructura. Antes se contaban en los dos lados: de ahí los números inflados.
@@ -31,7 +31,7 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | IT-12 · abrir el sitio a Google (A-11) y transferir (A-08)  | Musapp        | la entrega                  |
 | IT-09 · medir el peso de la portada con las fotos reales    | espera a A-04 | la auditoría de rendimiento |
 | IT-06 · ver llegar un aviso de consulta nueva a la bandeja  | Musapp        | nada: es una comprobación   |
-| IT-08 · `docker compose up` nunca se levantó                | Musapp        | nada: Netlify ya sirve      |
+| IT-08 · `docker compose up` no levanta el almacenamiento    | decisión      | nada: Netlify ya sirve      |
 
 ---
 
@@ -120,7 +120,7 @@ Bloquean la entrega pero no son código.
 | ~~A-05~~ | ~~Confirmar a qué mail llegan las consultas~~ ✅ **Resuelto** (2026-08-23): `reynaderealestate@gmail.com`, confirmado por la clienta                                                                                   | —                | —                        |
 | A-06     | Confirmar derechos de uso de fotos de cartera compartida                                                                                                                                                               | Clienta          | Antes de publicar (R-07) |
 | A-07     | **Confirmar el alcance final por escrito con la clienta.** El borrador vive fuera del repositorio                                                                                                                      | Musapp           | **Antes de construir**   |
-| A-12     | **Marcar `RESEND_API_KEY` como "Contains secret values" en Netlify.** Hoy la clave se lee desde la interfaz, la API, el registro de construcción y la línea de comandos                                                | Musapp           | Antes de la entrega      |
+| ~~A-12~~ | ~~Marcar `RESEND_API_KEY` como "Contains secret values"~~ ✅ **Resuelto el 19/11**: marcada como secreta y limitada a Builds, Functions y Runtime                                                                      | —                | —                        |
 
 ---
 
@@ -134,6 +134,7 @@ clienta no dependa de nadie después de la transferencia.
 | UJ-17 | Recuperar la contraseña             | ✅     | Token cifrado en la base, vence en 1 h, un solo uso. El enlace se arma con el dominio configurado, no con `Host`        |
 | UJ-18 | Dar acceso a alguien desde el panel | ✅     | Invitar manda un enlace, nunca una contraseña. Barandas: nadie se quita a sí misma ni deja el panel sin acceso completo |
 | UJ-19 | Permisos por rol                    | ✅     | `completo` y `contenido`. Lo reservado: propietarios, configuración y usuarios                                          |
+| UJ-20 | Recordar que el sitio no está en Google | ✅     | Recuadro en el tablero, sólo para acceso completo. El botón dice "Ya le avisé", no "Entendido"                          |
 
 **Cerrado el 19/11.** La migración `0006` se aplicó en la base de la clienta, se desplegó y se probó
 en vivo: recuperar la contraseña, invitar con permiso de contenido y comprobar que los propietarios
@@ -145,6 +146,7 @@ no aparecen con ese acceso.
 
 | Fecha      | Evento                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-19 | **IT-08 probado con Docker ya instalado.** Postgres levanta sano y acepta el esquema entero; MinIO no, porque retiró sus imágenes públicas de los dos registros. Queda como decisión, no como arreglo. Mismo día: UJ-20 y la corrección de A-11, que mandaba quitar tres cabeceras cuando sólo una era del bloqueo temporal — las otras dos esconden el panel |
 | 2026-11-19 | **Hito 4 en vivo y probado de punta a punta con la clienta.** Migración `0006` aplicada, despliegue encendido, y verificado con ella: recuperó la contraseña sola, invitó un acceso de contenido y comprobó que los propietarios no aparecen. Correo de recuperación recibido de verdad: primer envío real de Resend confirmado |
 | 2026-08-20 | Brief completado a partir del documento de la clienta y las referencias visuales                                                                                                                                                                                                                                                                                                                              |
 | 2026-08-20 | Planificación v1: alcance amplio, bilingüe, con CMS de noticias                                                                                                                                                                                                                                                                                                                                               |

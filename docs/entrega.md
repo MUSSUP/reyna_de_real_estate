@@ -157,7 +157,7 @@ no usa la página 500 propia): se importa `createHandler` de `.netlify/build/ent
 | **Recuperar la contraseña**      | ✅ Resuelto el 11/11 (UJ-17)                                                                 | La clienta la recupera sola desde el ingreso. `npm run db:crear-admin` queda sólo como salida de emergencia                                                |
 | **Subir el video de la portada** | El campo del panel acepta una ruta, pero el archivo tiene que ir en `frontend/public/video/` | Cambiarlo necesita a alguien con el código                                                                                                                 |
 | **Permisos por rol**             | ✅ Resuelto el 11/11 (UJ-18 y UJ-19)                                                         | Dos roles. El de contenido no ve los propietarios, ni la configuración, ni los usuarios. Se invita desde el panel y cada persona pone su propia contraseña |
-| **Docker**                       | Probar `docker compose up`                                                                   | Docker no estaba instalado en el equipo de desarrollo                                                                                                      |
+| **Docker**                       | `docker compose up` **no levanta entero**                                                    | Probado el 19/11: Postgres arranca sano y acepta las migraciones. MinIO no: retiró sus imágenes públicas de Docker Hub y de quay.io, así que no hay de dónde bajarlas |
 | **Sitio bilingüe**               | —                                                                                            | Fuera de alcance por decisión: el costo real es obligar a la clienta a cargar todo dos veces, para siempre                                                 |
 | **Integración con EstateWave**   | —                                                                                            | Proyecto aparte. Su especificación tenía tres huecos de seguridad y choca con el modelo de reconstrucción                                                  |
 
@@ -171,7 +171,7 @@ no usa la página 500 propia): se importa `createHandler` de `.netlify/build/ent
 | A-08 | Transferir dominio y repositorio. **Activar segundo factor en Supabase, Netlify y el correo de la marca antes** | pendiente                |
 | A-09 | Definir el nombre de marca: el logo dice una cosa y el pie otra, en la misma página                             | pendiente de ella        |
 | A-10 | Que la clienta ponga su propia contraseña — **lo hace ella desde "¿Olvidaste tu contraseña?"**                  | hecho el 19/11           |
-| A-12 | Marcar `RESEND_API_KEY` como **"Contains secret values"** en Netlify — hoy se lee desde la interfaz             | pendiente                |
+| A-12 | ~~Marcar `RESEND_API_KEY` como "Contains secret values" en Netlify~~                                            | hecho el 19/11           |
 | A-11 | Abrir el sitio a Google                                                                                         | **preparado**: ver abajo |
 
 ### El DNS: un solo registro para la raíz, o el certificado no sale
@@ -245,11 +245,17 @@ propiedades, las noticias con su paginado y los informes.
   Abrir el sitio a los buscadores con dos nombres es enseñarles a no reconocer ninguno.
 
 Cumplidas esas dos, y con el dominio ya apuntado y la variable borrada —indexar la dirección de
-Netlify sería enseñarle a Google una dirección que se va a abandonar—, son **tres** pasos:
+Netlify sería enseñarle a Google una dirección que se va a abandonar—, son **cuatro** pasos:
 
 1. Borrar `frontend/public/robots.txt`.
-2. Quitar las tres cabeceras `X-Robots-Tag = "noindex, nofollow"` de `netlify.toml`.
-3. Empujar con `[desplegar]` en el mensaje.
+2. Quitar **una sola** cabecera `X-Robots-Tag = "noindex, nofollow"` de `netlify.toml`: la del
+   bloque `for = "/*"`. ⚠️ **Las otras dos se quedan donde están.** Son las de `/api/*` y
+   `/admin/*`, y lo que hacen es mantener el panel y las respuestas del formulario fuera de los
+   buscadores. Sacarlas sería publicar la puerta de entrada al panel en Google.
+3. Borrar el recordatorio del tablero, que ya no tendría sentido: el componente
+   `frontend/src/components/admin/AvisoGoogle.astro`, su script `frontend/public/js/aviso-google.js`
+   y las tres líneas que lo usan en `frontend/src/pages/admin/index.astro`.
+4. Empujar con `[desplegar]` en el mensaje.
 
 La primera sin la segunda no sirve: la cabecera manda sobre el archivo.
 

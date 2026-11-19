@@ -2828,3 +2828,84 @@ legibilidad, el estado seguro tiene que salir de la propia animación, no de una
 que la acompaña.
 
 `astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde** · `astro build`: completo contra la base real
+
+---
+
+## IT-08 probado de verdad, y UJ-20: el recordatorio del tablero
+
+**2026-11-19.** Docker ya está instalado en el equipo, así que por fin se pudo correr lo único
+que quedaba sin verificar de IT-08.
+
+### Postgres: anda, y acepta el esquema entero
+
+`docker compose up -d db` levanta el contenedor sano en doce segundos, y las migraciones corren
+contra él sin tocar nada:
+
+```
+PostgreSQL 17.12 on aarch64-unknown-linux-musl
+15 tablas creadas, password_resets incluida
+```
+
+Eso valida la mitad que importa de RNF-07: el proyecto **se puede mudar a un Postgres propio**
+sin cambiar una línea. No era obvio; la base real siempre fue Supabase.
+
+### MinIO: las imágenes ya no existen
+
+`docker compose up -d` falla entero, y no por el archivo:
+
+```
+pull access denied for minio/mc, repository does not exist
+```
+
+Comprobado: `minio/minio` y `minio/mc` **ya no están en Docker Hub** —la API del registro
+responde `object not found` para los repositorios, no para una etiqueta—, y en `quay.io`
+responden `401`. MinIO retiró sus imágenes públicas. No es una etiqueta mal puesta ni algo que
+se arregle fijando una versión: no hay de dónde bajarlas.
+
+Queda anotado como decisión pendiente, **no como arreglo automático**: cambiar el almacenamiento
+local por otro servidor compatible con S3 es elegir una dependencia nueva para el plan B de
+RNF-07, y eso no se decide dentro de una verificación. El sitio no lo usa: en producción el
+almacenamiento es Supabase y funciona.
+
+De paso quedó a la vista que el `docker-compose.yml` usaba `:latest` en los dos servicios de
+MinIO, aunque la bitácora de agosto decía "versiones fijadas". Era cierto sólo para Postgres.
+
+### UJ-20 · El recordatorio de Google en el tablero
+
+Pedido para que la clienta avise cuando tenga sus propiedades cargadas: hasta ese día el sitio
+no puede abrirse a los buscadores, y nadie más que ella sabe cuándo llega.
+
+Tres decisiones que no son obvias:
+
+**Arranca escondido y lo muestra el script, no al revés.** Visible por omisión, quien ya lo
+descartó vería el recuadro aparecer y desaparecer en cada entrada al panel, para siempre. El
+costo —una pantalla sin JavaScript que no ve el recordatorio— es aceptable: el panel ya depende
+de JavaScript en casi todas sus pantallas, y el sitio público, que es donde la regla manda, no
+cambia.
+
+**El botón dice "Ya le avisé", no "Entendido".** Con "Entendido" el recordatorio se descarta el
+primer día sin que haya pasado nada, que es justo lo que había que evitar. El botón nombra la
+acción que de verdad lo vuelve innecesario.
+
+**Sólo lo ve quien tiene acceso completo.** Abrir el sitio a los buscadores es decisión de la
+dueña del negocio. A alguien invitado a cargar contenido el recuadro le pediría una gestión que
+no le toca y que no puede resolver.
+
+El descarte vive en el navegador, no en la base: un recordatorio temporal no justifica una clave
+de configuración ni una migración, y si ella cambia de equipo lo vuelve a ver — que para un
+recordatorio no es un defecto. Toda lectura de `localStorage` va dentro de un `try`: en una
+ventana privada no devuelve `null`, **lanza**, y sin el `try` el script se corta antes de mostrar
+nada.
+
+### Un error en el documento de entrega que podía costar caro
+
+El paso 2 de A-11 decía **"quitar las tres cabeceras `X-Robots-Tag`"**. Son tres, pero sólo una
+es la del bloqueo temporal: las otras dos mantienen `/admin/*` y `/api/*` fuera de los
+buscadores. Seguir esa instrucción al pie de la letra **habría publicado la puerta del panel en
+Google** el mismo día de la entrega. Corregido, con la advertencia al lado.
+
+Verificado en el panel contra el Postgres de Docker: el recuadro aparece, "Ya le avisé" lo
+esconde, y al recargar sigue escondido sin parpadeo —el servidor lo manda con `hidden`—. En
+celular entra entero, con el botón de 44 px.
+
+`astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde**
