@@ -23,7 +23,7 @@ despliegue**, que era la trampa que había aparecido tres veces.
 ✅ IT-01 a IT-05, IT-07 — esqueleto, base, imágenes, autenticación, diseño, datos de demostración
 ✅ IT-10 · Auditoría de seguridad final — **hecha** (commit `d514e42`). No rehacerla
 ✅ IT-11 · Verificación con y sin datos — hecha, las dos mitades. **No cubrió el panel**; eso lo revisó la revisión final
-🟡 IT-06 · Envío de correo — **la cuenta de Resend quedó conectada y salió un correo real el 19/11** (el de recuperar la contraseña, recibido en la bandeja). Falta ver llegar un **aviso de consulta nueva**, que es otra plantilla
+✅ IT-06 · Envío de correo — **cerrada el 19/11**. Resend conectado, y llegaron de verdad las dos plantillas: el enlace para recuperar la contraseña y el aviso de consulta nueva
 🟡 IT-08 · Docker y despliegue — desplegado y funcionando en Netlify; falta probar `docker compose up` (Docker no está instalado en el equipo)
 🟡 IT-09 · Rendimiento y accesibilidad — menú móvil, título invisible y destinos táctiles resueltos. **Falta medir el peso de la portada con las fotos reales de Laura**
 🟡 IT-12 · Despliegue y entrega — dominio apuntado ✅, guía en `/admin/ayuda` ✅, `docs/entrega.md` ✅, `sitemap.xml` ✅. **Falta abrir el sitio a Google (A-11) y transferir (A-08)**

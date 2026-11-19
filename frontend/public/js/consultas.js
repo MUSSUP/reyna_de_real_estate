@@ -23,7 +23,7 @@
       (tono === 'ok' ? 'bg-[#e4ede9] text-[#1e4f4c]' : 'bg-red-50 text-red-800');
   }
 
-  function guardar(id, cambios, fila) {
+  function guardar(id, cambios, alSalirBien) {
     fetch('/api/admin/leads/' + id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -38,11 +38,43 @@
           return;
         }
         decir('Guardado.', 'ok');
-        if (cambios.estado) pintarSello(fila, cambios.estado);
+        if (alSalirBien) alSalirBien();
       })
       .catch(function () {
         decir('No pudimos conectar. El cambio no se guardó.', 'error');
       });
+  }
+
+  /** El estado por el que está filtrando la pantalla ahora mismo, si hay uno. */
+  function filtroDeEstado() {
+    try {
+      return new URLSearchParams(window.location.search).get('status') || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Corrige los contadores del desplegable de filtros sin recargar.
+   *
+   * Son los números entre paréntesis —"Nueva (3)"— y salen del servidor al
+   * cargar la página. Si no se tocan, después de mover una consulta de estado
+   * prometen un recuento que ya no existe.
+   */
+  function moverConteo(desde, hacia) {
+    var filtro = document.getElementById('f-estado');
+    if (!filtro || desde === hacia) return;
+
+    for (var i = 0; i < filtro.options.length; i++) {
+      var opcion = filtro.options[i];
+      if (opcion.value !== desde && opcion.value !== hacia) continue;
+
+      var paso = opcion.value === hacia ? 1 : -1;
+      // El texto es "Etiqueta (n)". Se reescribe sólo el número del final.
+      opcion.textContent = opcion.textContent.replace(/\((\d+)\)\s*$/, function (_, n) {
+        return '(' + Math.max(0, parseInt(n, 10) + paso) + ')';
+      });
+    }
   }
 
   var ETIQUETAS = {
@@ -75,7 +107,34 @@
     if (!campo.hasAttribute || !campo.hasAttribute('data-estado')) return;
     var fila = campo.closest('[data-consulta]');
     if (!fila) return;
-    guardar(fila.getAttribute('data-consulta'), { estado: campo.value }, fila);
+
+    var anterior = campo.getAttribute('data-estado-actual') || '';
+    var nuevo = campo.value;
+
+    guardar(fila.getAttribute('data-consulta'), { estado: nuevo }, function () {
+      /**
+       * Si la pantalla está filtrada por estado y esta consulta acaba de salir
+       * del filtro, **se recarga.**
+       *
+       * Antes se quedaba en la lista con el sello nuevo puesto, o sea una
+       * pantalla que dice "Cerradas" arriba y muestra una "Nueva" abajo. Daba
+       * toda la impresión de que el filtro no funcionaba — y el filtro estaba
+       * bien; lo que mentía era la lista.
+       *
+       * Recargar y no sacar la fila a mano es deliberado: el servidor vuelve a
+       * decir qué entra y qué no, y no hay dos versiones de la verdad que se
+       * puedan separar con el uso.
+       */
+      var filtro = filtroDeEstado();
+      if (filtro && nuevo !== filtro) {
+        window.location.reload();
+        return;
+      }
+
+      campo.setAttribute('data-estado-actual', nuevo);
+      pintarSello(fila, nuevo);
+      moverConteo(anterior, nuevo);
+    });
   });
 
   document.addEventListener('input', function (e) {
@@ -87,7 +146,7 @@
     var id = fila.getAttribute('data-consulta');
     if (pendientes[id]) window.clearTimeout(pendientes[id]);
     pendientes[id] = window.setTimeout(function () {
-      guardar(id, { notas: campo.value }, fila);
+      guardar(id, { notas: campo.value });
     }, 800);
   });
 })();

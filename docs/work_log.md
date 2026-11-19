@@ -2929,3 +2929,73 @@ porque le enseña algo incorrecto a quien lo lea después.
 
 De paso, un susto que no era: `/propiedades` parecía no llevar la cabecera. Era un `301` hacia
 `/propiedades/`, y la redirección no la lleva. Con la barra final, `200` y cabecera puesta.
+
+---
+
+## El filtro de consultas no mentía: mentía la lista
+
+**2026-11-19.** Reportado como *"el filtro de las consultas no filtra correctamente por estado"*.
+
+Lo primero fue descartar lo obvio. Ejercitando `listarConsultas` contra la base real, estado por
+estado:
+
+```
+nuevo       -> 1 de 1    contactado -> 1 de 1
+cerrado     -> 0 de 0    descartado -> 5 de 5
+```
+
+**La consulta está bien.** El defecto estaba en la pantalla, y se reproduce en dos pasos: filtrar
+por un estado, y cambiarle el estado a una de las filas que quedaron.
+
+```
+Filtro arriba:  Cerrada
+Lista abajo:    Nueva · Cerrada · Cerrada
+```
+
+La fila se quedaba con el sello nuevo puesto, contradiciendo al filtro de arriba. Y los
+contadores del desplegable —"Cerrada (3)"— seguían diciendo los números de cuando cargó la
+página. Al apretar "Filtrar" otra vez la fila desaparecía, así que desde afuera parecía un filtro
+que anda a veces sí y a veces no.
+
+### El arreglo, y por qué no saco la fila a mano
+
+**Si la pantalla está filtrada por estado y la consulta acaba de salir del filtro, se recarga.**
+Sacar la fila del DOM sería más suave, pero deja dos versiones de la verdad —la del servidor y la
+que el script fue parcheando— que se separan con el uso. Recargando, el servidor vuelve a decir
+qué entra y qué no, y de paso los contadores quedan bien solos.
+
+**Sin filtro activo no se recarga**: ahí la consulta sigue perteneciendo a la lista, no hay nada
+que contradecir, y recargar mientras ella repasa la bandeja sería peor que el problema. En ese
+caso se actualiza el sello y **se corrigen los dos contadores** —uno baja, el otro sube—.
+Verificado contra lo que devuelve el servidor en el mismo momento: coinciden.
+
+De paso, `guardar` recibía la fila para repintarla; ahora recibe **qué hacer cuando salió bien**.
+Las notas, que comparten esa función, no necesitan nada después de guardar y no pasan nada.
+
+**No hay prueba automática de esto**: todas las pruebas del proyecto son de backend, y esto vive
+en el JavaScript del navegador. Montar un entorno de DOM para cubrirlo es sumar una dependencia,
+y no se decide dentro de un arreglo.
+
+## Borradas las consultas de prueba
+
+A pedido de Mar, con la lista a la vista y confirmada antes de tocar nada: **las cinco de agosto**
+(`spam@ejemplo.com`, Diego Fuentes, Sofía Lambert, Martín Oliveira, Ana Restrepo), todas en estado
+Descartada. Quedan las dos reales del 19/11.
+
+El script se negaba a borrar si no encontraba exactamente cinco. No por elegancia: es lo que
+evita que un corte de fecha mal puesto se lleve algo que importa.
+
+## IT-06 cerrada
+
+Llegó el aviso de consulta nueva a la bandeja. Con el de recuperar la contraseña, que ya había
+llegado, **las dos plantillas están vistas en un correo real**. Era lo último del envío de correo
+que seguía siendo teoría.
+
+## El encabezado, ajustado
+
+A pedido de Mar: el verde entero llega ahora al **70%** de la pantalla en vez de al 85%. Arriba
+del todo sigue transparente. Entre el 55% y el 70% se pinta, y de ahí hasta abajo se queda. Se
+nota bajando rápido, que es como se baja: antes el verde llegaba justo cuando ya había aparecido
+la sección clara.
+
+`astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde**

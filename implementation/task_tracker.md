@@ -14,12 +14,12 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 
 | Bloque                  | Tareas | Estado                                                       |
 | ----------------------- | ------ | ------------------------------------------------------------ |
-| Infraestructura         | 12     | 🟢 8/12 · 4 parciales (IT-06, IT-08, IT-09, IT-12)           |
+| Infraestructura         | 12     | 🟢 9/12 · 3 parciales (IT-08, IT-09, IT-12)                  |
 | Hito 1 · Visitante      | 6      | ✅ 6/6                                                       |
 | Hito 2 · Administración | 8      | ✅ 8/8 · **cerrado** (incluye UJ-08b)                        |
 | Hito 3 · Contenido      | 3      | ✅ 3/3 (UJ-14, UJ-15, UJ-16)                                 |
 | Hito 4 · Autonomía      | 4      | ✅ 4/4 · **probado en vivo** (UJ-17 a UJ-19) + UJ-20         |
-| **Total**               | **33** | **29 terminadas · 4 parciales**                              |
+| **Total**               | **33** | **30 terminadas · 3 parciales**                              |
 
 > Las IT-09 a IT-12 figuran en la tabla del Hito 3 por orden de trabajo, pero se cuentan
 > como infraestructura. Antes se contaban en los dos lados: de ahí los números inflados.
@@ -30,7 +30,6 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | ----------------------------------------------------------- | ------------- | --------------------------- |
 | IT-12 · abrir el sitio a Google (A-11) y transferir (A-08)  | Musapp        | la entrega                  |
 | IT-09 · medir el peso de la portada con las fotos reales    | espera a A-04 | la auditoría de rendimiento |
-| IT-06 · ver llegar un aviso de consulta nueva a la bandeja  | Musapp        | nada: es una comprobación   |
 | IT-08 · `docker compose up` no levanta el almacenamiento    | decisión      | nada: Netlify ya sirve      |
 
 ---
@@ -44,7 +43,7 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 | IT-03 | Imágenes y almacenamiento (portada + galería) | ✅     |
 | IT-04 | Autenticación                                 | ✅     |
 | IT-05 | Sistema de diseño                             | ✅     |
-| IT-06 | Envío de correo                               | 🟡     |
+| IT-06 | Envío de correo                               | ✅     |
 | IT-07 | Datos de demostración                         | ✅     |
 | IT-08 | Entorno Docker y despliegue                   | 🟡     |
 
@@ -146,6 +145,7 @@ no aparecen con ese acceso.
 
 | Fecha      | Evento                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-19 | **IT-06 cerrada**: llegó el aviso de consulta nueva, así que las dos plantillas de correo están vistas en una bandeja real. Arreglado el filtro de consultas —filtraba bien, mentía la lista: una fila que cambiaba de estado se quedaba contradiciendo al filtro—. Borradas las cinco consultas de prueba de agosto, con la lista confirmada antes. Encabezado ajustado: verde entero al 70% |
 | 2026-11-19 | **IT-08 probado con Docker ya instalado.** Postgres levanta sano y acepta el esquema entero; MinIO no, porque retiró sus imágenes públicas de los dos registros. Queda como decisión, no como arreglo. Mismo día: UJ-20 y la corrección de A-11, que mandaba quitar tres cabeceras cuando sólo una era del bloqueo temporal — las otras dos esconden el panel |
 | 2026-11-19 | **Hito 4 en vivo y probado de punta a punta con la clienta.** Migración `0006` aplicada, despliegue encendido, y verificado con ella: recuperó la contraseña sola, invitó un acceso de contenido y comprobó que los propietarios no aparecen. Correo de recuperación recibido de verdad: primer envío real de Resend confirmado |
 | 2026-08-20 | Brief completado a partir del documento de la clienta y las referencias visuales                                                                                                                                                                                                                                                                                                                              |

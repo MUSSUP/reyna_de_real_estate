@@ -256,9 +256,14 @@ const urlExport = `/api/admin/leads/export${queryExport.size ? `?${queryExport}`
                 >
                   Estado
                 </label>
+                {/* `data-estado-actual` guarda el estado que tiene hoy. Lo lee el
+                    script para saber de qué contador restar cuando cambia, y
+                    para no quedarse mostrando una consulta que acaba de salir
+                    del filtro activo. */}
                 <select
                   id={`estado-${c.id}`}
                   data-estado
+                  data-estado-actual={c.estado}
                   class="min-w-[150px] rounded-[var(--radius-campo)] border border-black/10 bg-white px-3 py-2 text-sm"
                 >
                   {ESTADOS_CONSULTA.map((e) => (

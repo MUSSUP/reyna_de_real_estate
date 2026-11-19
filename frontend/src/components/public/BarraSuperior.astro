@@ -170,15 +170,18 @@ const enlaces = [
         La transparencia dura casi todo el hero, no 120 píxeles.
 
         El hero mide una pantalla completa (`min-h-[100svh]`). Con el rango
-        viejo la barra ya estaba verde sólido a los 120 px de scroll: se
+        original la barra ya estaba verde sólido a los 120 px de scroll: se
         oscurecía apenas empezabas a bajar, con el video todavía a la vista.
+        Arriba del todo tiene que quedar transparente, y queda.
 
-        Ahora arranca a pintarse recién al 55% de la pantalla y termina al
-        85%, o sea justo antes de que el hero salga de cuadro y aparezca la
-        sección clara de abajo — que es donde el verde hace falta para que el
-        logo y el menú, que son blancos, se sigan leyendo.
+        Termina al 70% de la pantalla, no al 85%: así el verde está entero
+        **antes** de que aparezca la sección clara de abajo, en vez de llegar
+        justo. Se nota sobre todo bajando rápido, que es como se baja. Entre
+        el 55% y el 70% la barra se pinta, y de ahí hasta abajo se queda
+        verde sólido: el logo y el menú, que son blancos, nunca quedan sobre
+        un fondo claro.
       */
-      animation-range: 55vh 85vh;
+      animation-range: 55vh 70vh;
     }
   }
 
