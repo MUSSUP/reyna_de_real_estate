@@ -88,6 +88,15 @@ Google (A-11, que depende de las dos anteriores) y la transferencia con segundo 
 > **Apuntar el dominio no obliga a abrir el sitio a Google** (A-11): eso además necesita contenido real
 > y el nombre de marca decidido (A-09).
 
+**El minificador descarta `animation-timeline` si va con el atajo `animation`.** Lo junta en
+`animation: linear both nombre scroll()`, que ningún navegador acepta: la declaración entera se
+pierde y `animation-name` queda en `none`. **El `@supports` no protege** —el navegador sí soporta la
+propiedad, es el atajo lo que no acepta—, así que falla sin avisar. Las dos animaciones ligadas al
+scroll del proyecto estaban rotas por esto: el encabezado (visible: quedaba transparente sobre
+secciones claras) y la aparición de secciones (invisible: el contenido quedaba quieto pero legible).
+**Van siempre con las propiedades sueltas**, y el estado seguro tiene que salir del fotograma, no de
+una declaración al lado. Arreglado el 19/11.
+
 **Y antes de cualquier push, dos cosas que ya costaron caro:**
 
 1. **Mirar si Supabase está despierta.** Se pausa sola; pasó **tres veces**. Con la base caída la
