@@ -21,18 +21,30 @@ export const prerender = false;
 
 const sesion = Astro.locals.sesion;
 
-const SECCIONES = [
+/**
+ * La ayuda también se adapta al permiso.
+ *
+ * Dos secciones hablan de pantallas que alguien con acceso de contenido no
+ * puede abrir. Dejarlas visibles sería mandarla a una puerta que le va a dar
+ * un portazo — y la ayuda es justo el lugar donde eso más confunde.
+ */
+const completo = (sesion?.rol ?? 'completo') === 'completo';
+
+const TODAS = [
   { id: 'publicar', titulo: 'Lo primero: nada se ve hasta que publicás' },
   { id: 'cupo', titulo: 'Tenés 20 publicaciones por mes' },
   { id: 'propiedades', titulo: 'Cargar una propiedad' },
   { id: 'destacadas', titulo: 'Elegir las de la portada' },
   { id: 'articulos', titulo: 'Escribir noticias e informes' },
   { id: 'consultas', titulo: 'Las consultas que te dejan' },
-  { id: 'textos', titulo: 'Cambiar los textos del sitio' },
+  { id: 'textos', titulo: 'Cambiar los textos del sitio', soloCompleto: true },
   { id: 'roto', titulo: 'Si el sitio aparece sin fotos' },
-  { id: 'clave', titulo: 'La contraseña' },
+  { id: 'clave', titulo: 'Si perdés la contraseña' },
+  { id: 'usuarios', titulo: 'Darle acceso a alguien más', soloCompleto: true },
   { id: 'limites', titulo: 'Lo que no se puede hacer desde acá' },
 ];
+
+const SECCIONES = TODAS.filter((s) => completo || !s.soloCompleto);
 
 const h2 = 'mt-10 scroll-mt-6 font-titulo text-xl text-verde sm:text-2xl';
 const p = 'mt-3 leading-relaxed text-texto';
@@ -63,7 +75,7 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       </ol>
     </nav>
 
-    <h2 id="publicar" class={h2}>1. Lo primero: nada se ve hasta que publicás</h2>
+    <h2 id="publicar" class={h2}>Lo primero: nada se ve hasta que publicás</h2>
     <p class={p}>
       Todo lo que hacés en el panel —cargar una propiedad, cambiar un texto, escribir una noticia—
       se guarda al instante, pero <strong>el sitio sigue mostrando lo de antes</strong>. Para que el
@@ -80,7 +92,7 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       caerse — y por eso hay que avisarle cuándo volver a escribirse.
     </div>
 
-    <h2 id="cupo" class={h2}>2. Tenés 20 publicaciones por mes</h2>
+    <h2 id="cupo" class={h2}>Tenés 20 publicaciones por mes</h2>
     <p class={p}>
       El plan del servicio permite <strong>20 publicaciones por mes</strong>. Al lado del botón ves
       cuántas te quedan. Se renueva el <strong>día 5</strong> de cada mes.
@@ -96,7 +108,7 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       pierde: se publica todo junto cuando vuelva el cupo.
     </p>
 
-    <h2 id="propiedades" class={h2}>3. Cargar una propiedad</h2>
+    <h2 id="propiedades" class={h2}>Cargar una propiedad</h2>
     <p class={p}>
       En <strong>Propiedades → Nueva</strong>. Nace como <strong>borrador</strong>: podés dejarla a
       medias y seguir otro día, nadie la ve.
@@ -111,7 +123,7 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       una zona, la creás ahí y después aparece en el formulario. Lo mismo las amenidades.
     </p>
 
-    <h2 id="destacadas" class={h2}>4. Elegir las de la portada</h2>
+    <h2 id="destacadas" class={h2}>Elegir las de la portada</h2>
     <p class={p}>
       En <a href="/admin/destacadas" class="text-verde underline">Destacadas</a>. Son las que salen
       en el carrusel de la portada, y podés ordenarlas: el orden de la lista es el orden en que se
@@ -122,7 +134,7 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       no encontrás una propiedad acá, es por eso.
     </p>
 
-    <h2 id="articulos" class={h2}>5. Escribir noticias e informes</h2>
+    <h2 id="articulos" class={h2}>Escribir noticias e informes</h2>
     <p class={p}>
       En <a href="/admin/articulos" class="text-verde underline">Artículos</a>. Hay
       <strong>vista previa</strong>: te muestra exactamente cómo va a salir, con el mismo lector que
@@ -153,7 +165,7 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       la vista en la vista previa, es que la dirección tiene algo raro — revisala.
     </p>
 
-    <h2 id="consultas" class={h2}>6. Las consultas que te dejan</h2>
+    <h2 id="consultas" class={h2}>Las consultas que te dejan</h2>
     <p class={p}>
       En <a href="/admin/leads" class="text-verde underline">Consultas</a> está todo el que dejó sus datos
       en el sitio. Podés escribir <strong>notas internas</strong> en cada una: nunca se publican, son
@@ -169,25 +181,37 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       entrar a mirar. En el Tablero, las que no tuvieron aviso figuran como “Sin aviso”.
     </div>
 
-    <h2 id="textos" class={h2}>7. Cambiar los textos del sitio</h2>
-    <p class={p}>
-      En <a href="/admin/configuracion" class="text-verde underline">Configuración</a>: el título de
-      la portada, tu presentación, los teléfonos, el WhatsApp, las redes.
-    </p>
-    <p class={p}>
-      Casi todos los campos se pueden <strong>dejar vacíos</strong> sin romper nada: el sitio usa un texto
-      de respaldo o esconde la parte. Cada campo dice abajo qué pasa si lo vacías. Dos casos que conviene
-      saber: si vaciás <strong>tu presentación</strong>, la sección “Conóceme” no aparece; si vaciás
-      el <strong>WhatsApp principal</strong>, desaparecen todos los botones de WhatsApp del sitio.
-    </p>
-    <div class={`${caja} border-[#ddc79a] bg-[#f7eeda]`}>
-      <strong>Las fotos y el video tienen una regla</strong>: sólo se pueden mostrar imágenes que
-      estén en este sitio. Si pegás la dirección de una foto de Drive, de Instagram o de otra
-      página, se guarda sin dar error pero <strong>después no se ve</strong>. Para tu retrato: subí
-      la foto como imagen de una propiedad y pegá acá esa dirección.
-    </div>
+    {
+      completo && (
+        <>
+          <h2 id="textos" class={h2}>
+            Cambiar los textos del sitio
+          </h2>
+          <p class={p}>
+            En{' '}
+            <a href="/admin/configuracion" class="text-verde underline">
+              Configuración
+            </a>
+            : el título de la portada, tu presentación, los teléfonos, el WhatsApp, las redes.
+          </p>
+          <p class={p}>
+            Casi todos los campos se pueden <strong>dejar vacíos</strong> sin romper nada: el sitio
+            usa un texto de respaldo o esconde la parte. Cada campo dice abajo qué pasa si lo
+            vacías. Dos casos que conviene saber: si vaciás <strong>tu presentación</strong>, la
+            sección “Conóceme” no aparece; si vaciás el <strong>WhatsApp principal</strong>,
+            desaparecen todos los botones de WhatsApp del sitio.
+          </p>
+          <div class={`${caja} border-[#ddc79a] bg-[#f7eeda]`}>
+            <strong>Las fotos y el video tienen una regla</strong>: sólo se pueden mostrar imágenes
+            que estén en este sitio. Si pegás la dirección de una foto de Drive, de Instagram o de
+            otra página, se guarda sin dar error pero <strong>después no se ve</strong>. Para tu
+            retrato: subí la foto como imagen de una propiedad y pegá acá esa dirección.
+          </div>
+        </>
+      )
+    }
 
-    <h2 id="roto" class={h2}>8. Si el sitio aparece sin fotos</h2>
+    <h2 id="roto" class={h2}>Si el sitio aparece sin fotos</h2>
     <p class={p}>
       Es el problema más probable, y <strong>lo podés arreglar sola en dos minutos</strong>. El
       síntoma: el sitio carga pero las fotos no aparecen, o el panel te da un error.
@@ -207,16 +231,65 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
       alguien técnico.
     </p>
 
-    <h2 id="clave" class={h2}>9. La contraseña</h2>
-    <div class={`${caja} border-red-300 bg-red-50`}>
-      <strong>No se puede recuperar desde la pantalla de ingreso.</strong> No hay “olvidé mi contraseña”:
-      para eso haría falta el servicio de correo que todavía no está. Si la perdés, hay que volver a crearla
-      desde la consola del proyecto, y eso necesita a alguien con el código.
-      <strong>Guardala en un lugar seguro</strong> — un administrador de contraseñas, o anotada donde
-      no se pierda.
+    <h2 id="clave" class={h2}>Si perdés la contraseña</h2>
+    <p class={p}>
+      En la pantalla de ingreso hay un enlace que dice <strong>“¿Olvidaste tu contraseña?”</strong>.
+      Escribís tu correo, te llega un mensaje con un botón, y ahí ponés una nueva.
+      <strong>No hace falta que nadie te ayude.</strong>
+    </p>
+    <p class={p}>
+      El enlace del correo <strong>vence en una hora y sirve una sola vez</strong>. Si se te pasó el
+      tiempo, pedís otro y listo.
+    </p>
+    <div class={`${caja} border-verde bg-[#eef5f4]`}>
+      Si pedís el enlace y no te llega, mirá en el correo no deseado. Y ojo: por seguridad, la
+      pantalla dice lo mismo aunque te equivoques de dirección — así nadie puede usarla para
+      averiguar quién tiene acceso al panel.
     </div>
 
-    <h2 id="limites" class={h2}>10. Lo que no se puede hacer desde acá</h2>
+    {
+      completo && (
+        <>
+          <h2 id="usuarios" class={h2}>
+            Darle acceso a alguien más
+          </h2>
+          <p class={p}>
+            En{' '}
+            <a href="/admin/usuarios" class="text-verde underline">
+              Usuarios
+            </a>{' '}
+            podés invitar a alguien a administrar el sitio. Le llega un correo y{' '}
+            <strong>ella misma pone su contraseña</strong>: vos nunca la conocés, y no hace falta
+            mandarle nada por mensaje.
+          </p>
+          <p class={p}>Al invitarla elegís qué va a poder hacer:</p>
+          <ul class="mt-3 flex flex-col gap-3 text-texto">
+            <li>
+              <strong>Acceso completo.</strong> Todo lo que podés hacer vos, incluidos los
+              propietarios, la configuración del sitio y esta misma lista de usuarios.
+            </li>
+            <li>
+              <strong>Sólo contenido.</strong> Carga propiedades con sus fotos, elige las
+              destacadas, escribe artículos, administra los catálogos, mira las consultas y puede
+              publicar.
+              <strong>No ve la lista de propietarios</strong>, ni la configuración, ni los usuarios.
+            </li>
+          </ul>
+          <div class={`${caja} border-[#ddc79a] bg-[#f7eeda]`}>
+            <strong>Por qué los propietarios son el dato que se protege</strong>: el nombre, el
+            teléfono y el correo de quien te confió una propiedad{' '}
+            <strong>no son información tuya, son de esa persona</strong>. Por eso quedan fuera del
+            acceso de contenido aunque todo lo demás esté permitido.
+          </div>
+          <p class={p}>
+            Si le cambiás el permiso a alguien, o le quitás el acceso,
+            <strong>el cambio se aplica cuando vuelva a entrar</strong> — a más tardar en 8 horas.
+          </p>
+        </>
+      )
+    }
+
+    <h2 id="limites" class={h2}>Lo que no se puede hacer desde acá</h2>
     <p class={p}>Para que no las busques:</p>
     <ul class="mt-3 flex flex-col gap-3 text-texto">
       <li>
@@ -224,15 +297,6 @@ const caja = 'mt-4 rounded-[var(--radius-campo)] border-l-4 px-5 py-4 text-sm le
         tiene que estar en el sitio, y subirlo necesita a alguien con el código. Lo que sí podés es <em
           >quitarlo</em
         >: vaciando el campo, la portada muestra la foto de fondo.
-      </li>
-      <li>
-        <strong>Avisos por mail</strong> de consultas nuevas, y recuperar la contraseña. Las dos cosas
-        esperan que se contrate un servicio de correo.
-      </li>
-      <li>
-        <strong>Dar acceso a alguien con permisos limitados.</strong> Se pueden crear más usuarios, pero
-        todos ven todo — incluidos los datos de los propietarios y las consultas. Si le das acceso a alguien,
-        tenelo en cuenta.
       </li>
       <li>
         <strong>El sitio en inglés.</strong> Quedó fuera de lo acordado.

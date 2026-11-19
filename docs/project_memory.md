@@ -48,6 +48,23 @@ Cerrados los dos críticos de código (C-2, C-3), los importantes I-1 a I-8 y lo
 panel y el sitio cambió. **El portón de despliegues está probado por los tres caminos** — push con la
 marca, webhook del panel, y cancelar un commit que no la lleva.
 
+**El 11/11 se abrió el Hito 4, fuera del alcance original**, con un motivo concreto: que la clienta no
+dependa de nadie después de la transferencia. **Recuperar la contraseña** (UJ-17), **dar acceso a
+alguien desde el panel** (UJ-18) y **permisos por rol** (UJ-19). El rol `contenido` no ve los
+propietarios —el único dato de terceros—, ni la configuración, ni los usuarios.
+
+> 🔴 **La migración `0006` no está aplicada en la base de la clienta.** El código consulta
+> `admin_users.role`, que todavía no existe allá: **desplegar sin migrar rompe el panel.** Es
+> aditiva y segura (`npm run db:migrate`).
+
+> **El rol viaja dentro del token, no se consulta en cada petición.** Es lo que permite que
+> `/admin/ayuda` siga funcionando con la base caída. El costo: un cambio de permiso se aplica cuando
+> la persona vuelve a entrar, y la pantalla de usuarios lo dice.
+>
+> **Ojo con `crearToken`**: guardaba sólo el correo y el nombre, así que el rol se perdía en el viaje
+> y todos quedaban con acceso completo **en silencio**. Lo encontró una prueba, no el código. Si se
+> agrega otro campo a la sesión, hay que agregarlo en `crearToken` **y** en `leerToken`.
+
 **IT-12 avanzó el 10/11**: la **guía de uso vive en el panel** (`/admin/ayuda`) y hay un documento de
 entrega para quien herede el código (`docs/entrega.md`). El `sitemap.xml` quedó hecho, con la
 indexación todavía bloqueada a propósito.

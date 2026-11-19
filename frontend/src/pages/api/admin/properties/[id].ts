@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getDb } from '../../../../../../backend/db/client';
-import { esRespuesta, requerirSesion } from '../../../../../../backend/lib/auth';
+import { esCompleto, esRespuesta, requerirSesion } from '../../../../../../backend/lib/auth';
+import { sinPropietario } from '../../../../../../backend/lib/permisos';
 import {
   borrarPropiedad,
   editarPropiedad,
@@ -34,6 +35,10 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   let crudo: unknown;
   try {
     crudo = await request.json();
+    // Sin acceso completo, el propietario no se toca. Se **quita** el campo en
+    // vez de vaciarlo: así editar una propiedad deja su propietario intacto,
+    // mientras que mandar null lo borraría.
+    if (!esCompleto(sesion)) crudo = sinPropietario(crudo);
   } catch {
     return Response.json(
       { ok: false, error: 'No pudimos leer los datos' },

@@ -25,6 +25,8 @@ interface Props {
 }
 
 const { catalogos, propiedad, amenidadesElegidas = [], imagenes = [] } = Astro.props;
+
+const completo = (Astro.locals.sesion?.rol ?? 'completo') === 'completo';
 const p: Partial<typeof properties.$inferSelect> = propiedad ?? {};
 const esEdicion = Boolean(propiedad);
 
@@ -238,20 +240,28 @@ const PESTANAS = [
         valor={p.ownership ?? 'propia'}
       />
 
-      <div class="xl:col-span-2">
-        <CampoPanel
-          id="p-propietario"
-          nombre="ownerId"
-          etiqueta="Propietario"
-          opciones={opcPropietarios}
-          valor={p.ownerId}
-        />
-        <p
-          class="mt-1.5 rounded-[var(--radius-campo)] bg-[#f7eeda] px-3 py-2 text-xs font-semibold text-[#8a6a28]"
-        >
-          Dato interno. No se muestra en el sitio.
-        </p>
-      </div>
+      {
+        /* El propietario sólo lo ve quien tiene acceso completo: son datos de
+          terceros (RNF-10, D-09), y el desplegable muestra sus nombres. Sin el
+          campo, el endpoint además ignora cualquier `ownerId` que llegue, así
+          que esconderlo no es lo único que protege. */
+      }
+      {
+        completo && (
+          <div class="xl:col-span-2">
+            <CampoPanel
+              id="p-propietario"
+              nombre="ownerId"
+              etiqueta="Propietario"
+              opciones={opcPropietarios}
+              valor={p.ownerId}
+            />
+            <p class="mt-1.5 rounded-[var(--radius-campo)] bg-[#f7eeda] px-3 py-2 text-xs font-semibold text-[#8a6a28]">
+              Dato interno. No se muestra en el sitio.
+            </p>
+          </div>
+        )
+      }
     </div>
   </section>
 

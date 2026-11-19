@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getDb } from '../../../../../../backend/db/client';
-import { esRespuesta, requerirSesion } from '../../../../../../backend/lib/auth';
+import { esCompleto, esRespuesta, requerirSesion } from '../../../../../../backend/lib/auth';
+import { catalogoReservado } from '../../../../../../backend/lib/permisos';
 import { crearItem, esCatalogo, listarCatalogo } from '../../../../../../backend/lib/catalogos';
 
 /** Listado y alta de un catálogo: zonas, tipologías, desarrollistas, propietarios, amenidades. */
@@ -19,12 +20,22 @@ function nombreValido(crudo: string | undefined) {
 
 const NO_EXISTE = { ok: false, error: 'Ese catálogo no existe' };
 
+const SIN_PERMISO = Response.json(
+  { ok: false, error: 'Tu usuario no tiene permiso para esto' },
+  { status: 403, headers: sinCache },
+);
+
 export const GET: APIRoute = async ({ request, params }) => {
   const sesion = await requerirSesion(request);
   if (esRespuesta(sesion)) return sesion;
 
   const nombre = nombreValido(params.catalogo);
   if (!nombre) return Response.json(NO_EXISTE, { status: 404, headers: sinCache });
+
+  // Los propietarios son datos de terceros: viven en Catálogos pero no son de
+  // todo el mundo. El permiso entra acá y no en la pantalla, porque la
+  // pantalla no es lo que protege una API.
+  if (catalogoReservado(nombre) && !esCompleto(sesion)) return SIN_PERMISO.clone();
 
   return Response.json(
     { ok: true, data: await listarCatalogo(getDb(), nombre) },
@@ -38,6 +49,11 @@ export const POST: APIRoute = async ({ request, params }) => {
 
   const nombre = nombreValido(params.catalogo);
   if (!nombre) return Response.json(NO_EXISTE, { status: 404, headers: sinCache });
+
+  // Los propietarios son datos de terceros: viven en Catálogos pero no son de
+  // todo el mundo. El permiso entra acá y no en la pantalla, porque la
+  // pantalla no es lo que protege una API.
+  if (catalogoReservado(nombre) && !esCompleto(sesion)) return SIN_PERMISO.clone();
 
   let crudo: unknown;
   try {

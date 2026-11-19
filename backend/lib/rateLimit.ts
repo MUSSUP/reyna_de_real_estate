@@ -16,7 +16,7 @@ import type { Db } from '../db/client';
 import { rateLimitHits } from '../db/schema';
 
 /** Los dos usos del contador. Cada uno cuenta por su cuenta. */
-export type Ambito = 'login' | 'leads';
+export type Ambito = 'login' | 'leads' | 'recuperar';
 
 export interface Limite {
   maximo: number;
@@ -28,6 +28,15 @@ export const LIMITE_ACCESO: Limite = { maximo: 5, ventanaMinutos: 15 };
 
 /** Formulario de consulta: 5 envíos cada 10 minutos (contrato de la API). */
 export const LIMITE_CONSULTAS: Limite = { maximo: 5, ventanaMinutos: 10 };
+
+/**
+ * Pedir el enlace para recuperar la contraseña: 3 cada 15 minutos.
+ *
+ * Más estricto que el ingreso porque cada pedido **manda un correo**. Sin
+ * tope, cualquiera podría usar el formulario para inundar de mensajes la
+ * casilla de la dueña del sitio, y además gastar la cuota del proveedor.
+ */
+export const LIMITE_RECUPERAR: Limite = { maximo: 3, ventanaMinutos: 15 };
 
 export interface EstadoLimite {
   bloqueado: boolean;

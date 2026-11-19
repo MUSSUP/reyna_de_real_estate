@@ -9,6 +9,10 @@ import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { createHash } from 'node:crypto';
 import { leerEnv } from './entorno';
+// Sólo el tipo: no agrega nada en tiempo de ejecución, así este archivo sigue
+// sin depender de la base (es lo que hace que la ayuda del panel funcione con
+// Supabase pausada).
+import type { RolAdmin } from '../db/schema';
 
 /** Coste 12: ~250 ms por verificación. Lento a propósito, para que probar
  *  contraseñas al azar sea caro. */
@@ -23,6 +27,31 @@ export interface Sesion {
   userId: string;
   email: string;
   name: string;
+  /**
+   * Qué puede tocar. Viaja **dentro del token**, no se consulta en cada
+   * petición: así una pantalla del panel que no necesita la base —como la
+   * ayuda— se sigue dibujando con la base caída, que es justo cuando hace
+   * falta.
+   *
+   * El costo: si se le cambia el permiso a alguien, **el cambio se aplica
+   * cuando vuelva a entrar**, o a más tardar cuando venza su sesión de 8
+   * horas. La pantalla de usuarios lo dice.
+   *
+   * Opcional para que una sesión emitida antes de que existieran los permisos
+   * no deje a nadie afuera: sin rol se trata como `completo`, que es lo que
+   * esa persona tenía cuando entró.
+   */
+  rol?: RolAdmin;
+}
+
+/** `completo` si el token no lo trae: ver el comentario de `Sesion.rol`. */
+export function rolDe(sesion: Sesion): RolAdmin {
+  return sesion.rol ?? 'completo';
+}
+
+/** Si esta sesión puede entrar a lo que es sólo de la dueña. */
+export function esCompleto(sesion: Sesion): boolean {
+  return rolDe(sesion) === 'completo';
 }
 
 function leerSecreto(): Uint8Array {
@@ -60,7 +89,7 @@ export async function gastarTiempoEquivalente(contrasena: string): Promise<void>
 // --- Sesión -----------------------------------------------------------------
 
 export async function crearToken(sesion: Sesion): Promise<string> {
-  return new SignJWT({ email: sesion.email, name: sesion.name })
+  return new SignJWT({ email: sesion.email, name: sesion.name, rol: sesion.rol })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(sesion.userId)
     .setIssuedAt()
@@ -76,7 +105,33 @@ export async function leerToken(token: string): Promise<Sesion | null> {
     if (!payload.sub || typeof payload.email !== 'string' || typeof payload.name !== 'string') {
       return null;
     }
-    return { userId: payload.sub, email: payload.email, name: payload.name };
+
+    /*
+      El permiso se lee con tres casos distintos, y la diferencia importa:
+
+      - **No viene**: es una sesión firmada antes de que existieran los
+        permisos. Se deja sin rol, y `rolDe` la trata como completa — nadie
+        queda afuera de golpe por una migración.
+      - **Viene uno conocido**: se usa.
+      - **Viene algo que no reconocemos**: se trata como el permiso más
+        acotado. La firma garantiza que lo escribimos nosotros, así que sólo
+        puede pasar si una versión nueva agrega un rol y una vieja lo lee; en
+        ese caso conviene equivocarse hacia el lado que no da acceso de más.
+    */
+    const crudo = payload.rol;
+    const rol =
+      crudo === undefined || crudo === null
+        ? undefined
+        : crudo === 'completo' || crudo === 'contenido'
+          ? crudo
+          : 'contenido';
+
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      ...(rol ? { rol } : {}),
+    };
   } catch {
     return null;
   }
@@ -133,6 +188,31 @@ export async function requerirSesion(request: Request): Promise<Sesion | Respons
   if (!sesion) return respuesta401();
 
   return sesion;
+}
+
+/**
+ * Como `requerirSesion`, pero además exige acceso completo.
+ *
+ * Es lo que protege los tres lugares que no son de todo el mundo: los
+ * propietarios —datos de terceros—, la configuración del sitio y los usuarios
+ * del panel.
+ *
+ * Responde **403 y no 404**: quien tiene sesión ya sabe que el panel existe, y
+ * esconder la existencia de la pantalla sólo lograría que crea que algo está
+ * roto. Decirle que no le corresponde es más útil y no revela nada.
+ */
+export async function requerirAccesoCompleto(request: Request): Promise<Sesion | Response> {
+  const sesion = await requerirSesion(request);
+  if (esRespuesta(sesion)) return sesion;
+  if (!esCompleto(sesion)) return respuesta403();
+  return sesion;
+}
+
+function respuesta403(): Response {
+  return Response.json(
+    { ok: false, error: 'Tu usuario no tiene permiso para esto' },
+    { status: 403, headers: { 'Cache-Control': 'no-store' } },
+  );
 }
 
 export function esRespuesta(valor: Sesion | Response): valor is Response {

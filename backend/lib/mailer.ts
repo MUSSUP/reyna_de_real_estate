@@ -198,3 +198,69 @@ export function armarAvisoDeConsulta(datos: DatosAviso): Omit<Mensaje, 'para'> {
 
   return { asunto, html, texto, responderA: datos.email };
 }
+
+/**
+ * El correo que lleva el enlace para poner una contraseña.
+ *
+ * **Uno solo para dos situaciones**: "olvidé mi contraseña" y "te invitaron al
+ * panel". Lo que cambia es el texto; el mecanismo es idéntico, y tener dos
+ * plantillas casi iguales garantiza que una envejezca peor que la otra.
+ *
+ * El enlace **no se escapa dentro de un `href` sin más**: se arma con el
+ * token, que es base64url y no tiene caracteres que rompan una dirección, y
+ * aun así pasa por `escapar` como todo lo demás.
+ */
+export function armarCorreoDeAcceso(datos: {
+  nombre: string;
+  enlace: string;
+  /** `invitacion` cambia el tono: a esa persona nadie le avisó que iba a recibir esto. */
+  motivo: 'reseteo' | 'invitacion';
+  validezMinutos: number;
+}): Omit<Mensaje, 'para'> {
+  const esInvitacion = datos.motivo === 'invitacion';
+
+  const asunto = esInvitacion
+    ? 'Te dieron acceso al panel de Reyna de Real Estate'
+    : 'Recuperar tu contraseña — Reyna de Real Estate';
+
+  const entrada = esInvitacion
+    ? `Hola ${datos.nombre}: te dieron acceso para administrar el sitio de Reyna de Real Estate. Para entrar, poné tu contraseña con este botón.`
+    : `Hola ${datos.nombre}: pediste recuperar tu contraseña del panel. Poné una nueva con este botón.`;
+
+  const cierre = esInvitacion
+    ? 'Si no esperabas este correo, ignoralo: sin poner una contraseña, nadie entra con tu dirección.'
+    : 'Si no lo pediste vos, ignorá este correo. Tu contraseña actual sigue funcionando y nadie la cambió.';
+
+  const enlace = escapar(datos.enlace);
+
+  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#F4F1EE;font-family:Helvetica,Arial,sans-serif;color:#2B2B2B">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+  <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6B6B6B;margin:0">Reyna de Real Estate</p>
+  <h1 style="font-size:22px;color:#1E4F4C;margin:12px 0 0">${escapar(esInvitacion ? 'Tu acceso al panel' : 'Recuperar tu contraseña')}</h1>
+  <p style="font-size:16px;line-height:1.6;margin:20px 0 0">${escapar(entrada)}</p>
+  <p style="margin:28px 0">
+    <a href="${enlace}" style="display:inline-block;background:#E6007E;color:#fff;text-decoration:none;padding:14px 28px;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase">
+      ${escapar(esInvitacion ? 'Poner mi contraseña' : 'Poner una nueva')}
+    </a>
+  </p>
+  <p style="font-size:14px;line-height:1.6;color:#6B6B6B;margin:0">
+    El enlace vence en ${datos.validezMinutos} minutos y sirve una sola vez.
+  </p>
+  <p style="font-size:14px;line-height:1.6;color:#6B6B6B;margin:16px 0 0">${escapar(cierre)}</p>
+  <p style="font-size:12px;line-height:1.6;color:#6B6B6B;margin:24px 0 0;word-break:break-all">
+    Si el botón no funciona, copiá esta dirección:<br>${enlace}
+  </p>
+</div>
+</body></html>`;
+
+  const texto = [
+    entrada,
+    '',
+    datos.enlace,
+    '',
+    `El enlace vence en ${datos.validezMinutos} minutos y sirve una sola vez.`,
+    cierre,
+  ].join('\n');
+
+  return { asunto, html, texto };
+}

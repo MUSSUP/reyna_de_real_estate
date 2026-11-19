@@ -1,0 +1,166 @@
+---
+import Panel from '../../layouts/Panel.astro';
+import { getDb } from '../../../../backend/db/client';
+import { ROLES, listarUsuarios } from '../../../../backend/lib/usuarios';
+import { fechaLegible } from '../../lib/articulos';
+
+/**
+ * Quién entra al panel.
+ *
+ * Sólo la ve quien tiene acceso completo: el middleware corta antes de llegar
+ * acá, y los endpoints verifican por su cuenta.
+ *
+ * **Invitar no manda una contraseña**: manda un enlace para que la persona
+ * ponga la suya. Así nadie —ni quien invita— conoce la clave ajena.
+ */
+export const prerender = false;
+
+const sesion = Astro.locals.sesion;
+const usuarios = await listarUsuarios(getDb());
+
+const campo =
+  'w-full rounded-[var(--radius-campo)] border border-crema bg-white px-4 py-2.5 text-base text-texto transition-colors hover:border-dorado';
+const etiqueta = 'text-xs font-semibold uppercase tracking-[0.1em] text-texto-suave';
+---
+
+<Panel titulo="Usuarios" usuario={sesion?.name} activo="/admin/usuarios">
+  <p class="text-texto-suave">
+    Quién puede entrar al panel. Al invitar a alguien le llega un correo para que ponga su propia
+    contraseña: vos nunca la conocés.
+  </p>
+
+  <noscript>
+    <p
+      class="mt-4 rounded-[var(--radius-campo)] border border-[#ddc79a] bg-[#f7eeda] px-4 py-3 text-sm text-[#8a6a28]"
+    >
+      Esta pantalla necesita JavaScript activado para invitar o quitar personas.
+    </p>
+  </noscript>
+
+  <section class="mt-6 rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+    <h2 class="font-titulo text-base text-verde">Con acceso hoy</h2>
+
+    <ul data-lista-usuarios class="mt-4 flex flex-col gap-3">
+      {
+        usuarios.map((u) => (
+          <li
+            data-usuario={u.id}
+            class="flex flex-col gap-3 rounded-[var(--radius-campo)] border border-black/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div class="min-w-0">
+              <p class="font-semibold text-texto">
+                {u.nombre}
+                {u.id === sesion?.userId && (
+                  <span class="ml-2 rounded-full bg-crema px-2 py-0.5 text-xs font-semibold text-verde">
+                    vos
+                  </span>
+                )}
+              </p>
+              <p class="break-all text-sm text-texto-suave">{u.email}</p>
+              <p class="mt-1 text-xs text-texto-suave">
+                {u.ultimoIngreso
+                  ? `Entró por última vez el ${fechaLegible(u.ultimoIngreso)}`
+                  : 'Todavía no entró nunca'}
+              </p>
+            </div>
+
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+              <label class="sr-only" for={`rol-${u.id}`}>
+                Permiso de {u.nombre}
+              </label>
+              <select
+                id={`rol-${u.id}`}
+                data-rol={u.id}
+                disabled={u.id === sesion?.userId}
+                class="rounded-[var(--radius-campo)] border border-crema bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {ROLES.map((r) => (
+                  <option value={r.valor} selected={r.valor === u.rol}>
+                    {r.etiqueta}
+                  </option>
+                ))}
+              </select>
+
+              {!u.ultimoIngreso && (
+                <button
+                  type="button"
+                  data-reenviar={u.id}
+                  class="rounded-full border border-verde/25 px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-verde transition-colors hover:bg-verde hover:text-white"
+                >
+                  Reenviar el enlace
+                </button>
+              )}
+
+              {u.id !== sesion?.userId && (
+                <button
+                  type="button"
+                  data-quitar={u.id}
+                  class="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-red-700 transition-colors hover:bg-red-600 hover:text-white"
+                >
+                  Quitar
+                </button>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="mt-4 text-xs text-texto-suave">
+      Si le cambiás el permiso a alguien, el cambio se aplica cuando vuelva a entrar — a más tardar
+      en 8 horas. Lo mismo al quitar a alguien que está usando el panel en ese momento.
+    </p>
+  </section>
+
+  <section class="mt-6 rounded-[var(--radius-card)] border border-black/10 bg-white p-5">
+    <h2 class="font-titulo text-base text-verde">Dar acceso a alguien</h2>
+
+    <form data-invitar class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class={etiqueta} for="inv-nombre">Nombre</label>
+        <input id="inv-nombre" name="nombre" type="text" required class={campo} />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class={etiqueta} for="inv-email">Correo</label>
+        <input id="inv-email" name="email" type="email" required class={campo} />
+      </div>
+
+      <div class="flex flex-col gap-1.5 sm:col-span-2">
+        <label class={etiqueta} for="inv-rol">Qué va a poder hacer</label>
+        <select id="inv-rol" name="rol" class={campo}>
+          {ROLES.map((r) => <option value={r.valor}>{r.etiqueta}</option>)}
+        </select>
+        <ul class="mt-1 flex flex-col gap-1 text-xs text-texto-suave">
+          {
+            ROLES.map((r) => (
+              <li>
+                <strong>{r.etiqueta}:</strong> {r.descripcion}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p
+        data-aviso-usuarios
+        role="alert"
+        class="hidden rounded-[var(--radius-campo)] px-4 py-3 text-sm sm:col-span-2"
+      >
+      </p>
+
+      <div class="sm:col-span-2">
+        <button
+          type="submit"
+          data-enviar-invitacion
+          disabled
+          class="min-h-[44px] rounded-full bg-rosa px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Mandar la invitación
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <script is:inline defer src="/js/usuarios.js"></script>
+</Panel>

@@ -1,0 +1,124 @@
+---
+import '../../../styles/global.css';
+import { getDb } from '../../../../../backend/db/client';
+import { LARGO_MINIMO, leerToken } from '../../../../../backend/lib/recuperacion';
+
+/**
+ * Poner la contraseña nueva, con el enlace del correo.
+ *
+ * **El token se valida acá, antes de dibujar nada.** Si no sirve, se muestra
+ * el motivo y el camino de vuelta en lugar de un formulario que iba a fallar
+ * al enviarse: enterarse después de escribir una contraseña es peor.
+ *
+ * El token no se vuelve a mostrar en la página ni viaja a ningún lado salvo al
+ * endpoint que lo consume.
+ */
+export const prerender = false;
+
+const { token = '' } = Astro.params;
+const destino = await leerToken(getDb(), token);
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/logos/favicon.png" />
+    <title>Poner una contraseña — Panel de Reyna de Real Estate</title>
+  </head>
+
+  <body class="flex min-h-screen items-center justify-center bg-verde px-5 py-10 font-cuerpo">
+    <main class="w-full max-w-[400px]">
+      <img
+        src="/logos/logo-claro.webp"
+        alt="Reyna de Real Estate"
+        width="499"
+        height="160"
+        class="mx-auto h-12 w-auto"
+      />
+
+      {
+        destino ? (
+          <form
+            data-formulario-clave
+            data-token={token}
+            class="mt-8 flex flex-col gap-5 rounded-[var(--radius-card)] bg-white p-7 sm:p-8"
+          >
+            <div>
+              <h1 class="font-titulo text-xl text-verde">Poné tu contraseña</h1>
+              <p class="mt-2 text-sm text-texto-suave">
+                Para la cuenta de <strong>{destino.email}</strong>. Al menos {LARGO_MINIMO}{' '}
+                caracteres.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label
+                for="clave-nueva"
+                class="text-xs font-semibold uppercase tracking-[0.1em] text-texto-suave"
+              >
+                Contraseña nueva
+              </label>
+              <input
+                id="clave-nueva"
+                name="password"
+                type="password"
+                required
+                minlength={LARGO_MINIMO}
+                autocomplete="new-password"
+                autofocus
+                class="w-full rounded-[var(--radius-campo)] border border-crema bg-white px-4 py-3 text-base text-texto transition-colors hover:border-dorado"
+              />
+              <p class="text-xs text-texto-suave">
+                Guardala en un lugar seguro: un administrador de contraseñas, o anotada donde no se
+                pierda.
+              </p>
+            </div>
+
+            <p
+              data-aviso-clave
+              role="alert"
+              class="hidden rounded-[var(--radius-campo)] px-4 py-3 text-sm"
+            />
+
+            <button
+              type="submit"
+              data-guardar-clave
+              disabled
+              class="min-h-[48px] rounded-full bg-rosa px-6 py-3 font-cuerpo text-sm font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-rosa-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Guardar y entrar
+            </button>
+
+            <noscript>
+              <p class="text-center text-sm text-texto-suave">
+                El panel necesita JavaScript activado para funcionar.
+              </p>
+            </noscript>
+          </form>
+        ) : (
+          <div class="mt-8 flex flex-col gap-5 rounded-[var(--radius-card)] bg-white p-7 text-center sm:p-8">
+            <h1 class="font-titulo text-xl text-verde">Este enlace ya no sirve</h1>
+            <p class="text-sm text-texto-suave">
+              Puede haber vencido —duran una hora— o haberse usado. Pedí uno nuevo y te llega al
+              instante.
+            </p>
+            <a
+              href="/admin/recuperar"
+              class="min-h-[48px] rounded-full bg-rosa px-6 py-3 text-center font-cuerpo text-sm font-semibold uppercase tracking-[0.12em] leading-6 text-white transition-colors hover:bg-rosa-hover"
+            >
+              Pedir otro enlace
+            </a>
+            <a href="/admin/login" class="text-sm text-verde underline hover:text-rosa">
+              Volver al ingreso
+            </a>
+          </div>
+        )
+      }
+    </main>
+
+    <script is:inline defer src="/js/recuperar.js"></script>
+  </body>
+</html>

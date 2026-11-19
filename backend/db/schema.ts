@@ -65,6 +65,24 @@ export const settingInputTypeEnum = pgEnum('setting_input_type', [
 // ---------------------------------------------------------------------------
 
 /** Acceso único para la clienta (acuerdo, punto 3). Sin roles ni multiusuario. */
+/**
+ * Qué puede tocar cada persona del panel.
+ *
+ * - `completo`: todo. Es la dueña del sitio.
+ * - `contenido`: carga propiedades, fotos, artículos, destacadas, catálogos,
+ *   mira las consultas y puede publicar. **No ve los propietarios, ni la
+ *   configuración, ni los usuarios.**
+ *
+ * Los propietarios son el único dato de terceros del sistema (RNF-10, D-09):
+ * nombre, teléfono y correo de gente que le confió una propiedad a la dueña.
+ * Por eso es lo que se protege aunque todo lo demás esté permitido.
+ *
+ * El valor por defecto es `completo` a propósito: las filas que ya existen y
+ * la primera administradora tienen que seguir pudiendo hacer todo. Un defecto
+ * restrictivo dejaría el panel sin nadie que lo administre.
+ */
+export const adminRoleEnum = pgEnum('admin_role', ['completo', 'contenido']);
+
 export const adminUsers = pgTable(
   'admin_users',
   {
@@ -73,10 +91,43 @@ export const adminUsers = pgTable(
     /** bcrypt coste 12. NUNCA se devuelve en una respuesta de API. */
     passwordHash: text('password_hash').notNull(),
     name: text('name').notNull(),
+    role: adminRoleEnum('role').notNull().default('completo'),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('admin_users_email_uq').on(t.email)],
+);
+
+/**
+ * Los pedidos de "olvidé mi contraseña", y también las invitaciones.
+ *
+ * Son lo mismo visto de dos maneras: invitar a alguien es crearle el usuario
+ * sin una contraseña que sirva y mandarle uno de estos para que ponga la suya.
+ * Así **nunca viaja una contraseña por correo** y quien invita jamás conoce la
+ * clave del invitado.
+ *
+ * **El token se guarda cifrado, igual que una contraseña.** Si esta tabla se
+ * filtra, lo que hay adentro no sirve para entrar: el valor que viaja en el
+ * enlace sólo existe en el correo de la persona.
+ */
+export const passwordResets = pgTable(
+  'password_resets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => adminUsers.id, { onDelete: 'cascade' }),
+    /** SHA-256 del token que viaja en el enlace. El original no se guarda. */
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    /** Se marca al usarlo: un token sirve una sola vez. */
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('password_resets_token_uq').on(t.tokenHash),
+    index('password_resets_user_idx').on(t.userId),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -437,6 +488,9 @@ export const siteSettings = pgTable(
 // ---------------------------------------------------------------------------
 
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type PasswordReset = typeof passwordResets.$inferSelect;
+/** `completo` o `contenido`. Ver el comentario de `adminRoleEnum`. */
+export type RolAdmin = (typeof adminRoleEnum.enumValues)[number];
 export type Zone = typeof zones.$inferSelect;
 export type PropertyType = typeof propertyTypes.$inferSelect;
 export type Developer = typeof developers.$inferSelect;

@@ -21,19 +21,34 @@ interface Props {
 }
 const { titulo, usuario, activo = Astro.url.pathname } = Astro.props;
 
-const SECCIONES = [
+const TODAS = [
   { href: '/admin', texto: 'Tablero' },
   { href: '/admin/propiedades', texto: 'Propiedades' },
   { href: '/admin/destacadas', texto: 'Destacadas' },
   { href: '/admin/articulos', texto: 'Artículos' },
   { href: '/admin/catalogos', texto: 'Catálogos' },
   { href: '/admin/leads', texto: 'Consultas' },
-  { href: '/admin/configuracion', texto: 'Configuración' },
+  { href: '/admin/configuracion', texto: 'Configuración', soloCompleto: true },
+  { href: '/admin/usuarios', texto: 'Usuarios', soloCompleto: true },
   // Última a propósito: no se usa todos los días, pero tiene que estar a la
   // vista. Después de la entrega es el único lugar donde la clienta puede
   // buscar qué hacer cuando algo no anda.
   { href: '/admin/ayuda', texto: 'Ayuda' },
 ];
+
+/**
+ * El menú esconde lo que esta persona no puede abrir.
+ *
+ * **Esconder no es proteger**: quien escriba la dirección a mano se topa con
+ * el portón del middleware igual. Esto es para no ofrecerle a alguien una
+ * puerta que le va a dar un portazo.
+ *
+ * El rol sale de la sesión, que ya validó el middleware. Se lee de `locals` y
+ * no de una prop para no tener que acordarse de pasarla en cada una de las
+ * trece pantallas — que es exactamente la clase de olvido que deja un agujero.
+ */
+const completo = (Astro.locals.sesion?.rol ?? 'completo') === 'completo';
+const SECCIONES = TODAS.filter((s) => completo || !s.soloCompleto);
 
 const estaActivo = (href: string) =>
   href === '/admin' ? activo === '/admin' : activo.startsWith(href);

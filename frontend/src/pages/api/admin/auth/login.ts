@@ -99,6 +99,9 @@ export const POST: APIRoute = async ({ request }) => {
     userId: usuario.id,
     email: usuario.email,
     name: usuario.name,
+    // El permiso viaja en el token. Si se le cambia a alguien, el cambio se
+    // aplica cuando vuelva a entrar: lo dice la pantalla de usuarios.
+    rol: usuario.role,
   });
 
   // El hash NUNCA sale en la respuesta: se devuelven solo estos tres campos.

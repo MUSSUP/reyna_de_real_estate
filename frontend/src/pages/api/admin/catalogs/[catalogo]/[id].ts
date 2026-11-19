@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getDb } from '../../../../../../../backend/db/client';
-import { esRespuesta, requerirSesion } from '../../../../../../../backend/lib/auth';
+import { esCompleto, esRespuesta, requerirSesion } from '../../../../../../../backend/lib/auth';
+import { catalogoReservado } from '../../../../../../../backend/lib/permisos';
 import { borrarItem, editarItem, esCatalogo } from '../../../../../../../backend/lib/catalogos';
 
 /** Un elemento de un catálogo: editar y borrar. */
@@ -8,6 +9,11 @@ export const prerender = false;
 
 const sinCache = { 'Cache-Control': 'no-store' };
 const NO_EXISTE = { ok: false, error: 'Eso no existe' };
+
+const SIN_PERMISO = Response.json(
+  { ok: false, error: 'Tu usuario no tiene permiso para esto' },
+  { status: 403, headers: sinCache },
+);
 
 /** Nombre e identificador llegan de la dirección: los dos se validan. */
 function leerParams(params: Record<string, string | undefined>) {
@@ -22,6 +28,9 @@ export const PATCH: APIRoute = async ({ request, params }) => {
 
   const { nombre, id } = leerParams(params);
   if (!nombre || id === null) return Response.json(NO_EXISTE, { status: 404, headers: sinCache });
+
+  // Los propietarios son datos de terceros: el permiso entra por catálogo.
+  if (catalogoReservado(nombre) && !esCompleto(sesion)) return SIN_PERMISO.clone();
 
   let crudo: unknown;
   try {
@@ -64,6 +73,9 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 
   const { nombre, id } = leerParams(params);
   if (!nombre || id === null) return Response.json(NO_EXISTE, { status: 404, headers: sinCache });
+
+  // Los propietarios son datos de terceros: el permiso entra por catálogo.
+  if (catalogoReservado(nombre) && !esCompleto(sesion)) return SIN_PERMISO.clone();
 
   const r = await borrarItem(getDb(), nombre, id);
 

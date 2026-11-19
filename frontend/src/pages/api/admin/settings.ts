@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getDb } from '../../../../../backend/db/client';
-import { esRespuesta, requerirSesion } from '../../../../../backend/lib/auth';
+import { esRespuesta, requerirAccesoCompleto } from '../../../../../backend/lib/auth';
 import { guardarConfiguracion } from '../../../../../backend/lib/configuracion';
 
 /**
@@ -21,7 +21,7 @@ function esEnvioDeFormulario(request: Request): boolean {
 }
 
 export const PUT: APIRoute = async ({ request }) => {
-  const sesion = await requerirSesion(request);
+  const sesion = await requerirAccesoCompleto(request);
   if (esRespuesta(sesion)) return sesion;
 
   const deFormulario = esEnvioDeFormulario(request);

@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
-import { leerCookie, leerToken } from '../../backend/lib/auth';
+import { esCompleto, leerCookie, leerToken } from '../../backend/lib/auth';
+import { rutaReservada } from '../../backend/lib/permisos';
 
 /**
  * La puerta del panel.
@@ -21,6 +22,24 @@ import { leerCookie, leerToken } from '../../backend/lib/auth';
  */
 const RAIZ_PANEL = '/admin';
 const INGRESO = '/admin/login';
+/** Pedir el enlace para recuperar la contraseña. */
+const RECUPERAR = '/admin/recuperar';
+
+/**
+ * Las pantallas del panel que se ven **sin** sesión.
+ *
+ * Son las únicas, y tienen que serlo: quien perdió la contraseña no puede
+ * tener sesión, y quien recién fue invitada todavía no entró nunca. Si el
+ * portón las tapara, el camino de recuperación sería imposible de recorrer —
+ * un lindo círculo.
+ *
+ * La comparación es exacta o con la barra incluida (`/admin/recuperar/` más el
+ * token). `startsWith('/admin/recuperar')` a secas dejaría pasar
+ * `/admin/recuperargatos`, que hoy no existe pero mañana sí.
+ */
+function esPublica(ruta: string): boolean {
+  return ruta === INGRESO || ruta === RECUPERAR || ruta.startsWith(`${RECUPERAR}/`);
+}
 
 export const onRequest = defineMiddleware(async (contexto, siguiente) => {
   const ruta = contexto.url.pathname;
@@ -38,10 +57,28 @@ export const onRequest = defineMiddleware(async (contexto, siguiente) => {
     return sinCache(await siguiente());
   }
 
+  // Las de recuperación se dibujan igual con sesión o sin ella. Mandar al
+  // tablero a alguien que abrió su propio enlace de reseteo sería desconcertante.
+  if (esPublica(ruta)) {
+    if (sesion) contexto.locals.sesion = sesion;
+    return sinCache(await siguiente());
+  }
+
   if (!sesion) {
     // Se recuerda adónde iba, para volver ahí después de entrar.
     const destino = ruta === RAIZ_PANEL ? '' : `?volver=${encodeURIComponent(ruta)}`;
     return contexto.redirect(`${INGRESO}${destino}`);
+  }
+
+  // Las áreas que son sólo de la dueña se cortan acá, por el mismo motivo por
+  // el que el portón de sesión vive acá (D-13): si cada pantalla escribiera su
+  // propia verificación, tarde o temprano una quedaría sin proteger.
+  //
+  // Va al tablero en vez de mostrar un error: quien navega y no tiene permiso
+  // no hizo nada malo, se metió en una dirección que no le corresponde. Los
+  // endpoints sí responden 403, que es lo que espera quien llama una API.
+  if (rutaReservada(ruta) && !esCompleto(sesion)) {
+    return contexto.redirect(RAIZ_PANEL);
   }
 
   // Las pantallas del panel pueden leer quién entró sin volver a validar.

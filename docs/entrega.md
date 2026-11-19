@@ -25,6 +25,18 @@ tests/backend/             13 archivos, 323 casos, Postgres real en memoria
 netlify/functions/         la función que mantiene despierta la base
 ```
 
+## ⚠️ Antes de desplegar: migrar
+
+El esquema cambió el 11/11 (permisos y recuperación de contraseña). **Si se despliega sin aplicar la
+migración, el panel se rompe**: el código consulta `admin_users.role` y esa columna no existe hasta
+migrar.
+
+```bash
+npm run db:migrate
+```
+
+Es aditiva —un tipo, una tabla y una columna con valor por defecto— y no toca nada existente.
+
 ## Las tres cosas que sorprenden
 
 ### 1. El sitio público es estático, y publicar es un despliegue
@@ -139,15 +151,15 @@ no usa la página 500 propia): se importa `createHandler` de `.netlify/build/ent
 
 ## Lo que no está hecho
 
-|                                  | Qué falta                                                                                    | Por qué                                                                                                                       |
-| -------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Avisos por correo**            | Cuenta de un servicio de correo (Resend). El código está y verificado                        | Sin esto no salen los avisos de consultas **ni hay recuperación de contraseña**                                               |
-| **Recuperar la contraseña**      | Depende del correo                                                                           | Hoy se rehace con `npm run db:crear-admin`, que necesita el código. **Es el callejón sin salida más importante**              |
-| **Subir el video de la portada** | El campo del panel acepta una ruta, pero el archivo tiene que ir en `frontend/public/video/` | Cambiarlo necesita a alguien con el código                                                                                    |
-| **Permisos por rol**             | `admin_users` tiene sólo correo, nombre y contraseña                                         | Se pueden crear varios usuarios, pero **todos ven todo**, incluidos propietarios y consultas. Está fuera del alcance acordado |
-| **Docker**                       | Probar `docker compose up`                                                                   | Docker no estaba instalado en el equipo de desarrollo                                                                         |
-| **Sitio bilingüe**               | —                                                                                            | Fuera de alcance por decisión: el costo real es obligar a la clienta a cargar todo dos veces, para siempre                    |
-| **Integración con EstateWave**   | —                                                                                            | Proyecto aparte. Su especificación tenía tres huecos de seguridad y choca con el modelo de reconstrucción                     |
+|                                  | Qué falta                                                                                    | Por qué                                                                                                                                                    |
+| -------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Avisos por correo**            | ✅ Resuelto el 11/11: la cuenta de Resend existe y las variables están en Netlify            | Falta probar en vivo que el aviso llegue al entrar una consulta                                                                                            |
+| **Recuperar la contraseña**      | ✅ Resuelto el 11/11 (UJ-17)                                                                 | La clienta la recupera sola desde el ingreso. `npm run db:crear-admin` queda sólo como salida de emergencia                                                |
+| **Subir el video de la portada** | El campo del panel acepta una ruta, pero el archivo tiene que ir en `frontend/public/video/` | Cambiarlo necesita a alguien con el código                                                                                                                 |
+| **Permisos por rol**             | ✅ Resuelto el 11/11 (UJ-18 y UJ-19)                                                         | Dos roles. El de contenido no ve los propietarios, ni la configuración, ni los usuarios. Se invita desde el panel y cada persona pone su propia contraseña |
+| **Docker**                       | Probar `docker compose up`                                                                   | Docker no estaba instalado en el equipo de desarrollo                                                                                                      |
+| **Sitio bilingüe**               | —                                                                                            | Fuera de alcance por decisión: el costo real es obligar a la clienta a cargar todo dos veces, para siempre                                                 |
+| **Integración con EstateWave**   | —                                                                                            | Proyecto aparte. Su especificación tenía tres huecos de seguridad y choca con el modelo de reconstrucción                                                  |
 
 ## Acciones de entrega que no son código
 
