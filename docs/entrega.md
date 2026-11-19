@@ -249,9 +249,16 @@ Netlify sería enseñarle a Google una dirección que se va a abandonar—, son 
 
 1. Borrar `frontend/public/robots.txt`.
 2. Quitar **una sola** cabecera `X-Robots-Tag = "noindex, nofollow"` de `netlify.toml`: la del
-   bloque `for = "/*"`. ⚠️ **Las otras dos se quedan donde están.** Son las de `/api/*` y
-   `/admin/*`, y lo que hacen es mantener el panel y las respuestas del formulario fuera de los
-   buscadores. Sacarlas sería publicar la puerta de entrada al panel en Google.
+   bloque `for = "/*"`. Es la única que hace algo. **Dejar las otras dos** —las de `/admin/*` y
+   `/api/*`— donde están.
+
+   > Comprobado en vivo el 19/11, y conviene saberlo: **las reglas `[[headers]]` de Netlify no
+   > se aplican a lo que responde la función del panel**, sólo a los archivos estáticos.
+   > `https://reynaderealestate.com/` las trae; `/admin/login` no. Así que esas dos cabeceras
+   > nunca llegaron al navegador: **lo que de verdad mantiene el panel fuera de los buscadores
+   > es el `<meta name="robots" content="noindex, nofollow">` de `Panel.astro`**, y ese no se
+   > toca nunca. Se dejan igual porque no molestan y porque valen el día que el panel deje de
+   > servirse desde una función.
 3. Borrar el recordatorio del tablero, que ya no tendría sentido: el componente
    `frontend/src/components/admin/AvisoGoogle.astro`, su script `frontend/public/js/aviso-google.js`
    y las tres líneas que lo usan en `frontend/src/pages/admin/index.astro`.

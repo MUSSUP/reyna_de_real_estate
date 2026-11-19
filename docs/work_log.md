@@ -2909,3 +2909,23 @@ esconde, y al recargar sigue escondido sin parpadeo —el servidor lo manda con 
 celular entra entero, con el botón de 44 px.
 
 `astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde**
+
+### Apéndice del mismo día: la corrección de A-11 estaba a medio corregir
+
+Al verificar el despliegue salió algo que cambia el motivo, aunque no el consejo. **Las reglas
+`[[headers]]` de Netlify no se aplican a lo que responde la función del panel**, sólo a los
+archivos estáticos:
+
+```
+/           → x-robots-tag: noindex, nofollow
+/admin/login→ (ninguna cabecera)
+```
+
+O sea que las cabeceras de `/admin/*` y `/api/*` **nunca llegaron al navegador**. Lo que de
+verdad mantiene el panel fuera de los buscadores es el `<meta name="robots">` de `Panel.astro`,
+que sí está. El consejo de A-11 sigue siendo el mismo —quitar sólo la del bloque `/*`— pero por
+otra razón, y eso quedó escrito: un motivo falso en el documento de entrega es peor que ninguno,
+porque le enseña algo incorrecto a quien lo lea después.
+
+De paso, un susto que no era: `/propiedades` parecía no llevar la cabecera. Era un `301` hacia
+`/propiedades/`, y la redirección no la lleva. Con la barra final, `200` y cabecera puesta.
