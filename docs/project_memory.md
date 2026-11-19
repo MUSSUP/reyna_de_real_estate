@@ -1,13 +1,14 @@
 # Memoria del Proyecto — Reyna de Real Estate
 
-Actualizado: 2026-11-07
+Actualizado: 2026-11-19
 
 ---
 
 ## Estado
 
-**En ejecución. 24 terminadas, 4 parciales, 1 sin empezar** (29 filas en el seguimiento: las 28 del plan más UJ-08b).
-**🎯 El sitio público está entero. El panel está cerrado y revisado. Falta la entrega (IT-12).**
+**En ejecución. 28 terminadas, 4 parciales** (32 filas: las 28 del plan, UJ-08b y los tres journeys del Hito 4).
+**🎯 El sitio público está entero. El panel está cerrado, revisado y probado en vivo con la clienta.
+Lo que falta para entregar casi no es código.**
 
 **En vivo**: <https://reynaderealestate.com> · Panel: `/admin`
 El dominio quedó apuntado el **10/11**: certificado de Let's Encrypt emitido, `www` y `http` redirigen
@@ -22,10 +23,10 @@ despliegue**, que era la trampa que había aparecido tres veces.
 ✅ IT-01 a IT-05, IT-07 — esqueleto, base, imágenes, autenticación, diseño, datos de demostración
 ✅ IT-10 · Auditoría de seguridad final — **hecha** (commit `d514e42`). No rehacerla
 ✅ IT-11 · Verificación con y sin datos — hecha, las dos mitades. **No cubrió el panel**; eso lo revisó la revisión final
-🟡 IT-06 · Envío de correo — implementado y verificado; **falta la cuenta de Resend**, así que los avisos no salen
+🟡 IT-06 · Envío de correo — **la cuenta de Resend quedó conectada y salió un correo real el 19/11** (el de recuperar la contraseña, recibido en la bandeja). Falta ver llegar un **aviso de consulta nueva**, que es otra plantilla
 🟡 IT-08 · Docker y despliegue — desplegado y funcionando en Netlify; falta probar `docker compose up` (Docker no está instalado en el equipo)
 🟡 IT-09 · Rendimiento y accesibilidad — menú móvil, título invisible y destinos táctiles resueltos. **Falta medir el peso de la portada con las fotos reales de Laura**
-⬜ IT-12 · Despliegue y entrega, DNS en Don Web, guía de uso ← **lo único sin empezar**
+🟡 IT-12 · Despliegue y entrega — dominio apuntado ✅, guía en `/admin/ayuda` ✅, `docs/entrega.md` ✅, `sitemap.xml` ✅. **Falta abrir el sitio a Google (A-11) y transferir (A-08)**
 
 **Hito 1 — el visitante (completo)**
 ✅ UJ-01 a UJ-06 · home, carrusel, buscador, ficha, WhatsApp, formulario
@@ -53,9 +54,10 @@ dependa de nadie después de la transferencia. **Recuperar la contraseña** (UJ-
 alguien desde el panel** (UJ-18) y **permisos por rol** (UJ-19). El rol `contenido` no ve los
 propietarios —el único dato de terceros—, ni la configuración, ni los usuarios.
 
-> 🔴 **La migración `0006` no está aplicada en la base de la clienta.** El código consulta
-> `admin_users.role`, que todavía no existe allá: **desplegar sin migrar rompe el panel.** Es
-> aditiva y segura (`npm run db:migrate`).
+> ✅ **Cerrado el 19/11.** La migración `0006` se aplicó en la base de la clienta, se desplegó
+> (`18b5f46`) y **se probó de punta a punta con ella presente**: recuperó la contraseña sola con el
+> correo que le llegó, invitó un acceso de `contenido`, y se comprobó que con ese acceso no aparecen
+> los propietarios, ni Configuración, ni Usuarios.
 
 > **El rol viaja dentro del token, no se consulta en cada petición.** Es lo que permite que
 > `/admin/ayuda` siga funcionando con la base caída. El costo: un cambio de permiso se aplica cuando
@@ -69,8 +71,9 @@ propietarios —el único dato de terceros—, ni la configuración, ni los usua
 entrega para quien herede el código (`docs/entrega.md`). El `sitemap.xml` quedó hecho, con la
 indexación todavía bloqueada a propósito.
 
-**Lo que falta no es código**: apuntar el dominio, la cuenta de Resend, el nombre de marca, las fotos
-de Laura, y la transferencia.
+**Lo que falta no es código**: el nombre de marca (A-09), las fotos de Laura (A-04), abrir el sitio a
+Google (A-11, que depende de las dos anteriores) y la transferencia con segundo factor puesto antes
+(A-08). El dominio y la cuenta de Resend ya están.
 
 > ✅ **Resuelto el 11/11.** Se borró `PUBLIC_SITE_URL` de Netlify y se desplegó. Verificado en vivo:
 > la canónica y el `og:url` dicen `https://reynaderealestate.com/`, y el mapa del sitio trae sus 16
@@ -101,7 +104,7 @@ de Laura, y la transferencia.
 - Hay una ejecución exitosa → el problema era el 200 silencioso y está resuelto.
 - **No hay ninguna ejecución** → Netlify no corre funciones programadas en el plan gratuito, y hay que cambiar de enfoque: sería un defecto que se lleva las fotos de Laura cada semana.
 
-**La contraseña del panel**: hay una de desarrollo creada en local. **Laura todavía tiene que poner la suya** (`npm run db:crear-admin`, acción A-10). **No hay recuperación de contraseña** —necesita mandar un mail y eso espera la cuenta de Resend—, así que si la pierde depende de alguien con terminal. Es el callejón sin salida más importante de la entrega.
+**La contraseña del panel**: resuelto. El Hito 4 la puso en manos de la clienta —la cambia ella desde "¿Olvidaste tu contraseña?", sin script y sin que nadie la vea— y el 19/11 lo hizo de verdad. **A-10 queda cerrado si la contraseña que puso en esa prueba es la que se queda.** El callejón sin salida que había (perderla y depender de alguien con terminal) ya no existe.
 
 **Firmar una sesión a mano con el `JWT_SECRET` queda bloqueado por la política de credenciales, y está bien que quede bloqueado.** La contraseña la pone la persona.
 

@@ -12,17 +12,26 @@ Leyenda: ⬜ pendiente · 🟡 en curso · ✅ terminado · ⏸️ bloqueado
 > Los números salen de contar los estados de las tablas de abajo, uno por uno.
 > Estuvieron inflados dos veces: conviene recontar antes de tocarlos.
 
-| Bloque                  | Tareas | Estado                                                             |
-| ----------------------- | ------ | ------------------------------------------------------------------ |
-| Infraestructura         | 8      | 🟢 5/8 · 3 parciales (IT-06, IT-08, IT-09) · 1 sin empezar (IT-12) |
-| Hito 1 · Visitante      | 6      | ✅ 6/6                                                             |
-| Hito 2 · Administración | 8      | ✅ 8/8 · **cerrado** (incluye UJ-08b)                              |
-| Hito 3 · Contenido      | 3      | ✅ 3/3 (UJ-14, UJ-15, UJ-16)                                       |
-| **Total**               | **29** | **24 terminadas · 4 parciales · 1 sin empezar**                    |
+| Bloque                  | Tareas | Estado                                                       |
+| ----------------------- | ------ | ------------------------------------------------------------ |
+| Infraestructura         | 12     | 🟢 8/12 · 4 parciales (IT-06, IT-08, IT-09, IT-12)           |
+| Hito 1 · Visitante      | 6      | ✅ 6/6                                                       |
+| Hito 2 · Administración | 8      | ✅ 8/8 · **cerrado** (incluye UJ-08b)                        |
+| Hito 3 · Contenido      | 3      | ✅ 3/3 (UJ-14, UJ-15, UJ-16)                                 |
+| Hito 4 · Autonomía      | 3      | ✅ 3/3 · **cerrado y probado en vivo** (UJ-17, UJ-18, UJ-19) |
+| **Total**               | **32** | **28 terminadas · 4 parciales**                              |
 
-**Lo que falta para entregar**: IT-12 (dominio, guía de uso y transferencia), terminar IT-09
-(medir el peso con las fotos reales) e IT-06 (cuenta de Resend). IT-08 queda parcial porque
-nunca se probó `docker compose up` — Docker no está instalado en el equipo.
+> Las IT-09 a IT-12 figuran en la tabla del Hito 3 por orden de trabajo, pero se cuentan
+> como infraestructura. Antes se contaban en los dos lados: de ahí los números inflados.
+
+**Lo que falta, y de quién depende**:
+
+| Qué                                                         | Quién         | Traba                       |
+| ----------------------------------------------------------- | ------------- | --------------------------- |
+| IT-12 · abrir el sitio a Google (A-11) y transferir (A-08)  | Musapp        | la entrega                  |
+| IT-09 · medir el peso de la portada con las fotos reales    | espera a A-04 | la auditoría de rendimiento |
+| IT-06 · ver llegar un aviso de consulta nueva a la bandeja  | Musapp        | nada: es una comprobación   |
+| IT-08 · `docker compose up` nunca se levantó                | Musapp        | nada: Netlify ya sirve      |
 
 ---
 
@@ -86,8 +95,8 @@ nunca se probó `docker compose up` — Docker no está instalado en el equipo.
 | UJ-16 | Conocer a Laura                          | ✅     | Texto aprobado. **Diseñar para que funcione sin foto** (D-10)                                                                                                  |
 | IT-09 | Auditoría de rendimiento y accesibilidad | 🟡     | Menú móvil resuelto. Falta contraste, foco y pesos                                                                                                             |
 | IT-10 | Auditoría de seguridad final             | ✅     | Obligatoria. `owners` verificado en vivo. 1 riesgo aceptado                                                                                                    |
-| IT-11 | Verificación con y sin datos             | 🟡     | Obligatoria. Falta la mitad sin datos: necesita base vacía                                                                                                     |
-| IT-12 | Despliegue y entrega                     | 🟡     | Guía de la clienta en `/admin/ayuda` ✅ · documento de entrega ✅ · `sitemap.xml` ✅ · DNS en Don Web con acceso ✅. **Falta apuntar el dominio y transferir** |
+| IT-11 | Verificación con y sin datos             | ✅     | Obligatoria. Las dos mitades hechas: con datos y con la base vacía (parche a PGlite, revertido)                                                                                                     |
+| IT-12 | Despliegue y entrega                     | 🟡     | Guía de la clienta en `/admin/ayuda` ✅ · documento de entrega ✅ · `sitemap.xml` ✅ · dominio `reynaderealestate.com` apuntado y sirviendo por HTTPS ✅. **Falta abrir a Google (A-11) y transferir (A-08)** |
 
 **🔍 Revisión final** antes de entregar — `/review`
 
@@ -101,7 +110,7 @@ Bloquean la entrega pero no son código.
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------ |
 | ~~A-01~~ | ~~Registrador del dominio~~ ✅ **Resuelto**: Don Web, cuenta de Musapp, acceso total al DNS                                                                                                                            | —                | —                        |
 | A-08     | **Transferir el dominio a la clienta** una vez entregado el sitio                                                                                                                                                      | Musapp           | Post-entrega             |
-| A-10     | **Que Laura ponga su propia contraseña del panel.** Hoy la usuaria del panel (`reynaderealestate@gmail.com`) tiene una contraseña que conoce Musapp. Volver a correr `npm run db:crear-admin` con ella presente        | Musapp + clienta | En la entrega            |
+| A-10     | ~~Que Laura ponga su propia contraseña del panel~~ **El Hito 4 lo resolvió**: lo hace ella sola desde "¿Olvidaste tu contraseña?", sin script y sin que nadie vea la clave. Queda cerrado si la que puso en la prueba del 19/11 es la que se queda                                                              | Clienta          | Hecho el 19/11           |
 | A-11     | **Quitar el bloqueo de indexación.** Borrar `frontend/public/robots.txt` y la cabecera `X-Robots-Tag` de `netlify.toml`. Son las dos cosas. Se puso para que el sitio de ensayo con datos falsos no aparezca en Google | Musapp           | Antes de la entrega      |
 | A-09     | **Definir el nombre de marca**: el logo dice "Laura Cabral" y el pie dice "Reyna de Real Estate". Conviven en la misma página                                                                                          | Clienta          | Antes de la entrega      |
 | A-02     | Crear cuentas de Netlify, Supabase y Resend con `reynaderealestate@gmail.com`                                                                                                                                          | Musapp           | Antes de IT-02           |
@@ -111,6 +120,7 @@ Bloquean la entrega pero no son código.
 | ~~A-05~~ | ~~Confirmar a qué mail llegan las consultas~~ ✅ **Resuelto** (2026-08-23): `reynaderealestate@gmail.com`, confirmado por la clienta                                                                                   | —                | —                        |
 | A-06     | Confirmar derechos de uso de fotos de cartera compartida                                                                                                                                                               | Clienta          | Antes de publicar (R-07) |
 | A-07     | **Confirmar el alcance final por escrito con la clienta.** El borrador vive fuera del repositorio                                                                                                                      | Musapp           | **Antes de construir**   |
+| A-12     | **Marcar `RESEND_API_KEY` como "Contains secret values" en Netlify.** Hoy la clave se lee desde la interfaz, la API, el registro de construcción y la línea de comandos                                                | Musapp           | Antes de la entrega      |
 
 ---
 
@@ -125,8 +135,9 @@ clienta no dependa de nadie después de la transferencia.
 | UJ-18 | Dar acceso a alguien desde el panel | ✅     | Invitar manda un enlace, nunca una contraseña. Barandas: nadie se quita a sí misma ni deja el panel sin acceso completo |
 | UJ-19 | Permisos por rol                    | ✅     | `completo` y `contenido`. Lo reservado: propietarios, configuración y usuarios                                          |
 
-**Pendiente de operación**: la migración `0006` no está aplicada en la base de la clienta.
-**Desplegar sin eso rompe el panel.**
+**Cerrado el 19/11.** La migración `0006` se aplicó en la base de la clienta, se desplegó y se probó
+en vivo: recuperar la contraseña, invitar con permiso de contenido y comprobar que los propietarios
+no aparecen con ese acceso.
 
 ---
 
@@ -134,6 +145,7 @@ clienta no dependa de nadie después de la transferencia.
 
 | Fecha      | Evento                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-19 | **Hito 4 en vivo y probado de punta a punta con la clienta.** Migración `0006` aplicada, despliegue encendido, y verificado con ella: recuperó la contraseña sola, invitó un acceso de contenido y comprobó que los propietarios no aparecen. Correo de recuperación recibido de verdad: primer envío real de Resend confirmado |
 | 2026-08-20 | Brief completado a partir del documento de la clienta y las referencias visuales                                                                                                                                                                                                                                                                                                                              |
 | 2026-08-20 | Planificación v1: alcance amplio, bilingüe, con CMS de noticias                                                                                                                                                                                                                                                                                                                                               |
 | 2026-08-20 | **Hallazgo**: apareció el Documento de Cierre de Alcance del 29/06 en Drive, que contradecía el plan en 9 puntos                                                                                                                                                                                                                                                                                              |

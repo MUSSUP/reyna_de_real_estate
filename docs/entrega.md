@@ -170,7 +170,8 @@ no usa la página 500 propia): se importa `createHandler` de `.netlify/build/ent
 | A-07 | Confirmar el alcance final por escrito                                                                          | pendiente                |
 | A-08 | Transferir dominio y repositorio. **Activar segundo factor en Supabase, Netlify y el correo de la marca antes** | pendiente                |
 | A-09 | Definir el nombre de marca: el logo dice una cosa y el pie otra, en la misma página                             | pendiente de ella        |
-| A-10 | Que la clienta ponga su propia contraseña (`npm run db:crear-admin`)                                            | pendiente                |
+| A-10 | Que la clienta ponga su propia contraseña — **lo hace ella desde "¿Olvidaste tu contraseña?"**                  | hecho el 19/11           |
+| A-12 | Marcar `RESEND_API_KEY` como **"Contains secret values"** en Netlify — hoy se lee desde la interfaz             | pendiente                |
 | A-11 | Abrir el sitio a Google                                                                                         | **preparado**: ver abajo |
 
 ### El DNS: un solo registro para la raíz, o el certificado no sale
