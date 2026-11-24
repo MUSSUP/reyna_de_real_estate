@@ -36,7 +36,7 @@ const { propiedades } = Astro.props;
         <SeparadorCorona clase="mt-4" />
       </div>
 
-      <div class="relative mt-10">
+      <div class="banda-carrusel relative mt-10">
         <div
           class="carrusel flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-5 pb-4 [justify-content:safe_center] sm:px-8 lg:px-12"
           role="group"
@@ -79,6 +79,32 @@ const { propiedades } = Astro.props;
 }
 
 <style>
+  /**
+   * La banda recorta lo que sobra del carrusel. **Sin esto la portada se
+   * desborda de costado en el celular.**
+   *
+   * El carrusel ya tiene `overflow-x: auto`, así que se mueve solo y no se
+   * ve nada fuera de lugar. Pero su contenido —cuatro tarjetas de 85vw, más
+   * de 1400 px en total— **se sigue contando en el ancho desplazable de la
+   * página**. Chrome mide ese ancho de más y después no deja correr la
+   * página, así que ahí no se nota. Safari de iPhone sí deja correrla: se
+   * arrastra de costado y aparece media pantalla en blanco, con el logo
+   * cortado. Es lo que grabó la clienta.
+   *
+   * Recortar acá y no en la `<section>` es a propósito: la sección lleva la
+   * animación de aparición y conviene no tocarle el contexto.
+   *
+   * Va `clip` y no `hidden` porque `hidden` convertiría la banda en un
+   * contenedor con scroll —`overflow-y` pasaría a `auto` solo— y eso recorta
+   * las sombras de las tarjetas por arriba y por abajo. `clip` recorta sin
+   * crear scroll. No lleva respaldo `hidden` para navegadores viejos: el
+   * respaldo traería justamente ese defecto, y a cambio de un desborde
+   * lateral que molesta pero no esconde nada.
+   */
+  .banda-carrusel {
+    overflow-x: clip;
+  }
+
   /* Barra de desplazamiento discreta, en los colores de la marca */
   .carrusel {
     scrollbar-width: thin;

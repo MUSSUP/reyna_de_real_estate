@@ -2999,3 +2999,71 @@ nota bajando rápido, que es como se baja: antes el verde llegaba justo cuando y
 la sección clara.
 
 `astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde**
+
+---
+
+## La portada se desbordaba de costado en el celular
+
+**2026-11-24.** Lo detectó la clienta y Mar lo grabó: en el iPhone la portada se arrastra de
+costado y aparece media pantalla en blanco, con el logo cortado y el menú fuera de cuadro.
+Intermitente — a Mar le pasó y después "no sé qué toqué y no volvió a pasar".
+
+### Medir el desborde, no buscarlo a ojo
+
+La emulación de pantalla del panel no servía: decía `clientWidth: 390` y `innerWidth: 1241` al
+mismo tiempo, o sea que la medición no era de fiar. La salida fue **un iframe de 390 px apuntando
+al propio sitio**, que le da al documento de adentro un viewport real de 390, sin emulación.
+
+Contra el sitio en producción no se puede —`frame-ancestors 'none'` lo impide, y está bien que lo
+impida—, así que se hizo contra el `dist/` servido en local.
+
+```
+clientWidth 390 · scrollWidth 1241 · desborde 851 px
+```
+
+Y sólo en la portada: `/propiedades`, `/noticias` y `/nosotros` dan cero.
+
+### La primera pista era falsa
+
+Las piezas más a la derecha eran las tarjetas del carrusel de Destacadas, a 1406 px. Pero están
+**dentro** de un contenedor con scroll propio: su posición no empuja nada. Midiendo de nuevo,
+descartando todo lo que viva dentro de un scroller, **no quedaba ni un elemento desbordado**.
+
+Lo que lo probó fue esconder cosas: tapar el carrusel bajaba el `scrollWidth` a 390 exacto, y
+sacar **una** tarjeta lo bajaba 352 px —el ancho de una tarjeta más su separación—. El ancho de la
+página seguía al contenido del carrusel, aunque el carrusel lo recorte.
+
+### Por qué nadie lo vio en la computadora
+
+```
+scrollWidth: 1241   ·   scrollX después de pedir 9999: 0
+```
+
+**Chrome mide el ancho de más pero no deja correr la página.** Safari de iPhone sí la deja correr.
+Por eso el defecto existía desde siempre y sólo aparecía en el teléfono — y por eso se va solo
+cuando algo obliga a recalcular la pantalla, que es el "no sé qué toqué".
+
+No se pudo confirmar en Safari de verdad: el simulador de iOS necesita Xcode completo y en este
+equipo sólo están las herramientas de línea de comandos. Queda **pendiente que Mar lo mire en el
+teléfono**, que es el único lugar donde el defecto se ve.
+
+### El arreglo
+
+`overflow-x: clip` en la banda que envuelve el carrusel. Verificado a 320, 390, 414 y 768 px:
+**desborde 0 en todos**, y el carrusel se sigue moviendo (`scrollLeft` llega a 372 de 1426).
+
+Tres decisiones adentro:
+
+- **En la banda y no en la `<section>`**: la sección lleva la animación de aparición y no conviene
+  tocarle el contexto.
+- **`clip` y no `hidden`**: `hidden` convertiría la banda en contenedor con scroll —`overflow-y`
+  pasa a `auto` solo— y recortaría las sombras de las tarjetas.
+- **Sin respaldo `hidden` para navegadores viejos**: el respaldo traería ese mismo defecto a
+  cambio de evitar un desborde lateral que molesta pero no esconde nada.
+
+### De paso: cómo mirar un video sin ffmpeg
+
+No hay `ffmpeg` en el equipo. Los cuadros del video salieron con un script de Swift de treinta
+líneas usando AVFoundation, que sí está. Vale anotarlo: en una Mac siempre hay con qué.
+
+`astro check`: 0 errores · ESLint: 0 · **362 pruebas en verde**
