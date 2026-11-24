@@ -3044,8 +3044,12 @@ Por eso el defecto existía desde siempre y sólo aparecía en el teléfono — 
 cuando algo obliga a recalcular la pantalla, que es el "no sé qué toqué".
 
 No se pudo confirmar en Safari de verdad: el simulador de iOS necesita Xcode completo y en este
-equipo sólo están las herramientas de línea de comandos. Queda **pendiente que Mar lo mire en el
-teléfono**, que es el único lugar donde el defecto se ve.
+equipo sólo están las herramientas de línea de comandos. Se dejó dicho en lugar de dar el arreglo
+por bueno.
+
+> ✅ **Confirmado el mismo día.** Mar lo probó en su iPhone después del despliegue de las 12:39 UTC
+> y la portada ya no se arrastra de costado. **El defecto está cerrado**, y esta vez verificado
+> donde se veía: en el teléfono.
 
 ### El arreglo
 

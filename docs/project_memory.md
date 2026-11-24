@@ -1,6 +1,6 @@
 # Memoria del Proyecto — Reyna de Real Estate
 
-Actualizado: 2026-11-19
+Actualizado: 2026-11-24
 
 ---
 
@@ -96,6 +96,21 @@ scroll del proyecto estaban rotas por esto: el encabezado (visible: quedaba tran
 secciones claras) y la aparición de secciones (invisible: el contenido quedaba quieto pero legible).
 **Van siempre con las propiedades sueltas**, y el estado seguro tiene que salir del fotograma, no de
 una declaración al lado. Arreglado el 19/11.
+
+**El ancho de un carrusel se cuenta en el ancho de la página, aunque el carrusel lo recorte.** El
+contenido de Destacadas —cuatro tarjetas de 85vw— sumaba 851 px de más en la portada. **Chrome mide
+ese ancho pero no deja correr la página; Safari de iPhone sí**, así que el defecto existió desde el
+primer despliegue y sólo se veía en el teléfono, de forma intermitente: cualquier cosa que obligue a
+recalcular la pantalla lo hace desaparecer hasta la próxima carga. Arreglado el 24/11 con
+`overflow-x: clip` en la banda que envuelve el carrusel —`clip` y no `hidden`, que convertiría la
+banda en contenedor con scroll y recortaría las sombras— y **confirmado por Mar en su iPhone**.
+
+> **Lo que importa más que el arreglo: este defecto lo encontró la clienta.** Las 362 pruebas son de
+> backend y **nada en el proyecto mira cómo se ve una pantalla en un teléfono**. Si aparece otro
+> defecto visual, va a venir por el mismo camino. Para medir un ancho de celular de forma confiable
+> no sirve la emulación del navegador (devolvía `clientWidth 390` con `innerWidth 1241`, dos números
+> que no pueden ser ciertos a la vez): sirve **un iframe de ancho fijo** apuntando al `dist/` servido
+> en local, porque contra producción `frame-ancestors 'none'` lo impide.
 
 **Y antes de cualquier push, dos cosas que ya costaron caro:**
 
